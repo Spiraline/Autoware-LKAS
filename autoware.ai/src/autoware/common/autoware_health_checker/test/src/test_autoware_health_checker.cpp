@@ -16,165 +16,227 @@
  *
  * v1.0 Masaya Kataoka
  */
-#include <autoware_health_checker/node_status_publisher.h>
+#include <autoware_health_checker/health_checker/health_checker.h>
 #include <gtest/gtest.h>
 #include <ros/ros.h>
+#include <vector>
+#include <utility>
 
-class AutowareHealthCheckerTestSuite : public ::testing::Test {
+using AwDiagStatus = autoware_system_msgs::DiagnosticStatus;
+using ErrorLevel = autoware_health_checker::ErrorLevel;
+template <class T>
+using InputAndResult = std::vector<std::pair<T, ErrorLevel>>;
+
+class AutowareHealthCheckerTestClass
+{
+public:
+  AutowareHealthCheckerTestClass() : pnh("~") {}
+  std::shared_ptr<autoware_health_checker::HealthChecker> health_checker_ptr;
+  ros::NodeHandle pnh;
+  ros::NodeHandle nh;
+  void init()
+  {
+    ros::param::set("health_checker/test", "default");
+    health_checker_ptr =
+      std::make_shared<autoware_health_checker::HealthChecker>(nh, pnh);
+  }
+};
+
+class AutowareHealthCheckerTestSuite : public ::testing::Test
+{
 public:
   AutowareHealthCheckerTestSuite() {}
 
   ~AutowareHealthCheckerTestSuite() {}
+  AutowareHealthCheckerTestClass test_obj_;
+
+protected:
+  virtual void SetUp()
+  {
+    test_obj_.init();
+  }
+  virtual void TearDown() {}
 };
 
-class AutowareHealthCheckerTestClass {
-public:
-  AutowareHealthCheckerTestClass() {
-    ros::NodeHandle nh;
-    ros::NodeHandle pnh("~");
-    node_status_publisher_ptr =
-        std::make_shared<autoware_health_checker::NodeStatusPublisher>(nh, pnh);
-  };
-  std::shared_ptr<autoware_health_checker::NodeStatusPublisher>
-      node_status_publisher_ptr;
+autoware_health_checker::ErrorLevel test_function(double value)
+{
+  return
+    (value == 0.0) ? AwDiagStatus::FATAL :
+    (value == 1.0) ? AwDiagStatus::ERROR :
+    (value == 2.0) ? AwDiagStatus::WARN : AwDiagStatus::OK;
 };
 
-TEST(TestSuite, CHECK_MIN_VALUE) {
-  AutowareHealthCheckerTestClass test_autoware_health_checker;
-  uint8_t ret_fatal =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MIN_VALUE(
-          "test", 1, 6, 4, 2, "test");
-  ASSERT_EQ(ret_fatal, autoware_health_checker::LEVEL_FATAL)
-      << "The value was self-diagnosed as fatal";
-  uint8_t ret_error =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MIN_VALUE(
-          "test", 3, 6, 4, 2, "test");
-  ASSERT_EQ(ret_error, autoware_health_checker::LEVEL_ERROR)
-      << "The value was self-diagnosed as error";
-  uint8_t ret_warn =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MIN_VALUE(
-          "test", 5, 6, 4, 2, "test");
-  ASSERT_EQ(ret_warn, autoware_health_checker::LEVEL_WARN)
-      << "The value was self-diagnosed as warn";
-  uint8_t ret_ok =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MIN_VALUE(
-          "test", 7, 6, 4, 2, "test");
-  ASSERT_EQ(ret_ok, autoware_health_checker::LEVEL_OK)
-      << "The value was self-diagnosed as ok";
-}
-
-TEST(TestSuite, CHECK_MAX_VALUE) {
-  AutowareHealthCheckerTestClass test_autoware_health_checker;
-  uint8_t ret_fatal =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MAX_VALUE(
-          "test", 7, 2, 4, 6, "test");
-  ASSERT_EQ(ret_fatal, autoware_health_checker::LEVEL_FATAL)
-      << "The value was self-diagnosed as fatal";
-  uint8_t ret_error =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MAX_VALUE(
-          "test", 5, 2, 4, 6, "test");
-  ASSERT_EQ(ret_error, autoware_health_checker::LEVEL_ERROR)
-      << "The value was self-diagnosed as error";
-  uint8_t ret_warn =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MAX_VALUE(
-          "test", 3, 2, 4, 6, "test");
-  ASSERT_EQ(ret_warn, autoware_health_checker::LEVEL_WARN)
-      << "The value was self-diagnosed as warn";
-  uint8_t ret_ok =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_MAX_VALUE(
-          "test", 1, 2, 4, 6, "test");
-  ASSERT_EQ(ret_ok, autoware_health_checker::LEVEL_OK)
-      << "The value was self-diagnosed as ok";
-}
-
-TEST(TestSuite, CHECK_RANGE) {
-  AutowareHealthCheckerTestClass test_autoware_health_checker;
-  uint8_t ret_fatal =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_RANGE(
-          "test", 7.0, {2.0, 4.0}, {1.0, 5.0}, {0.0, 6.0}, "test");
-  ASSERT_EQ(ret_fatal, autoware_health_checker::LEVEL_FATAL)
-      << "The value was self-diagnosed as fatal";
-  uint8_t ret_error =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_RANGE(
-          "test", 5.5, {2.0, 4.0}, {1.0, 5.0}, {0.0, 6.0}, "test");
-  ASSERT_EQ(ret_error, autoware_health_checker::LEVEL_ERROR)
-      << "The value was self-diagnosed as error";
-  uint8_t ret_warn =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_RANGE(
-          "test", 4.5, {2.0, 4.0}, {1.0, 5.0}, {0.0, 6.0}, "test");
-  ASSERT_EQ(ret_warn, autoware_health_checker::LEVEL_WARN)
-      << "The value was self-diagnosed as warn";
-  uint8_t ret_ok =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_RANGE(
-          "test", 3.0, {2.0, 4.0}, {1.0, 5.0}, {0.0, 6.0}, "test");
-  ASSERT_EQ(ret_ok, autoware_health_checker::LEVEL_OK)
-      << "The value was self-diagnosed as ok";
-}
-
-uint8_t test_function(double value) {
-  if (value == 0.0) {
-    return autoware_health_checker::LEVEL_FATAL;
-  }
-  if (value == 1.0) {
-    return autoware_health_checker::LEVEL_ERROR;
-  }
-  if (value == 2.0) {
-    return autoware_health_checker::LEVEL_WARN;
-  }
-  return autoware_health_checker::LEVEL_OK;
-};
-
-boost::property_tree::ptree test_value_json_func(double value) {
+boost::property_tree::ptree test_value_json_func(double value)
+{
   boost::property_tree::ptree tree;
   tree.put("value", value);
   return tree;
 };
 
-TEST(TestSuite, CHECK_VALUE) {
-  AutowareHealthCheckerTestClass test_autoware_health_checker;
-  std::function<uint8_t(double value)> check_func = test_function;
-  std::function<boost::property_tree::ptree(double value)>
-      check_value_json_func = test_value_json_func;
-  uint8_t ret_fatal =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_VALUE(
-          "test", 0.0, check_func, check_value_json_func, "test");
-  ASSERT_EQ(ret_fatal, autoware_health_checker::LEVEL_FATAL)
-      << "The value was self-diagnosed as fatal";
-  uint8_t ret_error =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_VALUE(
-          "test", 1.0, check_func, check_value_json_func, "test");
-  ASSERT_EQ(ret_error, autoware_health_checker::LEVEL_ERROR)
-      << "The value was self-diagnosed as fatal";
-  uint8_t ret_warn =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_VALUE(
-          "test", 2.0, check_func, check_value_json_func, "test");
-  ASSERT_EQ(ret_warn, autoware_health_checker::LEVEL_WARN)
-      << "The value was self-diagnosed as fatal";
-  uint8_t ret_ok =
-      test_autoware_health_checker.node_status_publisher_ptr->CHECK_VALUE(
-          "test", -1.0, check_func, check_value_json_func, "test");
-  ASSERT_EQ(ret_ok, autoware_health_checker::LEVEL_OK)
-      << "The value was self-diagnosed as fatal";
-  boost::optional<double> value =
-      check_value_json_func(0.0).get_optional<double>("value");
+/*
+  test for value check function
+*/
+TEST_F(AutowareHealthCheckerTestSuite, CHECK_VALUE)
+{
+  using CheckLevel = std::function<ErrorLevel(double value)>;
+  using CheckVal = std::function<boost::property_tree::ptree(double value)>;
+  CheckLevel check_func = test_function;
+  CheckVal check_value_json_func = test_value_json_func;
+
+  const InputAndResult<double> dataset =
+  {
+    std::make_pair(0.0, AwDiagStatus::FATAL),
+    std::make_pair(1.0, AwDiagStatus::ERROR),
+    std::make_pair(2.0, AwDiagStatus::WARN),
+    std::make_pair(-1.0, AwDiagStatus::OK)
+  };
+  for (const auto& data : dataset)
+  {
+    auto ret_value = test_obj_.health_checker_ptr->CHECK_VALUE(
+      "test", data.first, check_func, check_value_json_func, "test");
+    ASSERT_EQ(ret_value, data.second)
+      << "CHECK_VALUE function returns invalid value."
+      << "It should be " << static_cast<int>(data.second);
+  }
+  auto value = check_value_json_func(0.0).get_optional<double>("value");
   ASSERT_EQ(value.get(), 0.0)
-      << "The value must be true, failed to get json value";
+    << "Failed to get json value."
+    << "It should be 0.0";
 }
 
-TEST(TestSuite, NODE_STATUS) {
-  AutowareHealthCheckerTestClass test_autoware_health_checker;
-  test_autoware_health_checker.node_status_publisher_ptr->NODE_ACTIVATE();
-  uint8_t ret_active =
-      test_autoware_health_checker.node_status_publisher_ptr->getNodeStatus();
+/*
+  test for minimum value check function
+*/
+TEST_F(AutowareHealthCheckerTestSuite, CHECK_MIN_VALUE)
+{
+  const InputAndResult<double> dataset =
+  {
+    std::make_pair(1.0, AwDiagStatus::FATAL),
+    std::make_pair(3.0, AwDiagStatus::ERROR),
+    std::make_pair(5.0, AwDiagStatus::WARN),
+    std::make_pair(7.0, AwDiagStatus::OK)
+  };
+  for (const auto& data : dataset)
+  {
+    auto ret_min = test_obj_.health_checker_ptr->CHECK_MIN_VALUE(
+      "test", data.first, 6, 4, 2, "test");
+    ASSERT_EQ(ret_min, data.second)
+      << "CHECK_MIN_VALUE function returns invalid value."
+      << "It should be " << static_cast<int>(data.second);
+  }
+}
+
+/*
+  test for maximum value check function
+*/
+TEST_F(AutowareHealthCheckerTestSuite, CHECK_MAX_VALUE)
+{
+  const InputAndResult<double> dataset =
+  {
+    std::make_pair(7.0, AwDiagStatus::FATAL),
+    std::make_pair(5.0, AwDiagStatus::ERROR),
+    std::make_pair(3.0, AwDiagStatus::WARN),
+    std::make_pair(1.0, AwDiagStatus::OK)
+  };
+  for (const auto& data : dataset)
+  {
+    auto ret_max = test_obj_.health_checker_ptr->CHECK_MAX_VALUE(
+      "test", data.first, 2, 4, 6, "test");
+    ASSERT_EQ(ret_max, data.second)
+      << "CHECK_MAX_VALUE function returns invalid value."
+      << "It should be " << static_cast<int>(data.second);
+  }
+}
+
+/*
+  test for range check functions
+*/
+TEST_F(AutowareHealthCheckerTestSuite, CHECK_RANGE)
+{
+  const std::pair<double, double> warn_range = std::make_pair(2.0, 4.0);
+  const std::pair<double, double> error_range = std::make_pair(1.0, 5.0);
+  const std::pair<double, double> fatal_range = std::make_pair(0.0, 6.0);
+  const InputAndResult<double> dataset =
+  {
+    std::make_pair(7.0, AwDiagStatus::FATAL),
+    std::make_pair(5.5, AwDiagStatus::ERROR),
+    std::make_pair(4.5, AwDiagStatus::WARN),
+    std::make_pair(3.0, AwDiagStatus::OK)
+  };
+
+  for (const auto& data : dataset)
+  {
+    auto ret_range = test_obj_.health_checker_ptr->CHECK_RANGE(
+      "test", data.first, warn_range, error_range, fatal_range, "test");
+    ASSERT_EQ(ret_range, data.second)
+      << "CHECK_RANGE function returns invalid value."
+      << "It should be " << static_cast<int>(data.second);
+  }
+}
+
+/*
+  test for bool check functions
+*/
+TEST_F(AutowareHealthCheckerTestSuite, CHECK_TRUE)
+{
+  const InputAndResult<bool> dataset =
+  {
+    std::make_pair(true, AwDiagStatus::FATAL),
+    std::make_pair(false, AwDiagStatus::ERROR),
+    std::make_pair(true, AwDiagStatus::WARN),
+    std::make_pair(false, AwDiagStatus::OK)
+  };
+  for (const auto& data : dataset)
+  {
+    auto ret_bool = test_obj_.health_checker_ptr->CHECK_TRUE(
+      "test", data.first, data.second, "test");
+    ASSERT_EQ(ret_bool, data.second)
+      << "CHECK_TRUE function returns invalid value."
+      << "It should be " << static_cast<int>(data.second);
+  }
+}
+
+/*
+  test for set diag function
+*/
+TEST_F(AutowareHealthCheckerTestSuite, SET_DIAG_STATUS)
+{
+  const InputAndResult<ErrorLevel> dataset =
+  {
+    std::make_pair(AwDiagStatus::FATAL, AwDiagStatus::FATAL),
+    std::make_pair(AwDiagStatus::ERROR, AwDiagStatus::ERROR),
+    std::make_pair(AwDiagStatus::WARN, AwDiagStatus::WARN),
+    std::make_pair(AwDiagStatus::OK, AwDiagStatus::OK)
+  };
+  autoware_system_msgs::DiagnosticStatus status;
+  status.key = "test";
+  for (const auto& data : dataset)
+  {
+    status.level = data.first;
+    auto ret_diag = test_obj_.health_checker_ptr->SET_DIAG_STATUS(status);
+    ASSERT_EQ(ret_diag, data.second)
+      << "SET_DIAG_STATUS function returns invalid value."
+      << "It should be " << static_cast<int>(data.second);
+  }
+}
+
+/*
+  test for node status
+*/
+TEST_F(AutowareHealthCheckerTestSuite, NODE_STATUS)
+{
+  test_obj_.health_checker_ptr->NODE_ACTIVATE();
+  auto ret_active = test_obj_.health_checker_ptr->getNodeStatus();
   ASSERT_EQ(ret_active, true) << "The value must be true";
-  test_autoware_health_checker.node_status_publisher_ptr->NODE_DEACTIVATE();
-  uint8_t ret_inactive =
-      test_autoware_health_checker.node_status_publisher_ptr->getNodeStatus();
+  test_obj_.health_checker_ptr->NODE_DEACTIVATE();
+  auto ret_inactive = test_obj_.health_checker_ptr->getNodeStatus();
   ASSERT_EQ(ret_inactive, false) << "The value must be true";
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   testing::InitGoogleTest(&argc, argv);
   ros::init(argc, argv, "AutowareHealthCheckerTestNode");
+  ros::NodeHandle nh;
   return RUN_ALL_TESTS();
 }
