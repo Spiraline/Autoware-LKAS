@@ -1,0 +1,33 @@
+<launch>
+  <!-- setting path parameter -->
+  <arg name="use_openmp" value="false" />
+  <arg name="get_height" value="true" />
+
+  <!-- vel/pose connect -->
+  <arg name="topic_twist_stamped" default="/estimate_twist" />
+  <arg name="topic_pose_stamped" default="/ndt_pose" />
+
+  <!-- ndt_matching -->
+  <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
+  <include file="$(find lidar_localizer)/launch/ndt_matching.launch">
+    <arg name="method_type" value="3" />
+    <arg name="use_gnss" value="0" />
+    <arg name="get_height" value="true" />
+    <arg name="use_csv_init" value="false" />
+  </include>
+
+  <include file="$(find rubis_cm_pkg)/launch/waypoint_generator.launch">
+    <arg name="waypoint_filename" value="$(env HOME)/autoware.ai/autoware_files/carmaker/documents/pose_waypoints_example.csv" />
+    <!-- <arg name="waypoint_filename" value="$(env HOME)/autoware.ai/autoware_files/carmaker/documents/GPS_waypoints_example.csv" /> -->
+    <arg name="zone_points_filename" value="$(env HOME)/autoware.ai/autoware_files/carmaker/documents/zone_points/zone_points.csv" />
+    <arg name="zone_offset_filename" value="$(env HOME)/autoware.ai/autoware_files/carmaker/documents/zone_points/zone_offset.csv" />
+    <arg name="mode" value="0" /> <!-- 0: POSE(XYZ) / 1: GPS(LLH)-->
+  </include>
+
+  <!-- vel_pose_mux -->
+  <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">
+    <arg name="topic_pose_stamped" value="$(arg topic_pose_stamped)" />
+    <arg name="topic_twist_stamped" value="$(arg topic_twist_stamped)" />
+  </include>
+
+</launch>

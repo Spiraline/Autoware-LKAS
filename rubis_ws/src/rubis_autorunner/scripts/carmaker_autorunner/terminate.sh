@@ -1,0 +1,12 @@
+rosnode kill /carmaker_autorunner
+rosnode kill /base_link_to_imu
+rosnode kill /base_link_to_velodyne
+rosnode kill /imu_cm_republisher
+rosnode kill /map_to_mobility
+rosnode kill /op_global_planner
+rosnode kill /points_map_loader
+rosnode kill /vds_node_localhost_2211
+rosnode kill /vector_map_loader
+rosnode kill /velodyne_to_velodyne_top
+rosnode kill /world_to_map
+rosnode kill /ndt_matching
