@@ -210,7 +210,7 @@ void publishDetectedObjects(const autoware_msgs::CloudClusterArray &in_clusters)
     detected_object.pointcloud = in_clusters.clusters[i].cloud;
     detected_object.convex_hull = in_clusters.clusters[i].convex_hull;
     detected_object.valid = true;
-
+    
     detected_objects.objects.push_back(detected_object);
   }
   _pub_detected_objects.publish(detected_objects);
@@ -266,7 +266,7 @@ void publishCloudClusters(const ros::Publisher *in_publisher, const autoware_msg
     in_publisher->publish(clusters_transformed);
     publishDetectedObjects(clusters_transformed);
   } else
-  {
+  { 
     in_publisher->publish(in_clusters);
     publishDetectedObjects(in_clusters);
   }
@@ -950,13 +950,30 @@ int main(int argc, char **argv)
   cv::generateColors(_colors, 255);
 #endif
 
-  _pub_cluster_cloud = h.advertise<sensor_msgs::PointCloud2>("/points_cluster", 1);
-  _pub_ground_cloud = h.advertise<sensor_msgs::PointCloud2>("/points_ground", 1);
-  _centroid_pub = h.advertise<autoware_msgs::Centroids>("/cluster_centroids", 1);
 
-  _pub_points_lanes_cloud = h.advertise<sensor_msgs::PointCloud2>("/points_lanes", 1);
-  _pub_clusters_message = h.advertise<autoware_msgs::CloudClusterArray>("/detection/lidar_detector/cloud_clusters", 1);
-  _pub_detected_objects = h.advertise<autoware_msgs::DetectedObjectArray>("/detection/lidar_detector/objects", 1);
+
+  std::string label;
+  std::string output_lane_str;
+  std::string output_cluster_str;
+  std::string output_objects_str;
+  std::string point_cluster_str;
+  std::string cluster_centeroids_str;
+  std::string points_ground_str;
+
+  private_nh.param<std::string>("label", label, "center");
+  output_lane_str = std::string("/points_lanes_")+label;
+  output_cluster_str = std::string("/detection/lidar_detector/cloud_clusters_")+label;
+  output_objects_str = std::string("/detection/lidar_detector/objects_")+label;
+  point_cluster_str = std::string("/points_cluster_")+label;
+  cluster_centeroids_str = std::string("/points_ground_")+label;
+  points_ground_str = std::string("/cluster_centroids_")+label;
+
+  _pub_cluster_cloud = h.advertise<sensor_msgs::PointCloud2>(point_cluster_str.c_str(), 1);
+  _pub_ground_cloud = h.advertise<sensor_msgs::PointCloud2>(cluster_centeroids_str.c_str(), 1);
+  _centroid_pub = h.advertise<autoware_msgs::Centroids>(points_ground_str.c_str(), 1);
+  _pub_points_lanes_cloud = h.advertise<sensor_msgs::PointCloud2>(output_lane_str.c_str(), 1);
+  _pub_clusters_message = h.advertise<autoware_msgs::CloudClusterArray>(output_cluster_str.c_str(), 1);
+  _pub_detected_objects = h.advertise<autoware_msgs::DetectedObjectArray>(output_objects_str.c_str(), 1);
 
   std::string points_topic, gridmap_topic;
 

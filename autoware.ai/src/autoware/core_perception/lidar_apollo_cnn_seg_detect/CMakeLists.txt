@@ -20,7 +20,7 @@ catkin_package(
 )
 
 ###CAFFE
-set(CAFFE_PATH "$ENV{HOME}/caffe/distribute")
+#set(CAFFE_PATH "$ENV{HOME}/caffe/distribute")
 
 AW_CHECK_CUDA()
 

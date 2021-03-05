@@ -39,6 +39,9 @@ DecisionMaker::DecisionMaker()
   m_pInitState = 0;
   m_pFollowState = 0;
   m_pAvoidObstacleState = 0;
+  m_pPedestrianState = 0;
+  m_sprintSpeed = -1;
+  m_remainObstacleWaitingTime = 0;
 }
 
 DecisionMaker::~DecisionMaker()
@@ -55,22 +58,34 @@ DecisionMaker::~DecisionMaker()
   delete m_pTrafficLightWaitState;
   delete m_pStopSignWaitState;
   delete m_pStopSignStopState;
+  delete m_pPedestrianState;
 }
 
-void DecisionMaker::Init(const ControllerParams& ctrlParams, const PlannerHNS::PlanningParams& params,const CAR_BASIC_INFO& carInfo)
+void DecisionMaker::Init(const ControllerParams& ctrlParams, const PlannerHNS::PlanningParams& params,const CAR_BASIC_INFO& carInfo, const double sprintSpeed)
    {
-     m_CarInfo = carInfo;
-     m_ControlParams = ctrlParams;
-     m_params = params;
+    m_CarInfo = carInfo;
+    m_ControlParams = ctrlParams;
+    m_params = params;
+    m_sprintSpeed = sprintSpeed;
 
-     m_pidVelocity.Init(0.01, 0.004, 0.01);
+    m_pidVelocity.Init(0.01, 0.004, 0.01);
     m_pidVelocity.Setlimit(m_params.maxSpeed, 0);
+
+    m_pidSprintVelocity.Init(0.01, 0.004, 0.01);
+    m_pidSprintVelocity.Setlimit(sprintSpeed, 0);
+
+    m_pidIntersectionVelocity.Init(0.01, 0.004, 0.01);
+    m_pidIntersectionVelocity.Setlimit(m_params.maxSpeed*0.7, 0);
 
     m_pidStopping.Init(0.05, 0.05, 0.1);
     m_pidStopping.Setlimit(m_params.horizonDistance, 0);
 
     m_pidFollowing.Init(0.05, 0.05, 0.01);
     m_pidFollowing.Setlimit(m_params.minFollowingDistance, 0);
+
+    m_prevTrafficLightID = -1;
+    m_prevTrafficLightSignal = UNKNOWN_LIGHT;
+    m_remainTrafficLightWaitingTime = 0;
 
     InitBehaviorStates();
 
@@ -95,10 +110,17 @@ void DecisionMaker::InitBehaviorStates()
   m_pTrafficLightWaitState  = new TrafficLightWaitStateII(m_pStopState->m_pParams, m_pStopState->GetCalcParams(), m_pGoToGoalState);
   m_pTrafficLightStopState  = new TrafficLightStopStateII(m_pStopState->m_pParams, m_pStopState->GetCalcParams(), m_pGoToGoalState);
 
+  // Added by PHY
+  m_pPedestrianState         = new PedestrianState(m_pStopState->m_pParams, m_pStopState->GetCalcParams(), m_pGoToGoalState);
+
+  m_pIntersectionState         = new IntersectionState(m_pStopState->m_pParams, m_pStopState->GetCalcParams(), m_pGoToGoalState);
+
   m_pGoToGoalState->InsertNextState(m_pAvoidObstacleState);
   m_pGoToGoalState->InsertNextState(m_pStopSignStopState);
   m_pGoToGoalState->InsertNextState(m_pTrafficLightStopState);
   m_pGoToGoalState->InsertNextState(m_pFollowState);
+  m_pGoToGoalState->InsertNextState(m_pPedestrianState);
+  m_pGoToGoalState->InsertNextState(m_pIntersectionState);
   m_pGoToGoalState->decisionMakingCount = 0;//m_params.nReliableCount;
 
   m_pGoalState->InsertNextState(m_pGoToGoalState);
@@ -106,18 +128,25 @@ void DecisionMaker::InitBehaviorStates()
   m_pStopSignWaitState->decisionMakingTime = m_params.stopSignStopTime;
   m_pStopSignWaitState->InsertNextState(m_pStopSignStopState);
   m_pStopSignWaitState->InsertNextState(m_pGoalState);
+  m_pStopSignWaitState->InsertNextState(m_pPedestrianState);
 
+  m_pStopSignStopState->InsertNextState(m_pPedestrianState);
 
   m_pTrafficLightStopState->InsertNextState(m_pTrafficLightWaitState);
+  m_pTrafficLightStopState->InsertNextState(m_pPedestrianState);
 
   m_pTrafficLightWaitState->InsertNextState(m_pTrafficLightStopState);
   m_pTrafficLightWaitState->InsertNextState(m_pGoalState);
+  m_pTrafficLightWaitState->InsertNextState(m_pPedestrianState);
 
   m_pFollowState->InsertNextState(m_pAvoidObstacleState);
   m_pFollowState->InsertNextState(m_pStopSignStopState);
   m_pFollowState->InsertNextState(m_pTrafficLightStopState);
   m_pFollowState->InsertNextState(m_pGoalState);
+  m_pFollowState->InsertNextState(m_pPedestrianState);
   m_pFollowState->decisionMakingCount = 0;//m_params.nReliableCount;
+
+  m_pAvoidObstacleState->InsertNextState(m_pPedestrianState);
 
   m_pInitState->decisionMakingCount = 0;//m_params.nReliableCount;
 
@@ -193,43 +222,110 @@ void DecisionMaker::InitBehaviorStates()
   else
     pValues->currentGoalID = goalID;
 
-   m_iCurrentTotalPathId = pValues->iCurrSafeLane;
+  m_iCurrentTotalPathId = pValues->iCurrSafeLane;
 
-   int stopLineID = -1;
-   int stopSignID = -1;
-   int trafficLightID = -1;
-   double distanceToClosestStopLine = 0;
-   bool bGreenTrafficLight = true;
+  // For Intersection
+  m_params.isInsideIntersection = m_isInsideIntersection;
+  m_params.obstacleinRiskyArea = (m_riskyLeft || m_riskyRight);
+  m_params.closestIntersectionDistance = m_closestIntersectionDistance;
 
+  // std::cout << "isIn : " << m_params.isInsideIntersection << " left : " << m_params.turnLeft << " right : " << m_params.turnRight << std::endl;
 
-    distanceToClosestStopLine = PlanningHelpers::GetDistanceToClosestStopLineAndCheck(m_TotalPath.at(pValues->iCurrSafeLane), state, m_params.giveUpDistance, stopLineID, stopSignID, trafficLightID) - critical_long_front_distance;
+  // For Traffic Signal
 
-    //std::cout << "StopLineID" << stopLineID << ", StopSignID: " << stopSignID << ", TrafficLightID: " << trafficLightID << ", Distance: " << distanceToClosestStopLine << ", MinStopDistance: " << pValues->minStoppingDistance << std::endl;
+  int stopLineID = -1;
+  int stopSignID = -1;
+  double stopLineLength = -1;
+  int trafficLightID = -1;
+  double distanceToClosestStopLine = 0;
+  bool bShouldForward = true;
+  bool traffic_detected = false;
+  double remain_time = 0;
 
-   if(distanceToClosestStopLine > m_params.giveUpDistance && distanceToClosestStopLine < (pValues->minStoppingDistance + 1.0))
-   {
-     if(m_pCurrentBehaviorState->m_pParams->enableTrafficLightBehavior)
-     {
-       pValues->currentTrafficLightID = trafficLightID;
-       //std::cout << "Detected Traffic Light: " << trafficLightID << std::endl;
-       for(unsigned int i=0; i< detectedLights.size(); i++)
-       {
-         if(detectedLights.at(i).id == trafficLightID)
-           bGreenTrafficLight = (detectedLights.at(i).lightState == GREEN_LIGHT);
-       }
-     }
+  distanceToClosestStopLine = PlanningHelpers::CalculateStopLineDistance_RUBIS(m_TotalPath.at(pValues->iCurrSafeLane), state, m_Map.stopLines, stopLineID, stopLineLength, trafficLightID) - critical_long_front_distance;
 
-     if(m_pCurrentBehaviorState->m_pParams->enableStopSignBehavior)
-       pValues->currentStopSignID = stopSignID;
+  // std::cout << "StopLineID : " << stopLineID << ", TrafficLightID : " << trafficLightID << ", Distance: " << distanceToClosestStopLine << ", MinStopDistance: " << pValues->minStoppingDistance << std::endl;
+  // std::cout << "detected Lights # : " << detectedLights.size() << std::endl;
 
-    pValues->stoppingDistances.push_back(distanceToClosestStopLine);
-    //std::cout << "LP => D: " << pValues->distanceToStop() << ", PrevSignID: " << pValues->prevTrafficLightID << ", CurrSignID: " << pValues->currentTrafficLightID << ", Green: " << bGreenTrafficLight << endl;
-   }
+  if(m_pCurrentBehaviorState->m_pParams->enableTrafficLightBehavior){
 
+    for(unsigned int i=0; i< detectedLights.size(); i++)
+    {
+      if(detectedLights.at(i).id == trafficLightID){
+        traffic_detected = true;
 
-   //std::cout << "Distance To Closest: " << distanceToClosestStopLine << ", Stop LineID: " << stopLineID << ", Stop SignID: " << stopSignID << ", TFID: " << trafficLightID << std::endl;
+        ////// V2X without remain time
+        remain_time = m_remainTrafficLightWaitingTime;
+        // new light case
+        if(detectedLights.at(i).id != m_prevTrafficLightID){
+          if(detectedLights.at(i).lightState == GREEN_LIGHT){
+            remain_time = detectedLights.at(i).routine.at(1); // Add yellow light
+          }
+          else{ // For yellow, red case
+            remain_time = 0;
+          }
+        }
+        else if(detectedLights.at(i).lightState != m_prevTrafficLightSignal){
+          if(detectedLights.at(i).lightState == GREEN_LIGHT){ // R -> G
+            // G Time + Y Time
+            remain_time = detectedLights.at(i).routine.at(0) + detectedLights.at(i).routine.at(1);
+          }
+          else if(detectedLights.at(i).lightState == YELLOW_LIGHT){ // G -> Y
+            remain_time = detectedLights.at(i).routine.at(1);
+          }
+          else{ // Y -> R
+            remain_time = detectedLights.at(i).routine.at(2);
+          }
+        }
+        else{
+          remain_time -= 0.01; // spin period;
+          if(remain_time < 0) remain_time = 0.0;
+        }
 
-   pValues->bTrafficIsRed = !bGreenTrafficLight;
+        if(distanceToClosestStopLine < m_params.stopLineDetectionDistance && distanceToClosestStopLine > 0){
+          bool bGreenTrafficLight = !(detectedLights.at(i).lightState == RED_LIGHT);
+          double reachableDistance = m_params.maxSpeed * detectedLights.at(i).remainTime / 2;
+          bShouldForward = (bGreenTrafficLight && reachableDistance > distanceToClosestStopLine) ||
+                        (!bGreenTrafficLight && reachableDistance < distanceToClosestStopLine);
+
+          pValues->currentTrafficLightID = trafficLightID;
+          pValues->stoppingDistances.push_back(distanceToClosestStopLine);
+        }
+
+        m_prevTrafficLightID = trafficLightID;
+        m_prevTrafficLightSignal = detectedLights.at(i).lightState;
+
+        ////// V2X with remain time and stop line length
+        // double remain_time = detectedLights.at(i).remainTime;
+        // if(detectedLights.at(i).lightState == GREEN_LIGHT){ // Add time for yellow lights time
+        //   remain_time += detectedLights.at(i).routine.at(1); // Add yellow light
+        // }
+        // double reachableDistance = m_params.maxSpeed * detectedLights.at(i).remainTime / 2;
+        // bool bGreenTrafficLight = !(detectedLights.at(i).lightState == RED_LIGHT);
+        // bShouldForward = (bGreenTrafficLight && reachableDistance > distanceToClosestStopLine + stopLineLength) ||
+        //               (!bGreenTrafficLight && reachableDistance < distanceToClosestStopLine);
+
+        ////// V2X with remain time without stop line length
+        // double remain_time = detectedLights.at(i).remainTime;
+        // if(detectedLights.at(i).lightState == GREEN_LIGHT){ // Add time for yellow lights time
+        //   remain_time += detectedLights.at(i).routine.at(1); // Add yellow light
+        // }
+        // double reachableDistance = m_params.maxSpeed * detectedLights.at(i).remainTime / 2;
+        // bool bGreenTrafficLight = !(detectedLights.at(i).lightState == RED_LIGHT);
+        // bShouldForward = (bGreenTrafficLight && reachableDistance > distanceToClosestStopLine) ||
+        //               (!bGreenTrafficLight && reachableDistance < distanceToClosestStopLine);
+      }
+    }
+
+    if(!traffic_detected){
+      m_prevTrafficLightID = -1;
+      m_prevTrafficLightSignal = UNKNOWN_LIGHT;
+    }
+
+    m_remainTrafficLightWaitingTime = remain_time;
+  }
+
+   pValues->bTrafficIsRed = !bShouldForward;
 
    if(bEmergencyStop)
   {
@@ -339,6 +435,22 @@ void DecisionMaker::InitBehaviorStates()
   if(average_braking_distance  < m_params.minIndicationDistance)
     average_braking_distance = m_params.minIndicationDistance;
 
+  double minDistanceToRollOut = 0;
+  for(int i=0; i<m_RollOuts.size(); i++){
+    const PlannerHNS::WayPoint rollout_start_waypoint = m_RollOuts.at(i).at(std::min(10, int(m_RollOuts.at(i).size()))-1);
+
+    double direct_distance = hypot(rollout_start_waypoint.pos.y - state.pos.y, rollout_start_waypoint.pos.x - state.pos.x);
+
+    if(minDistanceToRollOut == 0 || minDistanceToRollOut > direct_distance){
+      minDistanceToRollOut = direct_distance;
+      currentBehavior.currTrajectory = i;
+    }
+  }
+
+  // Check turn
+  // Detects whether or not to turning 50m ahead
+  m_turnWaypoint = m_RollOuts.at(currentBehavior.currTrajectory).at(std::min(100, int(m_RollOuts.at(currentBehavior.currTrajectory).size()))-1);
+  
   currentBehavior.indicator = PlanningHelpers::GetIndicatorsFromPath(m_Path, state, average_braking_distance );
 
   return currentBehavior;
@@ -357,12 +469,80 @@ void DecisionMaker::InitBehaviorStates()
   unsigned int point_index = 0;
   double critical_long_front_distance = m_CarInfo.length/2.0;
 
-  if(beh.state == TRAFFIC_LIGHT_STOP_STATE || beh.state == STOP_SIGN_STOP_STATE)
+  if(beh.state == PEDESTRIAN_STATE){
+    double desiredVelocity = -1;
+    return desiredVelocity;
+  }
+  else if(beh.state == INTERSECTION_STATE){
+    
+    max_velocity = m_params.maxSpeed*0.7;
+    double target_velocity = max_velocity;
+
+    double e = target_velocity - CurrStatus.speed;
+
+    m_pidSprintVelocity.getPID(e);
+    m_pidVelocity.getPID(e);
+    double desiredVelocity = m_pidIntersectionVelocity.getPID(e);
+    
+    if(desiredVelocity > max_velocity)
+      desiredVelocity = max_velocity;
+    else if(desiredVelocity < m_params.minSpeed)
+      desiredVelocity = 0;
+
+    // std::cout << "o_a : " << m_params.obstacleinRiskyArea << "f_d : " << beh.followDistance << std::endl;
+    // std::cout << "remain_time : " << m_remainObstacleWaitingTime << std::endl;
+
+    // Wait for predetermined time
+    if(m_remainObstacleWaitingTime > 0){
+      m_remainObstacleWaitingTime--;
+      desiredVelocity = 0;
+    }
+    else if(m_params.obstacleinRiskyArea){
+      // double desiredAcceleration = m_params.maxSpeed * m_params.maxSpeed / 2 / std::max(beh.stopDistance - m_params.stopLineMargin, 0.1);
+      // double desiredVelocity = m_params.maxSpeed - desiredAcceleration * 0.1; // 0.1 stands for delta t.
+      // if(desiredVelocity < 0.5)
+      //   desiredVelocity = 0;
+      desiredVelocity = 0;
+      m_remainObstacleWaitingTime = int(m_obstacleWaitingTimeinIntersection * 100);
+    }
+    // else if(beh.followDistance < 30){
+    //   desiredVelocity = 0;
+    //   m_remainObstacleWaitingTime = int(m_obstacleWaitingTimeinIntersection * 100);
+    // }
+
+    for(unsigned int i = 0; i < m_Path.size(); i++)
+      m_Path.at(i).v = desiredVelocity;
+
+    return desiredVelocity;
+  }
+  else if(beh.state == TRAFFIC_LIGHT_STOP_STATE || beh.state == TRAFFIC_LIGHT_WAIT_STATE)
+  {
+    double desiredAcceleration = m_params.maxSpeed * m_params.maxSpeed / 2 / std::max(beh.stopDistance - m_params.stopLineMargin, 0.1);
+    double desiredVelocity = m_params.maxSpeed - desiredAcceleration * 0.1; // 0.1 stands for delta t.
+    
+    double e = max_velocity - CurrStatus.speed;
+    m_pidSprintVelocity.getPID(e);
+    m_pidVelocity.getPID(e);
+    m_pidIntersectionVelocity.getPID(e);
+
+    if(desiredVelocity < 0.5)
+      desiredVelocity = 0;
+
+    for(unsigned int i = 0; i < m_Path.size(); i++)
+      m_Path.at(i).v = desiredVelocity;
+    return desiredVelocity;
+  }
+  else if(beh.state == STOP_SIGN_STOP_STATE)
   {
     PlanningHelpers::GetFollowPointOnTrajectory(m_Path, info, beh.stopDistance - critical_long_front_distance, point_index);
 
     double e = -beh.stopDistance;
     double desiredVelocity = m_pidStopping.getPID(e);
+
+    double e2 = max_velocity - CurrStatus.speed;
+    m_pidSprintVelocity.getPID(e2);
+    m_pidVelocity.getPID(e2);
+    m_pidIntersectionVelocity.getPID(e2);
 
 //    std::cout << "Stopping : e=" << e << ", desiredPID=" << desiredVelocity << ", PID: " << m_pidStopping.ToString() << std::endl;
 
@@ -375,6 +555,14 @@ void DecisionMaker::InitBehaviorStates()
       m_Path.at(i).v = desiredVelocity;
 
     return desiredVelocity;
+  }
+  else if(beh.state == STOP_SIGN_WAIT_STATE)
+  {
+    double target_velocity = 0;
+    for(unsigned int i = 0; i < m_Path.size(); i++)
+      m_Path.at(i).v = target_velocity;
+
+    return target_velocity;
   }
   else if(beh.state == FOLLOW_STATE)
   {
@@ -405,19 +593,72 @@ void DecisionMaker::InitBehaviorStates()
     return desiredVelocity;
 
   }
-  else if(beh.state == FORWARD_STATE || beh.state == OBSTACLE_AVOIDANCE_STATE )
+  else if(beh.state == FORWARD_STATE)
+  {
+    if(m_sprintSwitch == true){
+      max_velocity = m_sprintSpeed;
+    }
+
+    double target_velocity = max_velocity;
+    bool bSlowBecauseChange=false;
+
+    // std::cout << "curr Traj : " << beh.currTrajectory << ", curr Safe Traj : " << m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory << std::endl;
+    // if(m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory != m_pCurrentBehaviorState->GetCalcParams()->iCentralTrajectory)
+    if(beh.currTrajectory != m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory)
+    {
+      // target_velocity /= fabs(beh.currTrajectory - m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory);
+      target_velocity *= 0.5;
+      bSlowBecauseChange = true;
+    }
+
+    
+    double e = target_velocity - CurrStatus.speed;
+    double desiredVelocity = 0; 
+
+    double sprint_pid_vel, forward_pid_vel;
+    sprint_pid_vel = m_pidSprintVelocity.getPID(e);
+    forward_pid_vel = m_pidVelocity.getPID(e);
+    m_pidIntersectionVelocity.getPID(e);
+
+    if(m_sprintSwitch == true)
+      desiredVelocity = sprint_pid_vel;
+    else
+      desiredVelocity = forward_pid_vel;
+
+
+    if(desiredVelocity>max_velocity)
+      desiredVelocity = max_velocity;
+    else if(desiredVelocity < m_params.minSpeed)
+      desiredVelocity = 0;
+
+    // for(unsigned int i = 0; i < m_Path.size(); i++)
+    //   m_Path.at(i).v = desiredVelocity;
+    for(auto it = m_Path.begin(); it != m_Path.end(); ++it){
+      (*it).v = desiredVelocity;
+    }
+
+    //std::cout << "Target Velocity: " << desiredVelocity << ", Change Slowdown: " << bSlowBecauseChange  << std::endl;
+
+    return desiredVelocity;
+  }
+  else if(beh.state == OBSTACLE_AVOIDANCE_STATE )
   {
     double target_velocity = max_velocity;
     bool bSlowBecauseChange=false;
-    if(m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory != m_pCurrentBehaviorState->GetCalcParams()->iCentralTrajectory)
+    // std::cout << "curr Traj : " << beh.currTrajectory << ", curr Safe Traj : " << m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory << std::endl;
+    // if(m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory != m_pCurrentBehaviorState->GetCalcParams()->iCentralTrajectory)
+    if(beh.currTrajectory != m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory)
     {
-      target_velocity*=0.5;
+      // target_velocity /= fabs(beh.currTrajectory - m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory);
+      target_velocity *= 0.5;
       bSlowBecauseChange = true;
     }
 
     double e = target_velocity - CurrStatus.speed;
     double desiredVelocity = m_pidVelocity.getPID(e);
-
+    m_pidSprintVelocity.getPID(e);    
+    m_pidIntersectionVelocity.getPID(e);
+    
     if(desiredVelocity>max_velocity)
       desiredVelocity = max_velocity;
     else if(desiredVelocity < m_params.minSpeed)
@@ -426,17 +667,9 @@ void DecisionMaker::InitBehaviorStates()
     for(unsigned int i = 0; i < m_Path.size(); i++)
       m_Path.at(i).v = desiredVelocity;
 
-    //std::cout << "Target Velocity: " << desiredVelocity << ", Change Slowdown: " << bSlowBecauseChange  << std::endl;
+    // std::cout << "Target Velocity: " << desiredVelocity << ", Change Slowdown: " << bSlowBecauseChange  << std::endl;
 
     return desiredVelocity;
-  }
-  else if(beh.state == STOP_SIGN_WAIT_STATE || beh.state == TRAFFIC_LIGHT_WAIT_STATE)
-  {
-    double target_velocity = 0;
-    for(unsigned int i = 0; i < m_Path.size(); i++)
-      m_Path.at(i).v = target_velocity;
-
-    return target_velocity;
   }
   else
   {
@@ -459,6 +692,7 @@ void DecisionMaker::InitBehaviorStates()
     const TrajectoryCost& tc,
     const bool& bEmergencyStop)
 {
+
    PlannerHNS::BehaviorState beh;
    state = currPose;
    m_TotalPath.clear();
@@ -475,15 +709,102 @@ void DecisionMaker::InitBehaviorStates()
 
   CalculateImportantParameterForDecisionMaking(vehicleState, goalID, bEmergencyStop, trafficLight, tc);
 
+  CheckTurn();
+  // PrintTurn();
   beh = GenerateBehaviorState(vehicleState);
 
   beh.bNewPlan = SelectSafeTrajectory();
 
   beh.maxVelocity = UpdateVelocityDirectlyToTrajectory(beh, vehicleState, dt);
-
+  
   //std::cout << "Eval_i: " << tc.index << ", Curr_i: " <<  m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory << ", Prev_i: " << m_pCurrentBehaviorState->GetCalcParams()->iPrevSafeTrajectory << std::endl;
 
   return beh;
  }
 
+ // Added by PHY
+  void DecisionMaker::UpdatePedestrianAppearence(const bool pedestrianAppearence){
+    m_params.pedestrianAppearence = pedestrianAppearence;
+  }
+
+  void DecisionMaker::printPedestrianAppearence(){
+    if(m_params.pedestrianAppearence == true){
+      std::cout<<"Pedestrian Appearence: True"<<std::endl;  
+    }
+    else{
+        std::cout<<"Pedestrian Appearence: False"<<std::endl;  
+    }
+
+  }
+
+  void DecisionMaker::CheckTurn(){
+    if(abs(m_turnAngle) > m_turnThreshold){
+      if(m_turnAngle > 0){
+        m_params.turnLeft = true;
+        m_params.turnRight = false;
+      }
+      else{
+        m_params.turnLeft = false;
+        m_params.turnRight = true;
+      }
+    }
+    else{
+      m_params.turnLeft = false;
+      m_params.turnRight = false;
+    }
+  }
+
+  void DecisionMaker::PrintTurn(){
+    std::cout<<"LEFT:"<<m_params.turnLeft<<std::endl;
+    std::cout<<"RIGHT:"<<m_params.turnRight<<std::endl;
+  }
+
+  std::string DecisionMaker::ToString(STATE_TYPE beh)
+  {
+    std::string str = "Unknown";
+    switch(beh)
+    {
+    case PlannerHNS::INITIAL_STATE:
+      str = "Init";
+      break;
+    case PlannerHNS::EMERGENCY_STATE:
+      str = "Emergency";
+      break;
+    case PlannerHNS::FORWARD_STATE:
+      str = "Forward";
+      break;
+    case PlannerHNS::STOPPING_STATE:
+      str = "Stop";
+      break;
+    case PlannerHNS::FINISH_STATE:
+      str = "End";
+      break;
+    case PlannerHNS::FOLLOW_STATE:
+      str = "Follow";
+      break;
+    case PlannerHNS::OBSTACLE_AVOIDANCE_STATE:
+      str = "Swerving";
+      break;
+    case PlannerHNS::TRAFFIC_LIGHT_STOP_STATE:
+      str = "Light Stop";
+      break;
+    case PlannerHNS::TRAFFIC_LIGHT_WAIT_STATE:
+      str = "Light Wait";
+      break;
+    case PlannerHNS::STOP_SIGN_STOP_STATE:
+      str = "Sign Stop";
+      break;
+    case PlannerHNS::STOP_SIGN_WAIT_STATE:
+      str = "Sign Wait";
+      break;
+    case PlannerHNS::INTERSECTION_STATE:
+      str = "Intersection";
+      break;
+    default:
+      str = "Unknown";
+      break;
+    }
+
+    return str;
+  }
 } /* namespace PlannerHNS */

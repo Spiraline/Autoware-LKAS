@@ -994,6 +994,105 @@ bool PlanningHelpers::CompareTrajectories(const std::vector<WayPoint>& path1, co
   return true;
 }
 
+double PlanningHelpers::CalculateStopLineDistance_RUBIS(const std::vector<WayPoint>& path, const WayPoint& p, std::vector<StopLine> stopLines, int& stopLineID, double& stopLineLength, int& trafficLightID){
+  RelativeInfo waypoint_info;
+  GetRelativeInfo(path, p, waypoint_info);
+
+  double closestStopLineDistance = DBL_MAX;
+
+  for(int sl_idx = 0; sl_idx < stopLines.size(); sl_idx++){
+    WayPoint stopLineWP;
+    RelativeInfo stopline_info;
+    stopLineWP.pos = stopLines.at(sl_idx).points.at(0);
+    GetRelativeInfo(path, stopLineWP, stopline_info);
+
+    double localDistance = GetExactDistanceOnTrajectory(path, waypoint_info, stopline_info);
+
+    // std::cout << "localDistance " << sl_idx << " " << localDistance << std::endl;
+
+    if(localDistance > 0 && closestStopLineDistance > localDistance){
+      stopLineID = stopLines.at(sl_idx).id;
+      stopLineLength = stopLines.at(sl_idx).length;
+      trafficLightID = stopLines.at(sl_idx).trafficLightID;
+      closestStopLineDistance = localDistance;
+    }
+  }
+
+  return closestStopLineDistance;
+}
+
+void PlanningHelpers::GetIntersectionCondition(const WayPoint& p, std::vector<Crossing>& crossings, std::vector<PlannerHNS::DetectedObject>& obj_list, int& intersectionID, double& distance, bool& isIntersection, bool& riskyLeftTurn, bool& riskyRightTurn){
+  double closestCrossingDistance = DBL_MAX;
+  int closest_is_idx = -1;
+  int ego_risky_area_idx = -1;
+
+  bool bIsIntersection = false;
+
+  for(int is_idx = 0; is_idx < crossings.size(); is_idx++){
+    double localDistance = hypot(p.pos.y - crossings.at(is_idx).pos.y, p.pos.x - crossings.at(is_idx).pos.x);
+
+    if(closestCrossingDistance > localDistance){
+      closestCrossingDistance = localDistance;
+      intersectionID = crossings.at(is_idx).id;
+      closest_is_idx = is_idx;
+    }
+  }
+
+  distance = closestCrossingDistance;
+
+  if(closestCrossingDistance > 50){
+    isIntersection = false;
+    intersectionID = -1;
+    riskyLeftTurn = false;
+    riskyRightTurn = false;
+    return;
+  }
+
+  for(int i=0; i<4; i++){
+    if(crossings.at(closest_is_idx).risky_area.at(i).PointInsidePolygon(crossings.at(closest_is_idx).risky_area.at(i), p.pos) == true){
+      ego_risky_area_idx = i;
+      bIsIntersection = true;
+      break;
+    }
+  }
+
+  if(!bIsIntersection){
+    isIntersection = false;
+    intersectionID = -1;
+    riskyLeftTurn = false;
+    riskyRightTurn = false;
+    return;
+  }
+  else{
+    riskyLeftTurn = false;
+    riskyRightTurn = false;
+    int next_idx = (ego_risky_area_idx + 1) % 4;
+    int prev_idx = (ego_risky_area_idx + 3) % 4;
+    int diag_idx = (ego_risky_area_idx + 2) % 4;
+    for(unsigned int io=0; io<obj_list.size(); io++) // Object in object list
+    {
+      // std::cout << "v : " << obj_list.at(io).center.v << std::endl;
+      if(crossings.at(closest_is_idx).risky_area.at(next_idx).PointInsidePolygon(crossings.at(closest_is_idx).risky_area.at(next_idx), obj_list.at(io).center.pos) == true){
+      // if(crossings.at(closest_is_idx).risky_area.at(next_idx).PointInsidePolygon(crossings.at(closest_is_idx).risky_area.at(next_idx), obj_list.at(io).center.pos) == true && obj_list.at(io).center.v > 0){
+        // riskyLeftTurn = true;
+      }
+      if(crossings.at(closest_is_idx).risky_area.at(prev_idx).PointInsidePolygon(crossings.at(closest_is_idx).risky_area.at(prev_idx), obj_list.at(io).center.pos) == true){
+      // if(crossings.at(closest_is_idx).risky_area.at(prev_idx).PointInsidePolygon(crossings.at(closest_is_idx).risky_area.at(prev_idx), obj_list.at(io).center.pos) == true && obj_list.at(io).center.v > 0){
+        // riskyLeftTurn = true;
+        // riskyRightTurn = true;
+      }
+      // if(crossings.at(closest_is_idx).risky_area.at(diag_idx).PointInsidePolygon(crossings.at(closest_is_idx).risky_area.at(diag_idx), obj_list.at(io).center.pos) == true){
+      if(crossings.at(closest_is_idx).risky_area.at(diag_idx).PointInsidePolygon(crossings.at(closest_is_idx).risky_area.at(diag_idx), obj_list.at(io).center.pos) == true && obj_list.at(io).center.v > 1){
+        riskyLeftTurn = true;
+        riskyRightTurn = true;
+      }
+    }
+    isIntersection = true;
+  }
+
+  // std::cout << riskyLeftTurn << " " << riskyRightTurn << std::endl;
+}
+
 double PlanningHelpers::GetDistanceToClosestStopLineAndCheck(const std::vector<WayPoint>& path, const WayPoint& p, const double& giveUpDistance, int& stopLineID, int& stopSignID, int& trafficLightID, const int& prevIndex)
 {
   trafficLightID = stopSignID = stopLineID = -1;
@@ -2796,6 +2895,5 @@ double PlanningHelpers::fpprunge ( double x )
 
   return fx;
 }
-
 
 } /* namespace PlannerHNS */

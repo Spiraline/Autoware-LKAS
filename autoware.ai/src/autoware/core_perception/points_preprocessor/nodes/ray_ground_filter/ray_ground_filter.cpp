@@ -47,7 +47,7 @@ void RayGroundFilter::update_config_params(const autoware_config_msgs::ConfigRay
   radial_divider_angle_ = param->radial_divider_angle;
   concentric_divider_distance_ = param->concentric_divider_distance;
   min_height_threshold_ = param->min_height_threshold;
-  clipping_height_ = param->clipping_height;
+  max_clipping_height_ = param->clipping_height;
   min_point_distance_ = param->min_point_distance;
   reclass_distance_threshold_ = param->reclass_distance_threshold;
 }
@@ -252,7 +252,7 @@ void RayGroundFilter::ClassifyPointCloud(const std::vector<PointCloudXYZIRTColor
  * @param in_clip_height Maximum allowed height in the cloud
  * @param out_clipped_cloud_ptr Resultung PointCloud with the points removed
  */
-void RayGroundFilter::ClipCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr in_cloud_ptr, const double in_clip_height,
+void RayGroundFilter::ClipCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr in_cloud_ptr, const double in_max_clip_height, const double in_min_clip_height,
                                 pcl::PointCloud<pcl::PointXYZI>::Ptr out_clipped_cloud_ptr)
 {
   pcl::ExtractIndices<pcl::PointXYZI> extractor;
@@ -262,7 +262,7 @@ void RayGroundFilter::ClipCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr in_cl
 #pragma omp for
   for (size_t i = 0; i < in_cloud_ptr->points.size(); i++)
   {
-    if (in_cloud_ptr->points[i].z > in_clip_height)
+    if (in_cloud_ptr->points[i].z > in_max_clip_height || in_cloud_ptr->points[i].z < in_min_clip_height)
     {
       indices.indices.push_back(i);
     }
@@ -330,6 +330,7 @@ void RayGroundFilter::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& in_s
 
   sensor_msgs::PointCloud2::Ptr trans_sensor_cloud(new sensor_msgs::PointCloud2);
   const bool succeeded = TransformPointCloud(base_frame_, in_sensor_cloud, trans_sensor_cloud);
+  
   if (!succeeded)
   {
     ROS_ERROR_STREAM_THROTTLE(10, "Failed transform from " << base_frame_ << " to "
@@ -343,7 +344,7 @@ void RayGroundFilter::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& in_s
   pcl::PointCloud<pcl::PointXYZI>::Ptr clipped_cloud_ptr(new pcl::PointCloud<pcl::PointXYZI>);
 
   // remove points above certain point
-  ClipCloud(current_sensor_cloud_ptr, clipping_height_, clipped_cloud_ptr);
+  ClipCloud(current_sensor_cloud_ptr, max_clipping_height_, min_clipping_height_, clipped_cloud_ptr);
 
   // remove closer points than a threshold
   pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud_ptr(new pcl::PointCloud<pcl::PointXYZI>);
@@ -410,8 +411,10 @@ void RayGroundFilter::Run()
   ROS_INFO("concentric_divider_distance[meters]: %f", concentric_divider_distance_);
   node_handle_.param("min_height_threshold", min_height_threshold_, 0.05);  // 0.05 meters default
   ROS_INFO("min_height_threshold[meters]: %f", min_height_threshold_);
-  node_handle_.param("clipping_height", clipping_height_, 2.0);  // 2.0 meters default above the car
-  ROS_INFO("clipping_height[meters]: %f", clipping_height_);
+  node_handle_.param("max_clipping_height", max_clipping_height_, 2.0);  // 2.0 meters default above the car
+  ROS_INFO("max_clipping_height[meters]: %f", max_clipping_height_);
+  node_handle_.param("min_clipping_height", min_clipping_height_, -0.5);  // 2.0 meters default above the car
+  ROS_INFO("min_clipping_height[meters]: %f", min_clipping_height_);
   node_handle_.param("min_point_distance", min_point_distance_, 1.85);  // 1.85 meters default
   ROS_INFO("min_point_distance[meters]: %f", min_point_distance_);
   node_handle_.param("reclass_distance_threshold", reclass_distance_threshold_, 0.2);  // 0.5 meters default

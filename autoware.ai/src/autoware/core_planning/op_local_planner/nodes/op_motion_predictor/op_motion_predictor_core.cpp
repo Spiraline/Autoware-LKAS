@@ -47,7 +47,27 @@ MotionPrediction::MotionPrediction()
   pub_ParticlesRviz = nh.advertise<visualization_msgs::MarkerArray>("prediction_particles", 1);
 
   sub_StepSignal = nh.subscribe("/pred_step_signal",     1, &MotionPrediction::callbackGetStepForwardSignals,     this);
-  sub_tracked_objects  = nh.subscribe("/tracked_objects",       1,    &MotionPrediction::callbackGetTrackedObjects,     this);
+  // sub_tracked_objects  = nh.subscribe("/tracked_objects",       1,    &MotionPrediction::callbackGetTrackedObjects,     this);
+  
+  // Setup tf
+  std::string tf_str_list_str;
+  _nh.param<std::string>("/op_motion_predictor/object_tf_list", tf_str_list_str, "[velodyne]");
+  tf_str_list_ = ParseInputStr(tf_str_list_str);
+  InitTF();
+
+  // Init Objects Sub
+  std::string input_object_list_str;
+  _nh.param<std::string>("/op_motion_predictor/input_object_list", input_object_list_str, "[/tracked_objects]");
+  std::vector<std::string> input_object_list = ParseInputStr(input_object_list_str);
+
+
+  for(auto it = input_object_list.begin(); it != input_object_list.end(); ++it){
+    std::string topic = *it;
+    objects_subs_.push_back(nh.subscribe(topic.c_str(), 1, &MotionPrediction::callbackGetTrackedObjects, this));
+    autoware_msgs::DetectedObjectArray msg;
+    object_msg_list_.push_back(msg);
+  }
+  
   sub_current_pose   = nh.subscribe("/current_pose", 10,  &MotionPrediction::callbackGetCurrentPose,     this);
 
   int bVelSource = 1;
@@ -86,6 +106,44 @@ MotionPrediction::MotionPrediction()
 MotionPrediction::~MotionPrediction()
 {
 }
+
+void MotionPrediction::InitTF(){
+  int tf_num = tf_str_list_.size();
+  listener_list_ = std::vector<tf::TransformListener>(tf_num);
+  transform_list_ = std::vector<tf::StampedTransform>(tf_num);
+
+  for(int i = 0; i<tf_num; i++){
+    tf::TransformListener listener;
+    std::string target_frame = tf_str_list_[i];
+    while(1){
+      try{
+        listener_list_[i].waitForTransform("velodyne", target_frame, ros::Time(0), ros::Duration(0.001));
+        listener_list_[i].lookupTransform("velodyne", target_frame, ros::Time(0), transform_list_[i]);
+        break;
+      }
+      catch(tf::TransformException& ex)
+      {
+        // ROS_ERROR("[2] Cannot transform object pose: %s", ex.what());
+      }
+    }
+    std::cout<<"Init tf["<<i<<"] Transform "<<target_frame<<" -> "<<"velodyne is obtained."<<std::endl;
+  }
+}
+
+std::vector<std::string> MotionPrediction::ParseInputStr(std::string str){
+  std::vector<std::string> result;
+  str.erase(str.begin());
+  str.erase(str.end()-1);
+
+  std::istringstream ss(str);
+  std::string token;
+  while(std::getline(ss, token, ',')){
+    result.push_back(token);
+  }
+
+  return result;
+}
+
 
 void MotionPrediction::UpdatePlanningParams(ros::NodeHandle& _nh)
 {
@@ -197,26 +255,87 @@ void MotionPrediction::callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& ms
   bVehicleStatus = true;
 }
 
-void MotionPrediction::callbackGetTrackedObjects(const autoware_msgs::DetectedObjectArrayConstPtr& msg)
+autoware_msgs::DetectedObject MotionPrediction::TransformObjToVeldoyne(const autoware_msgs::DetectedObject& in_obj, tf::StampedTransform &transform){
+  autoware_msgs::DetectedObject out_obj;
+  out_obj = in_obj;
+  // Transform pose
+  geometry_msgs::PoseStamped pose;
+  pose.pose.position.x = out_obj.pose.position.x;
+  pose.pose.position.y = out_obj.pose.position.y;
+  pose.pose.position.z = out_obj.pose.position.z;
+  pose.pose.orientation.x = out_obj.pose.orientation.x;
+  pose.pose.orientation.y = out_obj.pose.orientation.y;
+  pose.pose.orientation.z = out_obj.pose.orientation.z;
+  pose.pose.orientation.w = out_obj.pose.orientation.w;
+
+  TransformPose(pose, pose, transform);                        
+  out_obj.pose = pose.pose;
+
+  // Transform convex hull
+  for(unsigned int j = 0; j < out_obj.convex_hull.polygon.points.size(); j++){
+    geometry_msgs::PoseStamped contour_point;
+    contour_point.pose.position.x = out_obj.convex_hull.polygon.points.at(j).x;
+    contour_point.pose.position.y = out_obj.convex_hull.polygon.points.at(j).y;
+    contour_point.pose.position.z = out_obj.convex_hull.polygon.points.at(j).z;    
+    TransformPose(contour_point, contour_point, transform);        
+          
+    out_obj.convex_hull.polygon.points.at(j).x = (float)contour_point.pose.position.x;
+    out_obj.convex_hull.polygon.points.at(j).y = (float)contour_point.pose.position.y;
+    out_obj.convex_hull.polygon.points.at(j).z = (float)contour_point.pose.position.z;
+  }
+  out_obj.header.frame_id = "velodyne";
+  out_obj.convex_hull.header.frame_id = "velodyne";    
+  out_obj.valid = true;   
+
+  return out_obj;
+}
+
+autoware_msgs::DetectedObjectArray MotionPrediction::TrasformObjAryToVeldoyne(const autoware_msgs::DetectedObjectArray& in_obj, tf::StampedTransform &transform){ 
+  autoware_msgs::DetectedObjectArray out_obj = in_obj;
+  out_obj.objects.clear();
+  for(unsigned int i = 0 ; i <in_obj.objects.size(); i++){
+    autoware_msgs::DetectedObject msg_obj = in_obj.objects.at(i);
+    msg_obj = TransformObjToVeldoyne(msg_obj, transform);
+    out_obj.objects.push_back(msg_obj);
+  }      
+  
+  return out_obj;
+}
+
+void MotionPrediction::callbackGetTrackedObjects(const autoware_msgs::DetectedObjectArrayConstPtr& in_msg)
 {
+  
   UtilityHNS::UtilityH::GetTickCount(m_SensingTimer);
   m_TrackedObjects.clear();
   bTrackedObjects = true;
 
+  // Check frame id of the object is valid
+  std::string target_frame = in_msg->header.frame_id;
+  int obj_idx = getIndex(tf_str_list_, target_frame);
+  if(obj_idx == -1){      
+    std::cout<<target_frame<<std::endl;
+    ROS_ERROR("Cannot find index by frame id");      
+    exit(0);
+  }  
+
+  autoware_msgs::DetectedObjectArray msg; 
+  if(target_frame != "velodyne"){
+    msg = TrasformObjAryToVeldoyne(*in_msg, transform_list_[obj_idx]);  
+  }
+  else{
+    msg = *in_msg;
+  }
+  
+  
   PlannerHNS::DetectedObject obj;
 
-  for(unsigned int i = 0 ; i <msg->objects.size(); i++)
+  for(unsigned int i = 0 ; i <msg.objects.size(); i++)
   {
-    if(msg->objects.at(i).id > 0)
-    {
-      PlannerHNS::ROSHelpers::ConvertFromAutowareDetectedObjectToOpenPlannerDetectedObject(msg->objects.at(i), obj);
+    // if(msg->objects.at(i).id > 0)
+    // {
+      PlannerHNS::ROSHelpers::ConvertFromAutowareDetectedObjectToOpenPlannerDetectedObject(msg.objects.at(i), obj);
       m_TrackedObjects.push_back(obj);
-    }
-//    else
-//    {
-//      std::cout << " Ego Car avoid detecting itself from motion prediction node! ID: " << msg->objects.at(i).id << std::endl;
-//    }
-
+    // }
   }
 
   if(bMap)
@@ -232,16 +351,17 @@ void MotionPrediction::callbackGetTrackedObjects(const autoware_msgs::DetectedOb
     }
 
 
-    m_PredictedResultsResults.objects.clear();
+    object_msg_list_[obj_idx].objects.clear();
     autoware_msgs::DetectedObject pred_obj;
     for(unsigned int i = 0 ; i <m_PredictBeh.m_ParticleInfo_II.size(); i++)
     {
       PlannerHNS::ROSHelpers::ConvertFromOpenPlannerDetectedObjectToAutowareDetectedObject(m_PredictBeh.m_ParticleInfo_II.at(i)->obj, false, pred_obj);
       if(m_PredictBeh.m_ParticleInfo_II.at(i)->best_beh_track)
         pred_obj.behavior_state = m_PredictBeh.m_ParticleInfo_II.at(i)->best_beh_track->best_beh;
-      m_PredictedResultsResults.objects.push_back(pred_obj);
+      // pred_obj = TransformObjToVeldoyne(pred_obj, transform_list_[obj_idx]);
+      object_msg_list_[obj_idx].objects.push_back(pred_obj);
     }
-
+    
     if(m_bEnableCurbObstacles)
     {
       curr_curbs_obstacles.clear();
@@ -250,11 +370,26 @@ void MotionPrediction::callbackGetTrackedObjects(const autoware_msgs::DetectedOb
       for(unsigned int i = 0 ; i <curr_curbs_obstacles.size(); i++)
       {
         PlannerHNS::ROSHelpers::ConvertFromOpenPlannerDetectedObjectToAutowareDetectedObject(curr_curbs_obstacles.at(i), false, pred_obj);
-        m_PredictedResultsResults.objects.push_back(pred_obj);
+        // pred_obj = TransformObjToVeldoyne(pred_obj, transform_list_[obj_idx]);
+        object_msg_list_[obj_idx].objects.push_back(pred_obj);
+      }
+    }
+
+    m_PredictedResultsResults.objects.clear();
+    for(auto it1 = object_msg_list_.begin(); it1 != object_msg_list_.end(); ++it1){
+      auto object_msg_entry = *it1;
+      for(auto it2 = object_msg_entry.objects.begin(); it2 != object_msg_entry.objects.end(); ++it2){
+        auto object_entry = *it2;
+        object_entry.header.frame_id = "velodyne";
+        object_entry.convex_hull.header.frame_id = "velodyne";
+        object_entry.valid=true;
+        m_PredictedResultsResults.objects.push_back(object_entry);
       }
     }
 
     m_PredictedResultsResults.header.stamp = ros::Time().now();
+    m_PredictedResultsResults.header.frame_id = "velodyne";
+    
     pub_predicted_objects_trajectories.publish(m_PredictedResultsResults);
   }
 }
@@ -464,6 +599,69 @@ void MotionPrediction::MainLoop()
 
     loop_rate.sleep();
   }
+}
+
+void MotionPrediction::TransformPose(const geometry_msgs::PoseStamped &in_pose, geometry_msgs::PoseStamped& out_pose, const tf::StampedTransform &in_transform)
+{
+
+  tf::Vector3 in_pos(in_pose.pose.position.x,
+                     in_pose.pose.position.y,
+                     in_pose.pose.position.z);
+  tf::Quaternion in_quat(in_pose.pose.orientation.x,
+                         in_pose.pose.orientation.y,
+                         in_pose.pose.orientation.w,
+                         in_pose.pose.orientation.z);
+
+  tf::Vector3 in_pos_t = in_transform * in_pos;
+  tf::Quaternion in_quat_t = in_transform * in_quat;
+  
+  out_pose.header = in_pose.header;
+  out_pose.pose.position.x = in_pos_t.x();
+  out_pose.pose.position.y = in_pos_t.y();
+  out_pose.pose.position.z = in_pos_t.z();
+  out_pose.pose.orientation.x = in_quat_t.x();
+  out_pose.pose.orientation.y = in_quat_t.y();
+  out_pose.pose.orientation.z = in_quat_t.z();
+  out_pose.pose.orientation.w = in_quat_t.w();
+
+
+  return;
+}
+
+int MotionPrediction::getIndex(std::vector<std::string> v, std::string K)
+{
+    int index = -1;
+    auto it = find(v.begin(), v.end(), K);
+    // If element was found
+    if (it != v.end()) 
+    {
+        // calculating the index
+        // of K
+        index = it - v.begin();
+        return index;
+    }
+    else {
+        // If the element is not
+        // present in the vector
+        index = -1;
+    }
+
+    K.erase(K.begin());
+    it = find(v.begin(), v.end(), K);
+    // If element was found
+    if (it != v.end()) 
+    {
+        // calculating the index
+        // of K
+        index = it - v.begin();
+        return index;
+    }
+    else {
+        // If the element is not
+        // present in the vector
+        index = -1;
+    }
+    return index;
 }
 
 //Mapping Section

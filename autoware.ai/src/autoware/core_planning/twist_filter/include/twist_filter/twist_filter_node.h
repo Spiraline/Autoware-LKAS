@@ -24,6 +24,7 @@
 #include <autoware_health_checker/health_checker/health_checker.h>
 #include <autoware_msgs/ControlCommandStamped.h>
 #include <autoware_config_msgs/ConfigTwistFilter.h>
+#include <std_msgs/Bool.h>
 
 namespace twist_filter_node
 {
@@ -46,12 +47,21 @@ private:
 
   // subscribers
   ros::Subscriber twist_sub_, ctrl_sub_, config_sub_;
+  // Added by PHY
+  ros::Subscriber emergency_stop_sub_;
+  
+  bool emergency_stop_;
+  int max_stop_count_;
+  int current_stop_count_;
 
   void configCallback(const autoware_config_msgs::ConfigTwistFilterConstPtr& config);
   void twistCmdCallback(const geometry_msgs::TwistStampedConstPtr& msg);
   void ctrlCmdCallback(const autoware_msgs::ControlCommandStampedConstPtr& msg);
   void checkTwist(const twist_filter::Twist twist, const twist_filter::Twist twist_prev, const double& dt);
   void checkCtrl(const twist_filter::Ctrl ctrl, const twist_filter::Ctrl ctrl_prev, const double& dt);
+
+  //Added by PHY
+  void emergencyStopCallback(const std_msgs::Bool& msg);
 };
 
 }  // namespace twist_filter_node

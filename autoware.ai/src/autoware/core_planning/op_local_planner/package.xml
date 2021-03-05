@@ -24,4 +24,6 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>libwaypoint_follower</depend>
+  <depend>yaml-cpp</depend>
+
 </package>

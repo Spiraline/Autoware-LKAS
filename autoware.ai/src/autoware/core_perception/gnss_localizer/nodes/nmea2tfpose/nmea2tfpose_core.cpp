@@ -67,6 +67,7 @@ void Nmea2TFPoseNode::publishPoseStamped()
   pose.pose.position.y = geo_.x();
   pose.pose.position.z = geo_.z();
   pose.pose.orientation = tf::createQuaternionMsgFromRollPitchYaw(roll_, pitch_, yaw_);
+  std::cout<<"##"<<roll_<<"/"<<pitch_<<"/"<<yaw_<<std::endl;
   pub1_.publish(pose);
 }
 
@@ -154,11 +155,18 @@ void Nmea2TFPoseNode::convert(std::vector<std::string> nmea, ros::Time current_s
 void Nmea2TFPoseNode::callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg)
 {
   current_time_ = msg->header.stamp;
+  std::cout<<msg->sentence<<std::endl;
   convert(split(msg->sentence), msg->header.stamp);
 
   double timeout = 10.0;
   // if orientation_stamp_ is 0 then no "QQ" sentence was ever received,
   // so orientation should be computed from offsets
+
+  // publishPoseStamped();
+  // publishTF();
+  // return;
+
+
   if (orientation_stamp_.isZero()
       || fabs(orientation_stamp_.toSec() - msg->header.stamp.toSec()) > timeout)
   {

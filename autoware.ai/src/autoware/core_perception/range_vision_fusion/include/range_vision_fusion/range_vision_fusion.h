@@ -95,6 +95,9 @@ class ROSRangeVisionFusionApp
   double person_width_, person_height_, person_depth_;
   double truck_width_, truck_depth_, truck_height_;
 
+  int camera_area_;
+  double vision_area_ratio_threshold_;
+
   size_t empty_frames_;
 
   typedef

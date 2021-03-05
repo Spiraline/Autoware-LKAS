@@ -36,6 +36,8 @@
 #include <vector>
 #include <memory>
 
+#include <XmlRpcException.h>
+
 namespace waypoint_follower
 {
 enum class Mode : int32_t
@@ -51,6 +53,17 @@ typename std::underlying_type<T>::type enumToInteger(T t)
 {
   return static_cast<typename std::underlying_type<T>::type>(t);
 }
+
+class DynamicParams
+{
+public:
+  DynamicParams();
+
+  double min_vel;
+  double max_vel;
+  double lookahead_ratio;
+  double lookahead_distance;
+};
 
 class PurePursuitNode
 {
@@ -96,6 +109,11 @@ private:
   // the next waypoint must be outside of this threshold.
   double minimum_lookahead_distance_;
 
+  // Added by PHY
+  bool dynamic_param_flag_;
+  std::vector<DynamicParams> dynamic_params;
+
+
   // callbacks
   void callbackFromConfig(
     const autoware_config_msgs::ConfigWaypointFollowerConstPtr& config);
@@ -117,6 +135,10 @@ private:
     const std::vector<autoware_msgs::Waypoint>& waypoints) const;
   void connectVirtualLastWaypoints(
     autoware_msgs::Lane* expand_lane, LaneDirection direction);
+  
+  // Added by PHY
+  void setLookaheadParamsByVel();
+
 
   int getSgn() const;
   double computeLookaheadDistance() const;

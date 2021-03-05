@@ -69,7 +69,8 @@ private:
   double radial_divider_angle_;         // distance in rads between dividers
   double concentric_divider_distance_;  // distance in meters between concentric divisions
   double min_height_threshold_;         // minimum height threshold regardless the slope, useful for close points
-  double clipping_height_;              // the points higher than this will be removed from the input cloud.
+  double max_clipping_height_;          // the points higher than this will be removed from the input cloud.
+  double min_clipping_height_;          // the points lower than this will be removed from the input cloud.
   double min_point_distance_;           // minimum distance from the origin to consider a point as valid
   double reclass_distance_threshold_;   // distance between points at which re classification will occur
 
@@ -142,7 +143,7 @@ private:
    * @param in_clip_height Maximum allowed height in the cloud
    * @param out_clipped_cloud_ptr Resultung PointCloud with the points removed
    */
-  void ClipCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr in_cloud_ptr, const double in_clip_height,
+  void ClipCloud(const pcl::PointCloud<pcl::PointXYZI>::Ptr in_cloud_ptr, const double in_max_clip_height, const double in_min_clip_height,
                  pcl::PointCloud<pcl::PointXYZI>::Ptr out_clipped_cloud_ptr);
 
   /*!

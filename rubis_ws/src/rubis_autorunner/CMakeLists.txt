@@ -41,15 +41,3 @@ target_link_libraries(lgsvl_triple_lidar_autorunner
   ${catkin_LIBRARIES}
   ros_autorunner_lib
 )
-
-add_executable(carmaker_autorunner
-  include/carmaker_autorunner/carmaker_autorunner.h
-  src/carmaker_autorunner/carmaker_autorunner.cpp
-  src/carmaker_autorunner/carmaker_autorunner_node.cpp
-)
-
-add_dependencies(carmaker_autorunner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(carmaker_autorunner
-  ${catkin_LIBRARIES}
-  ros_autorunner_lib
-)

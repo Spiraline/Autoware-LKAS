@@ -100,7 +100,6 @@ BehaviorStateMachine* BehaviorStateMachine::FindBehaviorState(const STATE_TYPE& 
       return pState;
     }
   }
-
   return nullptr;
 }
 
@@ -120,6 +119,7 @@ BehaviorStateMachine::~BehaviorStateMachine()
 
 BehaviorStateMachine* ForwardState::GetNextState()
 {
+  //  std::cout<<m_pParams->pedestrianAppearence<<std::endl;
   if(UtilityH::GetTimeDiffNow(m_StateTimer) < decisionMakingTime)
     return this; //return this behavior only , without reset
 
@@ -350,13 +350,19 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
 
   if(pCParams->currentGoalID != pCParams->prevGoalID)
     return FindBehaviorState(GOAL_STATE);
-
+  else if(m_pParams->pedestrianAppearence){
+    return FindBehaviorState(PEDESTRIAN_STATE);
+  }
+  // hjw added
   else if(m_pParams->enableTrafficLightBehavior
         && pCParams->currentTrafficLightID > 0
-        && pCParams->bTrafficIsRed
-        && pCParams->currentTrafficLightID != pCParams->prevTrafficLightID)
+        && pCParams->bTrafficIsRed)
+        // && pCParams->currentTrafficLightID != pCParams->prevTrafficLightID)
       return FindBehaviorState(TRAFFIC_LIGHT_STOP_STATE);
-
+  else if(m_pParams->isInsideIntersection
+    && (m_pParams->turnLeft || m_pParams->turnRight)){
+    return FindBehaviorState(INTERSECTION_STATE);
+  }
   else if(m_pParams->enableStopSignBehavior
       && pCParams->currentStopSignID > 0
       && pCParams->currentStopSignID != pCParams->prevStopSignID)
@@ -381,11 +387,12 @@ BehaviorStateMachine* FollowStateII::GetNextState()
 
   if(pCParams->currentGoalID != pCParams->prevGoalID)
     return FindBehaviorState(GOAL_STATE);
-
+  else if(m_pParams->pedestrianAppearence)
+    return FindBehaviorState(PEDESTRIAN_STATE);
   else if(m_pParams->enableTrafficLightBehavior
         && pCParams->currentTrafficLightID > 0
-        && pCParams->bTrafficIsRed
-        && pCParams->currentTrafficLightID != pCParams->prevTrafficLightID)
+        && pCParams->bTrafficIsRed)
+        // && pCParams->currentTrafficLightID != pCParams->prevTrafficLightID)
       return FindBehaviorState(TRAFFIC_LIGHT_STOP_STATE);
 
   else if(m_pParams->enableStopSignBehavior
@@ -408,10 +415,17 @@ BehaviorStateMachine* FollowStateII::GetNextState()
 
 BehaviorStateMachine* SwerveStateII::GetNextState()
 {
+  if(m_pParams->pedestrianAppearence)
+    return FindBehaviorState(PEDESTRIAN_STATE);
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   pCParams->iPrevSafeTrajectory = pCParams->iCurrSafeTrajectory;
   pCParams->bRePlan = true;
+
+  // if(pCParams->iCurrSafeTrajectory != pCParams->iPrevSafeTrajectory)
+  //   return FindBehaviorState(FORWARD_STATE);
+  // else
+  //   return FindBehaviorState(this->m_Behavior);
 
   return FindBehaviorState(FORWARD_STATE);
 }
@@ -448,10 +462,11 @@ BehaviorStateMachine* MissionAccomplishedStateII::GetNextState()
 BehaviorStateMachine* StopSignStopStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
-
+  
   if(pCParams->currentGoalID != pCParams->prevGoalID)
     return FindBehaviorState(GOAL_STATE);
-
+  else if(m_pParams->pedestrianAppearence)
+    return FindBehaviorState(PEDESTRIAN_STATE);
   else if(pCParams->currentVelocity < m_zero_velocity)
     return FindBehaviorState(STOP_SIGN_WAIT_STATE);
 
@@ -463,7 +478,8 @@ BehaviorStateMachine* StopSignWaitStateII::GetNextState()
 {
   if(UtilityH::GetTimeDiffNow(m_StateTimer) < decisionMakingTime)
     return this;
-
+  else if(m_pParams->pedestrianAppearence)
+    return FindBehaviorState(PEDESTRIAN_STATE);
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   pCParams->prevStopSignID = pCParams->currentStopSignID;
@@ -474,9 +490,10 @@ BehaviorStateMachine* StopSignWaitStateII::GetNextState()
 BehaviorStateMachine* TrafficLightStopStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
-
+  if(m_pParams->pedestrianAppearence)
+    return FindBehaviorState(PEDESTRIAN_STATE);
   //std::cout << "Stopping for trafficLight "  << std::endl;
-  if(!pCParams->bTrafficIsRed)
+  else if(!pCParams->bTrafficIsRed)
   {
     //std::cout << "Color Changed Stopping for trafficLight "  << std::endl;
     pCParams->prevTrafficLightID = pCParams->currentTrafficLightID;
@@ -500,8 +517,9 @@ BehaviorStateMachine* TrafficLightWaitStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   //std::cout << "Wait for trafficLight "  << std::endl;
-
-  if(!pCParams->bTrafficIsRed)
+  if(m_pParams->pedestrianAppearence)
+    return FindBehaviorState(PEDESTRIAN_STATE);
+  else if(!pCParams->bTrafficIsRed)
   {
     pCParams->prevTrafficLightID = pCParams->currentTrafficLightID;
     return FindBehaviorState(FORWARD_STATE);
@@ -513,6 +531,30 @@ BehaviorStateMachine* TrafficLightWaitStateII::GetNextState()
   else
     return FindBehaviorState(this->m_Behavior); // return and reset
 
+}
+
+BehaviorStateMachine* PedestrianState::GetNextState()
+{
+  if(m_pParams->pedestrianAppearence){
+    return FindBehaviorState(this->m_Behavior);
+  }
+  else
+    return FindBehaviorState(FORWARD_STATE);
+}
+
+BehaviorStateMachine* IntersectionState::GetNextState()
+{
+  PreCalculatedConditions* pCParams = GetCalcParams();
+  if(m_pParams->closestIntersectionDistance < 35){
+    return FindBehaviorState(this->m_Behavior);
+  }
+  else if(m_pParams->enableTrafficLightBehavior
+        && pCParams->currentTrafficLightID > 0
+        && pCParams->bTrafficIsRed)
+        // && pCParams->currentTrafficLightID != pCParams->prevTrafficLightID)
+      return FindBehaviorState(TRAFFIC_LIGHT_STOP_STATE);
+  else
+    return FindBehaviorState(FORWARD_STATE);
 }
 
 } /* namespace PlannerHNS */

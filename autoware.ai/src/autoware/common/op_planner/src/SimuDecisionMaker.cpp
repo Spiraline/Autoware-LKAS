@@ -231,7 +231,7 @@ void SimuDecisionMaker::FirstLocalizeMe(const WayPoint& initCarPos)
 
   UpdateCurrentLane(m_MaxLaneSearchDistance);
 
-  PlannerHNS::TrajectoryCost tc = m_TrajectoryCostsCalculator.DoOneStepStatic(m_RollOuts, m_TotalPath.at(m_iCurrentTotalPathId), state,  m_params, m_CarInfo, vehicleState, objects);
+  PlannerHNS::TrajectoryCost tc = m_TrajectoryCostsCalculator.DoOneStepStatic(m_RollOuts, m_TotalPath.at(m_iCurrentTotalPathId), state,  m_params, m_CarInfo, vehicleState, objects, PlannerHNS::FORWARD_STATE);
 
   //std::cout << "Detected Objects Distance: " << tc.closest_obj_distance << ", N RollOuts: " << m_RollOuts.size() << std::endl;
 

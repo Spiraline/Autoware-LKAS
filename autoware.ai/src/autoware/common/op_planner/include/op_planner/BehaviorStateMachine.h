@@ -29,6 +29,8 @@ public:
   double decisionMakingTime;
   int decisionMakingCount;
   double m_zero_velocity;
+  bool m_turn_left = false;
+  bool m_turn_right = false;
 
   PreCalculatedConditions* GetCalcParams()
   {
@@ -269,6 +271,24 @@ public:
   TrafficLightWaitStateII(PlanningParams* pParams, PreCalculatedConditions* pPreCalcVal, BehaviorStateMachine* pNextState)
   : BehaviorStateMachine(pParams, pPreCalcVal, pNextState){m_Behavior = TRAFFIC_LIGHT_WAIT_STATE;}
   virtual ~TrafficLightWaitStateII(){}
+  virtual BehaviorStateMachine* GetNextState();
+};
+
+class PedestrianState : public BehaviorStateMachine
+{
+public:
+  PedestrianState(PlanningParams* pParams, PreCalculatedConditions* pPreCalcVal, BehaviorStateMachine* pNextState)
+  : BehaviorStateMachine(pParams, pPreCalcVal, pNextState){m_Behavior = PEDESTRIAN_STATE;}
+  virtual ~PedestrianState(){}
+  virtual BehaviorStateMachine* GetNextState();
+};
+
+class IntersectionState : public BehaviorStateMachine
+{
+public:
+  IntersectionState(PlanningParams* pParams, PreCalculatedConditions* pPreCalcVal, BehaviorStateMachine* pNextState)
+  : BehaviorStateMachine(pParams, pPreCalcVal, pNextState){m_Behavior = INTERSECTION_STATE;}
+  virtual ~IntersectionState(){}
   virtual BehaviorStateMachine* GetNextState();
 };
 

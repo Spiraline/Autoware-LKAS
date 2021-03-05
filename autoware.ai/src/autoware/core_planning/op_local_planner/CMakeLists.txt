@@ -22,6 +22,11 @@ find_package(
     vector_map_msgs
 )
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
+find_path(YAML_CPP_INCLUDE_DIR NAMES yaml_cpp.h PATHS ${YAML_CPP_INCLUDE_DIRS})
+find_library(YAML_CPP_LIBRARY NAMES YAML_CPP PATHS ${YAML_CPP_LIBRARIES})
+
 catkin_package(
   INCLUDE_DIRS include
 )
@@ -29,6 +34,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDE_DIRS}
 )
 
 link_directories(lib)
@@ -66,7 +72,7 @@ add_executable(
   nodes/op_motion_predictor/op_motion_predictor_core.cpp
 )
 
-target_link_libraries(op_motion_predictor ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(op_motion_predictor ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${YAML_CPP_INCLUDE_DIRS})
 
 add_dependencies(
   op_common_params

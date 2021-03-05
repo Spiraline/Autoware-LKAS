@@ -927,6 +927,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
   if (map_loaded == 1 && init_pos_set == 1)
   {
+
     matching_start = std::chrono::system_clock::now();
 
     static tf::TransformBroadcaster br;

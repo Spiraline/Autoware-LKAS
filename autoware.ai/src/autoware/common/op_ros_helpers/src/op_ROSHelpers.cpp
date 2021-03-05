@@ -1065,6 +1065,12 @@ std::string ROSHelpers::GetBehaviorNameFromCode(const PlannerHNS::STATE_TYPE& be
   case PlannerHNS::STOP_SIGN_WAIT_STATE:
     str = "Sign Wait";
     break;
+  case PlannerHNS::PEDESTRIAN_STATE:
+    str = "Pedestrian";
+    break;
+  case PlannerHNS::INTERSECTION_STATE:
+    str = "Intersection";
+    break;
   default:
     str = "Unknown";
     break;
@@ -1565,6 +1571,7 @@ void ROSHelpers::GetTrafficLightForVisualization(std::vector<PlannerHNS::Traffic
 
 void ROSHelpers::ConvertFromAutowareDetectedObjectToOpenPlannerDetectedObject(const autoware_msgs::DetectedObject& det_obj, PlannerHNS::DetectedObject& obj)
 {
+  obj.header = det_obj.header;
   obj.id = det_obj.id;
   obj.label = det_obj.label;
   obj.l = det_obj.dimensions.x;
@@ -1581,6 +1588,11 @@ void ROSHelpers::ConvertFromAutowareDetectedObjectToOpenPlannerDetectedObject(co
   obj.acceleration_desc = det_obj.velocity.linear.z;
   obj.bVelocity = det_obj.velocity_reliable;
   obj.bDirection = det_obj.pose_reliable;
+
+  obj.image_x = det_obj.x;
+  obj.image_y = det_obj.y;
+  obj.image_width = det_obj.width;
+  obj.image_height = det_obj.height;
 
   if(det_obj.indicator_state == 0)
     obj.indicator_state = PlannerHNS::INDICATOR_LEFT;
@@ -1623,6 +1635,7 @@ void ROSHelpers::ConvertFromOpenPlannerDetectedObjectToAutowareDetectedObject(co
   else
     obj.id = det_obj.id;
 
+  obj.header = det_obj.header;
   obj.label = det_obj.label;
   obj.indicator_state = det_obj.indicator_state;
   obj.dimensions.x = det_obj.l;
@@ -1639,6 +1652,11 @@ void ROSHelpers::ConvertFromOpenPlannerDetectedObjectToAutowareDetectedObject(co
   obj.velocity.linear.z = det_obj.acceleration_desc;
   obj.velocity_reliable = det_obj.bVelocity;
   obj.pose_reliable = det_obj.bDirection;
+
+  obj.x = det_obj.image_x;
+  obj.y = det_obj.image_y;
+  obj.width = det_obj.image_width;
+  obj.height = det_obj.image_height;
 
   geometry_msgs::Point32 p;
   obj.convex_hull.polygon.points.clear();

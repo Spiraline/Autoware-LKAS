@@ -18,6 +18,9 @@
 #define OP_MOTION_PREDICTION
 
 #include <ros/ros.h>
+#include <ros/time.h>
+
+#include <sstream>
 
 #include "vector_map_msgs/PointArray.h"
 #include "vector_map_msgs/LaneArray.h"
@@ -41,6 +44,7 @@
 #include <autoware_can_msgs/CANInfo.h>
 #include <autoware_msgs/DetectedObjectArray.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <tf/transform_listener.h>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/BehaviorPrediction.h"
@@ -96,6 +100,13 @@ protected:
 
   timespec m_SensingTimer;
 
+  // Object Msg List
+  std::vector<autoware_msgs::DetectedObjectArray> object_msg_list_;  
+
+  // TF
+  std::vector<std::string> tf_str_list_;
+  std::vector<tf::TransformListener> listener_list_;
+  std::vector<tf::StampedTransform> transform_list_;
 
   ros::NodeHandle nh;
   ros::Publisher pub_predicted_objects_trajectories;
@@ -104,7 +115,7 @@ protected:
   ros::Publisher pub_ParticlesRviz;
 
   // define subscribers.
-  ros::Subscriber sub_tracked_objects    ;
+  std::vector<ros::Subscriber> objects_subs_    ;
   ros::Subscriber sub_current_pose     ;
   ros::Subscriber sub_current_velocity  ;
   ros::Subscriber sub_robot_odom      ;
@@ -123,6 +134,12 @@ protected:
   void VisualizePrediction();
   void UpdatePlanningParams(ros::NodeHandle& _nh);
   void GenerateCurbsObstacles(std::vector<PlannerHNS::DetectedObject>& curb_obstacles);
+  std::vector<std::string> ParseInputStr(std::string str);
+  int getIndex(std::vector<std::string> v, std::string K);
+  void InitTF();
+  void TransformPose(const geometry_msgs::PoseStamped &in_pose, geometry_msgs::PoseStamped& out_pose, const tf::StampedTransform &in_transform);
+  autoware_msgs::DetectedObject TransformObjToVeldoyne(const autoware_msgs::DetectedObject& in_obj, tf::StampedTransform &transform);
+  autoware_msgs::DetectedObjectArray TrasformObjAryToVeldoyne(const autoware_msgs::DetectedObjectArray& in_obj, tf::StampedTransform &transform);
 
 public:
   MotionPrediction();

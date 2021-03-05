@@ -176,6 +176,10 @@ void Yolo3DetectorNode::convert_rect_to_image_obj(std::vector< RectClassScore<fl
                     obj.label = "unknown";
             }
             obj.valid = true;
+            obj.pose.orientation.x = 0;
+            obj.pose.orientation.y = 0;
+            obj.pose.orientation.z = 0;
+            obj.pose.orientation.w = 1;
 
             out_message.objects.push_back(obj);
 

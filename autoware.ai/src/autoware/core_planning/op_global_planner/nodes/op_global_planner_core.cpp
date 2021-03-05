@@ -37,6 +37,17 @@ GlobalPlanner::GlobalPlanner()
   nh.getParam("/op_global_planner/enableDynamicMapUpdate" , m_params.bEnableDynamicMapUpdate);
   nh.getParam("/op_global_planner/mapFileName" , m_params.KmlMapPath);
 
+  bool use_static_goal = false;
+  double goal_pose_x, goal_pose_y, goal_pose_z, goal_ori_x, goal_ori_y, goal_ori_z, goal_ori_w;
+  nh.param<bool>("/op_global_planner/use_static_goal", use_static_goal, false);
+  nh.param<double>("/op_global_planner/goal_pose_x", goal_pose_x, -1);
+  nh.param<double>("/op_global_planner/goal_pose_y", goal_pose_y, -1);
+  nh.param<double>("/op_global_planner/goal_pose_z", goal_pose_z, -1);
+  nh.param<double>("/op_global_planner/goal_ori_x", goal_ori_x, -1);
+  nh.param<double>("/op_global_planner/goal_ori_y", goal_ori_y, -1);
+  nh.param<double>("/op_global_planner/goal_ori_z", goal_ori_z, -1);
+  nh.param<double>("/op_global_planner/goal_ori_w", goal_ori_w, -1);  
+
   int iSource = 0;
   nh.getParam("/op_global_planner/mapSource", iSource);
   if(iSource == 0)
@@ -51,6 +62,16 @@ GlobalPlanner::GlobalPlanner()
   m_OriginPos.position.x  = transform.getOrigin().x();
   m_OriginPos.position.y  = transform.getOrigin().y();
   m_OriginPos.position.z  = transform.getOrigin().z();
+
+  if(use_static_goal == true){
+    geometry_msgs::Quaternion orientation;
+    orientation.x = goal_ori_x;
+    orientation.y = goal_ori_y;
+    orientation.z = goal_ori_z;
+    orientation.w = goal_ori_w;
+    PlannerHNS::WayPoint wp = PlannerHNS::WayPoint(goal_pose_x, goal_pose_y, goal_pose_z, tf::getYaw(orientation));
+    m_GoalsPos.push_back(wp);
+  }
 
   pub_Paths = nh.advertise<autoware_msgs::LaneArray>("lane_waypoints_array", 1, true);
   pub_PathsRviz = nh.advertise<visualization_msgs::MarkerArray>("global_waypoints_rviz", 1, true);
@@ -438,6 +459,7 @@ void GlobalPlanner::MainLoop()
             m_MapRaw.pVectors->m_data_list, m_MapRaw.pCurbs->m_data_list, m_MapRaw.pRoadedges->m_data_list, m_MapRaw.pWayAreas->m_data_list,
             m_MapRaw.pCrossWalks->m_data_list, m_MapRaw.pNodes->m_data_list, conn_data,
             m_MapRaw.pLanes, m_MapRaw.pPoints, m_MapRaw.pNodes, m_MapRaw.pLines, PlannerHNS::GPSPoint(), m_Map, true, m_params.bEnableLaneChange, false);
+
       }
       else if(m_MapRaw.GetVersion()==1)
       {

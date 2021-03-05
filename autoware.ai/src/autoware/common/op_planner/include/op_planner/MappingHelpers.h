@@ -14,7 +14,7 @@
 #include "op_utility/UtilityH.h"
 #include "op_utility/DataRW.h"
 #include "tinyxml.h"
-
+#include <XmlRpcValue.h>
 
 namespace PlannerHNS {
 
@@ -212,6 +212,10 @@ public:
   static void LinkLanesPointers(PlannerHNS::RoadNetwork& map);
 
   static void GetMapMaxIds(PlannerHNS::RoadNetwork& map);
+
+  static void ConstructRoadNetwork_RUBIS(PlannerHNS::RoadNetwork& map, XmlRpc::XmlRpcValue tl_list, XmlRpc::XmlRpcValue sl_list);
+
+  static void ConstructIntersection_RUBIS(std::vector<PlannerHNS::Crossing>& crossing, XmlRpc::XmlRpcValue is_list);
 
   static double m_USING_VER_ZERO;
 

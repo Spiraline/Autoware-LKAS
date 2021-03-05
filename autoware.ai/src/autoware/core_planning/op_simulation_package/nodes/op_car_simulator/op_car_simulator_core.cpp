@@ -50,7 +50,7 @@ OpenPlannerCarSimulator::OpenPlannerCarSimulator()
   m_PredControl.Init(m_ControlParams, m_CarInfo, false, false);
 
   m_LocalPlanner = new PlannerHNS::SimuDecisionMaker();
-  m_LocalPlanner->Init(m_ControlParams, m_PlanningParams, m_CarInfo);
+  m_LocalPlanner->Init(m_ControlParams, m_PlanningParams, m_CarInfo, 10);
   m_LocalPlanner->m_SimulationSteeringDelayFactor = m_ControlParams.SimulationSteeringDelay;
 
   //For rviz visualization
@@ -856,7 +856,7 @@ void OpenPlannerCarSimulator::MainLoop()
               delete m_LocalPlanner;
               m_LocalPlanner = 0;
               m_LocalPlanner = new  PlannerHNS::SimuDecisionMaker();
-              m_LocalPlanner->Init(m_ControlParams, m_PlanningParams, m_CarInfo);
+              m_LocalPlanner->Init(m_ControlParams, m_PlanningParams, m_CarInfo, 10);
               m_LocalPlanner->m_SimulationSteeringDelayFactor = m_ControlParams.SimulationSteeringDelay;
               InitializeSimuCar(m_SimParams.startPose);
             }
@@ -990,7 +990,7 @@ void OpenPlannerCarSimulator::MainLoop()
         delete m_LocalPlanner;
         m_LocalPlanner = 0;
         m_LocalPlanner = new  PlannerHNS::SimuDecisionMaker();
-        m_LocalPlanner->Init(m_ControlParams, m_PlanningParams, m_CarInfo);
+        m_LocalPlanner->Init(m_ControlParams, m_PlanningParams, m_CarInfo, 0);
         m_LocalPlanner->m_SimulationSteeringDelayFactor = m_ControlParams.SimulationSteeringDelay;
         InitializeSimuCar(m_SimParams.startPose);
       }

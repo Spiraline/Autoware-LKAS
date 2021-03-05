@@ -12,6 +12,7 @@
 #include <vector>
 #include <sstream>
 #include "op_utility/UtilityH.h"
+#include <std_msgs/Header.h>
 
 #define OPENPLANNER_ENABLE_LOGS
 
@@ -29,7 +30,9 @@ enum DRIVABLE_TYPE {DIRT, TARMAC, PARKINGAREA, INDOOR, GENERAL_AREA};
 enum GLOBAL_STATE_TYPE {G_WAITING_STATE, G_PLANING_STATE, G_FORWARD_STATE, G_BRANCHING_STATE, G_FINISH_STATE};
 
 enum STATE_TYPE {INITIAL_STATE, WAITING_STATE, FORWARD_STATE, STOPPING_STATE, EMERGENCY_STATE,
-  TRAFFIC_LIGHT_STOP_STATE,TRAFFIC_LIGHT_WAIT_STATE, STOP_SIGN_STOP_STATE, STOP_SIGN_WAIT_STATE, FOLLOW_STATE, LANE_CHANGE_STATE, OBSTACLE_AVOIDANCE_STATE, GOAL_STATE, FINISH_STATE, YIELDING_STATE, BRANCH_LEFT_STATE, BRANCH_RIGHT_STATE};
+  TRAFFIC_LIGHT_STOP_STATE,TRAFFIC_LIGHT_WAIT_STATE, STOP_SIGN_STOP_STATE, STOP_SIGN_WAIT_STATE,
+  FOLLOW_STATE, LANE_CHANGE_STATE, OBSTACLE_AVOIDANCE_STATE, GOAL_STATE, FINISH_STATE, YIELDING_STATE, 
+  BRANCH_LEFT_STATE, BRANCH_RIGHT_STATE, PEDESTRIAN_STATE, INTERSECTION_STATE};
 
 enum LIGHT_INDICATOR {INDICATOR_LEFT, INDICATOR_RIGHT, INDICATOR_BOTH , INDICATOR_NONE};
 
@@ -530,13 +533,16 @@ class Crossing
 public:
   int id;
   int roadId;
+  GPSPoint pos;
+  PolygonShape intersection_area;
+  std::vector<PolygonShape> risky_area;
   std::vector<GPSPoint> points;
   RoadSegment* pSegment;
 
   Crossing()
   {
     id    = 0;
-    roadId =0;
+    roadId = 0;
     pSegment = nullptr;
   }
 };
@@ -549,6 +555,7 @@ public:
   int roadId;
   int trafficLightID;
   int stopSignID;
+  int length;
   std::vector<GPSPoint> points;
   Lane* pLane;
   int linkID;
@@ -562,6 +569,7 @@ public:
     trafficLightID = -1;
     stopSignID = -1;
     linkID = 0;
+    length = 0;
   }
 };
 
@@ -630,6 +638,8 @@ public:
   std::vector<int> laneIds;
   std::vector<Lane*> pLanes;
   int linkID;
+  double remainTime;
+  std::vector<double> routine;
 
   TrafficLight()
   {
@@ -637,6 +647,7 @@ public:
     id       = 0;
     lightState  = GREEN_LIGHT;
     linkID     = 0;
+    remainTime = 0;
   }
 
   bool CheckLane(const int& laneId)
@@ -790,6 +801,7 @@ public:
   LIGHT_INDICATOR indicator;
   bool bNewPlan;
   int iTrajectory;
+  int currTrajectory;
 
 
   BehaviorState()
@@ -803,7 +815,7 @@ public:
     indicator  = INDICATOR_NONE;
     bNewPlan = false;
     iTrajectory = -1;
-
+    currTrajectory = -1;
   }
 
 };
@@ -811,6 +823,7 @@ public:
 class DetectedObject
 {
 public:
+  std_msgs::Header header;
   int id;
   std::string label;
   OBSTACLE_TYPE t;
@@ -826,6 +839,10 @@ public:
   double l;
   double h;
   double distance_to_center;
+  double image_width;
+  double image_height;
+  double image_x;
+  double image_y;
 
   double actual_speed;
   double actual_yaw;
@@ -891,6 +908,29 @@ public:
   double   smoothingSmoothWeight;
   double   smoothingToleranceError;
 
+  // Added by HJW for make traj eval parameter
+  double weightPriority;
+  double weightTransition;
+  double weightLong;
+  double weightLat;
+  double LateralSkipDistance;
+  
+  // Added by HJW for traffic signal parameter
+  double stopLineMargin;
+  double stopLineDetectionDistance;
+
+  // Added by HJW for handle intersection
+  bool isInsideIntersection;
+  int closestIntersectionID;
+  double closestIntersectionDistance;
+  int riskyAreaIdx;
+  bool obstacleinRiskyArea;
+
+  // Added by PHY
+  bool pedestrianAppearence;
+  bool turnLeft;
+  bool turnRight;
+
   double stopSignStopTime;
 
   double additionalBrakingDistance;
@@ -932,6 +972,12 @@ public:
     smoothingSmoothWeight      = 0.2;
     smoothingToleranceError      = 0.05;
 
+    double weightPriority     = 1;
+    double weightTransition   = 1;
+    double weightLong         = 1.2;
+    double weightLat          = 1;
+    double LateralSkipDistance = 5;
+
     stopSignStopTime         = 2.0;
 
     additionalBrakingDistance    = 10.0;
@@ -949,6 +995,15 @@ public:
     enableStopSignBehavior      = false;
     enabTrajectoryVelocities     = false;
     minIndicationDistance      = 15;
+    pedestrianAppearence       = false;
+
+    turnRight                  = false;
+    turnLeft                   = false;
+
+    isInsideIntersection       = false;
+    closestIntersectionID      = -1;
+    riskyAreaIdx               = -1;
+    obstacleinRiskyArea        = false;
   }
 };
 

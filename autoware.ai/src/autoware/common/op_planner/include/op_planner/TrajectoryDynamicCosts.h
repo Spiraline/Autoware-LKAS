@@ -29,7 +29,7 @@ public:
 
   TrajectoryCost DoOneStepStatic(const vector<vector<WayPoint> >& rollOuts, const vector<WayPoint>& totalPaths,
       const WayPoint& currState, const PlanningParams& params, const CAR_BASIC_INFO& carInfo, const VehicleState& vehicleState,
-      const std::vector<PlannerHNS::DetectedObject>& obj_list, const int& iCurrentIndex = -1);
+      const std::vector<PlannerHNS::DetectedObject>& obj_list, const PlannerHNS::STATE_TYPE& state, const int& iCurrentIndex = -1);
 
   TrajectoryCost DoOneStepDynamic(const vector<vector<WayPoint> >& rollOuts, const vector<WayPoint>& totalPaths,
       const WayPoint& currState, const PlanningParams& params, const CAR_BASIC_INFO& carInfo, const VehicleState& vehicleState,
@@ -38,6 +38,7 @@ public:
 public:
   int m_PrevCostIndex;
   int m_PrevIndex;
+  int m_PrevSelectedIndex;
   vector<TrajectoryCost> m_TrajectoryCosts;
   PlanningParams m_Params;
   PolygonShape m_SafetyBorder;
@@ -68,6 +69,8 @@ private:
   void CalculateLateralAndLongitudinalCostsDynamic(const std::vector<PlannerHNS::DetectedObject>& obj_list, const vector<vector<WayPoint> >& rollOuts, const vector<WayPoint>& totalPaths,
       const WayPoint& currState, const PlanningParams& params, const CAR_BASIC_INFO& carInfo,
       const VehicleState& vehicleState, const double& c_lateral_d, const double& c_long_front_d, const double& c_long_back_d );
+
+  double CalculateTurnAngle(const std::vector<WayPoint>& path, const WayPoint& currState);
 
 };
 

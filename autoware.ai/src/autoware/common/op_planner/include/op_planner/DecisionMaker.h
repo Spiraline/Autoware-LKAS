@@ -44,10 +44,32 @@ public:
   StopSignStopStateII*       m_pStopSignStopState;
   StopSignWaitStateII*       m_pStopSignWaitState;
 
+  //Added by PHY, HJW
+  PedestrianState*  m_pPedestrianState;
+  PlannerHNS::WayPoint m_turnWaypoint;
+  double m_turnThreshold;
+  double m_turnAngle;
+  double m_sprintSpeed;
+  bool m_sprintSwitch;
+  double m_obstacleWaitingTimeinIntersection;
+  int m_remainObstacleWaitingTime;
+
+  int m_prevTrafficLightID;
+  PlannerHNS::TrafficLightState m_prevTrafficLightSignal;
+  double m_remainTrafficLightWaitingTime;
+
+  IntersectionState*  m_pIntersectionState;
+  bool m_isInsideIntersection;
+  bool m_riskyLeft;
+  bool m_riskyRight;
+  double m_closestIntersectionDistance;
+
   void InitBehaviorStates();
 
   //For Simulation
   UtilityHNS::PIDController   m_pidVelocity;
+  UtilityHNS::PIDController   m_pidSprintVelocity;
+  UtilityHNS::PIDController   m_pidIntersectionVelocity;
   UtilityHNS::PIDController   m_pidStopping;
   UtilityHNS::PIDController   m_pidFollowing;
 
@@ -55,11 +77,17 @@ public:
 
   DecisionMaker();
   virtual ~DecisionMaker();
-  void Init(const ControllerParams& ctrlParams, const PlanningParams& params, const CAR_BASIC_INFO& carInfo);
+  void Init(const ControllerParams& ctrlParams, const PlanningParams& params, const CAR_BASIC_INFO& carInfo, const double sprintSpeed);
   void CalculateImportantParameterForDecisionMaking(const VehicleState& car_state,
       const int& goalID, const bool& bEmergencyStop, const std::vector<TrafficLight>& detectedLights,
       const TrajectoryCost& bestTrajectory);
   void SetNewGlobalPath(const std::vector<std::vector<WayPoint> >& globalPath);
+
+  // Added by PHY
+  void UpdatePedestrianAppearence(const bool pedestrianAppearence);
+  void printPedestrianAppearence();
+  void CheckTurn();
+  void PrintTurn();
 
   BehaviorState DoOneStep(
       const double& dt,
@@ -69,6 +97,8 @@ public:
       const std::vector<TrafficLight>& trafficLight,
       const TrajectoryCost& tc,
       const bool& bEmergencyStop);
+  std::string ToString(STATE_TYPE beh);
+    
 
 protected:
   bool GetNextTrafficLight(const int& prevTrafficLightId, const std::vector<TrafficLight>& trafficLights, TrafficLight& trafficL);
@@ -83,10 +113,12 @@ protected:
   std::vector<PlannerHNS::WayPoint> t_centerTrajectorySmoothed;
   std::vector<std::vector<WayPoint> > m_TotalOriginalPath;
   std::vector<std::vector<WayPoint> > m_TotalPath;
-  PlannerHNS::PlanningParams m_params;
+  PlannerHNS::PlanningParams m_params;  
 
 };
 
 } /* namespace PlannerHNS */
 
 #endif /* BEHAVIOR_DECISION_MAKER */
+
+

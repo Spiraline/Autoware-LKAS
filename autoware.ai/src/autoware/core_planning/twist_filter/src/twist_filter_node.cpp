@@ -24,6 +24,7 @@ TwistFilterNode::TwistFilterNode() : nh_(), private_nh_("~"), health_checker_(nh
   twist_sub_ = nh_.subscribe("twist_raw", 1, &TwistFilterNode::twistCmdCallback, this);
   ctrl_sub_ = nh_.subscribe("ctrl_raw", 1, &TwistFilterNode::ctrlCmdCallback, this);
   config_sub_ = nh_.subscribe("config/twist_filter", 10, &TwistFilterNode::configCallback, this);
+  emergency_stop_sub_ = nh_.subscribe("emergency_stop", 1 ,&TwistFilterNode::emergencyStopCallback, this);
 
   // Publish
   twist_pub_ = nh_.advertise<geometry_msgs::TwistStamped>("twist_cmd", 5);
@@ -45,7 +46,10 @@ TwistFilterNode::TwistFilterNode() : nh_(), private_nh_("~"), health_checker_(nh
   nh_.param("twist_filter/lowpass_gain_linear_x", twist_filter_config.lowpass_gain_linear_x, 0.0);
   nh_.param("twist_filter/lowpass_gain_angular_z", twist_filter_config.lowpass_gain_angular_z, 0.0);
   nh_.param("twist_filter/lowpass_gain_steering_angle", twist_filter_config.lowpass_gain_steering_angle, 0.0);
+  nh_.param("twist_filter/max_stop_count", max_stop_count_, 30);
   twist_filter_ptr_ = std::make_shared<twist_filter::TwistFilter>(twist_filter_config);
+  emergency_stop_ = false;
+  current_stop_count_ = 0;
 
   // Enable health checker
   health_checker_.ENABLE();
@@ -105,8 +109,14 @@ void TwistFilterNode::twistCmdCallback(const geometry_msgs::TwistStampedConstPtr
 
   // Smoothed value publish
   geometry_msgs::TwistStamped out_msg = *msg;
-  out_msg.twist.linear.x = twist_out.lx;
-  out_msg.twist.angular.z = twist_out.az;
+  if(emergency_stop_ == false){
+    out_msg.twist.linear.x = twist_out.lx;
+    out_msg.twist.angular.z = twist_out.az;
+  }
+  else{
+    out_msg.twist.linear.x = 0;
+    out_msg.twist.angular.z = 0;
+  }
   twist_pub_.publish(out_msg);
 
   // Publish lateral accel and jerk after smoothing
@@ -196,6 +206,31 @@ void TwistFilterNode::ctrlCmdCallback(const autoware_msgs::ControlCommandStamped
   // Preserve value and time
   ctrl_prev = ctrl_out;
   last_callback_time = current_time;
+}
+
+void TwistFilterNode::emergencyStopCallback(const std_msgs::Bool& msg){
+  bool current_emergency_stop = msg.data;
+  static std::string state("none");
+  
+  if(current_emergency_stop == true){
+    state = std::string("object is detected");
+    emergency_stop_ = true;
+    current_stop_count_ = max_stop_count_;
+  }
+  else if(current_emergency_stop == false && emergency_stop_ == true){ // Emergency Stop event is finished or wait
+    current_stop_count_--;
+    if(current_stop_count_ > 0){
+      state = std::string("Wait for go");
+      emergency_stop_ = true;
+    }
+    else
+      emergency_stop_ = false;
+  }
+  else if(current_emergency_stop == false && emergency_stop_ == false){ // No event
+    state = std::string("No object");
+    emergency_stop_ = false;
+    current_stop_count_ = 0;
+  }
 }
 
 void TwistFilterNode::checkTwist(const twist_filter::Twist twist, const twist_filter::Twist twist_prev,

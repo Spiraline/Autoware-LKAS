@@ -19,6 +19,13 @@
 
 namespace waypoint_follower
 {
+DynamicParams::DynamicParams(){
+  min_vel = -1;
+  max_vel = -1;
+  lookahead_ratio = -1;
+  lookahead_distance = -1;
+}
+
 // Constructor
 PurePursuitNode::PurePursuitNode()
   : private_nh_("~")
@@ -64,6 +71,30 @@ void PurePursuitNode::initForROS()
   private_nh_.param(
     "minimum_lookahead_distance", minimum_lookahead_distance_, 6.0);
   nh_.param("vehicle_info/wheel_base", wheel_base_, 2.7);
+
+  nh_.param("/pure_pursuit/dynamic_params_flag", dynamic_param_flag_, false);
+  
+  if(dynamic_param_flag_){
+    XmlRpc::XmlRpcValue xml_list;
+    if(!nh_.getParam("/pure_pursuit/dynamic_params", xml_list)){
+      ROS_ERROR("[pure_pursuit] Cannot load dynamic params");
+      exit(1);
+    }
+    std::cout<<"Parameter is loaded / "<<xml_list.size()<<std::endl;
+    for(int i=0; i<xml_list.size(); i++){
+      XmlRpc::XmlRpcValue xml_param = xml_list[i];
+      
+      DynamicParams param;
+      
+      param.min_vel = (double)(xml_param[0]);
+      param.max_vel = (double)(xml_param[1]);
+      param.lookahead_ratio = (double)(xml_param[2]);
+      param.lookahead_distance = (double)(xml_param[3]);
+      dynamic_params.push_back(param);
+    }
+
+  }
+
 
   // setup subscriber
   sub1_ = nh_.subscribe("final_waypoints", 10,
@@ -283,11 +314,26 @@ void PurePursuitNode::callbackFromCurrentVelocity(
   is_velocity_set_ = true;
 }
 
+void PurePursuitNode::setLookaheadParamsByVel(){
+  for(auto it=dynamic_params.begin(); it != dynamic_params.end(); ++it){
+    DynamicParams param = *it;
+    if(command_linear_velocity_>param.min_vel && command_linear_velocity_ <= param.max_vel){
+      lookahead_distance_ratio_ = param.lookahead_ratio;
+      minimum_lookahead_distance_ = param.lookahead_distance;
+      break;
+    }
+  }
+
+  // std::cout<<"Waypoint Vel:"<<command_linear_velocity_<<"/ ratio"<<lookahead_distance_ratio_<<"/ disdtance"<<minimum_lookahead_distance_<<std::endl;
+}
+
 void PurePursuitNode::callbackFromWayPoints(
   const autoware_msgs::LaneConstPtr& msg)
 {
   command_linear_velocity_ =
     (!msg->waypoints.empty()) ? msg->waypoints.at(0).twist.twist.linear.x : 0;
+  setLookaheadParamsByVel();
+  
   if (add_virtual_end_waypoints_)
   {
     const LaneDirection solved_dir = getLaneDirection(*msg);

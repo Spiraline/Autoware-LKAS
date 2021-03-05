@@ -30,7 +30,11 @@ VisualizeDetectedObjects::VisualizeDetectedObjects() : arrow_height_(0.5), label
     ros_namespace_.erase(ros_namespace_.begin());
   }
 
-  std::string markers_out_topic = ros_namespace_ + "/objects_markers";
+  std::string node_name = ros::this_node::getName();
+  std::string label_param = node_name+"/label";
+  std::string label;
+  private_nh_.param<std::string>(label_param, label, "center");
+  std::string markers_out_topic = ros_namespace_ + "/objects_markers_"+label;
 
   std::string object_src_topic;
   private_nh_.param<std::string>("objects_src_topic", object_src_topic, "/objects");
@@ -142,22 +146,22 @@ void VisualizeDetectedObjects::DetectedObjectsCallback(const autoware_msgs::Dete
   marker_id_ = 0;
 
   label_markers = ObjectsToLabels(in_objects);
-  arrow_markers = ObjectsToArrows(in_objects);
+  // arrow_markers = ObjectsToArrows(in_objects);
   polygon_hulls = ObjectsToHulls(in_objects);
-  bounding_boxes = ObjectsToBoxes(in_objects);
-  object_models = ObjectsToModels(in_objects);
+  // bounding_boxes = ObjectsToBoxes(in_objects);
+  // object_models = ObjectsToModels(in_objects);
   centroid_markers = ObjectsToCentroids(in_objects);
 
   visualization_markers.markers.insert(visualization_markers.markers.end(),
                                        label_markers.markers.begin(), label_markers.markers.end());
-  visualization_markers.markers.insert(visualization_markers.markers.end(),
-                                       arrow_markers.markers.begin(), arrow_markers.markers.end());
+  // visualization_markers.markers.insert(visualization_markers.markers.end(),
+  //                                      arrow_markers.markers.begin(), arrow_markers.markers.end());
   visualization_markers.markers.insert(visualization_markers.markers.end(),
                                        polygon_hulls.markers.begin(), polygon_hulls.markers.end());
-  visualization_markers.markers.insert(visualization_markers.markers.end(),
-                                       bounding_boxes.markers.begin(), bounding_boxes.markers.end());
-  visualization_markers.markers.insert(visualization_markers.markers.end(),
-                                       object_models.markers.begin(), object_models.markers.end());
+  // visualization_markers.markers.insert(visualization_markers.markers.end(),
+  //                                      bounding_boxes.markers.begin(), bounding_boxes.markers.end());
+  // visualization_markers.markers.insert(visualization_markers.markers.end(),
+  //                                      object_models.markers.begin(), object_models.markers.end());
   visualization_markers.markers.insert(visualization_markers.markers.end(),
                                        centroid_markers.markers.begin(), centroid_markers.markers.end());
 
@@ -169,6 +173,7 @@ visualization_msgs::MarkerArray
 VisualizeDetectedObjects::ObjectsToCentroids(const autoware_msgs::DetectedObjectArray &in_objects)
 {
   visualization_msgs::MarkerArray centroid_markers;
+
   for (auto const &object: in_objects.objects)
   {
     if (IsObjectValid(object))
@@ -180,7 +185,7 @@ VisualizeDetectedObjects::ObjectsToCentroids(const autoware_msgs::DetectedObject
       centroid_marker.type = visualization_msgs::Marker::SPHERE;
       centroid_marker.action = visualization_msgs::Marker::ADD;
       centroid_marker.pose = object.pose;
-      centroid_marker.ns = ros_namespace_ + "/centroid_markers";
+      centroid_marker.ns = ros_namespace_ + "/centroid_markers2";
 
       centroid_marker.scale.x = 0.5;
       centroid_marker.scale.y = 0.5;
@@ -195,9 +200,15 @@ VisualizeDetectedObjects::ObjectsToCentroids(const autoware_msgs::DetectedObject
         centroid_marker.color = object.color;
       }
       centroid_marker.id = marker_id_++;
+      centroid_marker.pose.orientation.x = 0;
+      centroid_marker.pose.orientation.y = 0;
+      centroid_marker.pose.orientation.z = 0;
+      centroid_marker.pose.orientation.w = 1;
+
       centroid_markers.markers.push_back(centroid_marker);
     }
   }
+
   return centroid_markers;
 }//ObjectsToCentroids
 
@@ -308,14 +319,15 @@ VisualizeDetectedObjects::ObjectsToHulls(const autoware_msgs::DetectedObjectArra
 
   for (auto const &object: in_objects.objects)
   {
-    if (IsObjectValid(object) && !object.convex_hull.polygon.points.empty() && object.label == "unknown")
+    // if (IsObjectValid(object) && !object.convex_hull.polygon.points.empty() && object.label == "unknown")
+    if (IsObjectValid(object) && !object.convex_hull.polygon.points.empty())
     {
       visualization_msgs::Marker hull;
       hull.lifetime = ros::Duration(marker_display_duration_);
       hull.header = in_objects.header;
       hull.type = visualization_msgs::Marker::LINE_STRIP;
       hull.action = visualization_msgs::Marker::ADD;
-      hull.ns = ros_namespace_ + "/hull_markers";
+      hull.ns = ros_namespace_ + "/hull_markers2";
       hull.id = marker_id_++;
       hull.scale.x = 0.2;
 
@@ -328,18 +340,22 @@ VisualizeDetectedObjects::ObjectsToHulls(const autoware_msgs::DetectedObjectArra
         hull.points.push_back(tmp_point);
       }
 
-      if (object.color.a == 0)
-      {
-        hull.color = hull_color_;
-      }
-      else
-      {
-        hull.color = object.color;
-      }
-
+      // if (object.color.a == 0)
+      // {
+      hull.color = hull_color_;
+      // }
+      // else
+      // {
+      //   hull.color = object.color;
+      // }
+      hull.pose.orientation.x = 0;
+      hull.pose.orientation.y = 0;
+      hull.pose.orientation.z = 0;
+      hull.pose.orientation.w = 1;
       polygon_hulls.markers.push_back(hull);
     }
   }
+
   return polygon_hulls;
 }
 
@@ -433,7 +449,7 @@ VisualizeDetectedObjects::ObjectsToLabels(const autoware_msgs::DetectedObjectArr
 
       label_marker.lifetime = ros::Duration(marker_display_duration_);
       label_marker.header = in_objects.header;
-      label_marker.ns = ros_namespace_ + "/label_markers";
+      label_marker.ns = ros_namespace_ + "/label_markers2";
       label_marker.action = visualization_msgs::Marker::ADD;
       label_marker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
       label_marker.scale.x = 1.5;
@@ -484,10 +500,15 @@ VisualizeDetectedObjects::ObjectsToLabels(const autoware_msgs::DetectedObjectArr
       label_marker.pose.position.y = object.pose.position.y;
       label_marker.pose.position.z = label_height_;
       label_marker.scale.z = 1.0;
+      label_marker.pose.orientation.x = 0;
+      label_marker.pose.orientation.y = 0;
+      label_marker.pose.orientation.z = 0;
+      label_marker.pose.orientation.w = 1;
       if (!label_marker.text.empty())
         label_markers.markers.push_back(label_marker);
     }
   }  // end in_objects.objects loop
+
 
   return label_markers;
 }//ObjectsToLabels

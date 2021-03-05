@@ -17,6 +17,7 @@
 #ifndef OP_BEHAVIOR_SELECTOR_CORE
 #define OP_BEHAVIOR_SELECTOR_CORE
 
+#include <unistd.h>
 #include <ros/ros.h>
 
 #include "vector_map_msgs/PointArray.h"
@@ -38,17 +39,27 @@
 #include <nav_msgs/Odometry.h>
 #include <autoware_msgs/LaneArray.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
 #include <autoware_can_msgs/CANInfo.h>
 #include <autoware_msgs/DetectedObjectArray.h>
-#include <autoware_msgs/TrafficLight.h>
-#include <autoware_msgs/Signals.h>
+#include <autoware_msgs/IntersectionCondition.h>
+// #include <autoware_msgs/TrafficLight.h>
+// #include <autoware_msgs/Signals.h>
+#include <autoware_msgs/RUBISTrafficSignalArray.h>
 #include <autoware_msgs/ControlCommand.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <XmlRpcException.h>
+
+#include <std_msgs/Float64.h>
+#include <std_msgs/Bool.h>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/DecisionMaker.h"
 #include "op_utility/DataRW.h"
+
+#include <visualization_msgs/Marker.h>
+#include <tf/transform_listener.h>
 
 
 namespace BehaviorGeneratorNS
@@ -57,6 +68,7 @@ namespace BehaviorGeneratorNS
 class BehaviorGen
 {
 protected: //Planning Related variables
+  double PI = 3.14159265;
 
   geometry_msgs::Pose m_OriginPos;
   PlannerHNS::WayPoint m_CurrentPos;
@@ -85,21 +97,29 @@ protected: //Planning Related variables
   PlannerHNS::DecisionMaker m_BehaviorGenerator;
   PlannerHNS::BehaviorState m_CurrentBehavior;
 
-    std::vector<std::string>    m_LogData;
-
-    PlannerHNS::PlanningParams m_PlanningParams;
-    PlannerHNS::CAR_BASIC_INFO m_CarInfo;
-
-    autoware_msgs::Lane m_CurrentTrajectoryToSend;
-    bool bNewLightStatus;
+  std::vector<std::string>    m_LogData;
+  PlannerHNS::PlanningParams m_PlanningParams;
+  PlannerHNS::CAR_BASIC_INFO m_CarInfo;
+  autoware_msgs::Lane m_CurrentTrajectoryToSend;
+  bool bNewLightStatus;
   bool bNewLightSignal;
   PlannerHNS::TrafficLightState  m_CurrLightStatus;
   std::vector<PlannerHNS::TrafficLight> m_CurrTrafficLight;
   std::vector<PlannerHNS::TrafficLight> m_PrevTrafficLight;
+  tf::TransformListener m_map_base_listener;
+  tf::StampedTransform m_map_base_transform;
 
   geometry_msgs::TwistStamped m_Twist_raw;
   geometry_msgs::TwistStamped m_Twist_cmd;
   autoware_msgs::ControlCommand m_Ctrl_cmd;
+
+  //Added by PHY
+  double m_distanceToPedestrianThreshold;
+  double m_turnAngle;
+  double m_turnThreshold;
+  double m_sprintSpeed;
+  bool m_sprintSwitch;
+  double m_obstacleWaitingTimeinIntersection;
 
   //ROS messages (topics)
   ros::NodeHandle nh;
@@ -111,6 +131,13 @@ protected: //Planning Related variables
   ros::Publisher pub_BehaviorState;
   ros::Publisher pub_SimuBoxPose;
   ros::Publisher pub_SelectedPathRviz;
+  ros::Publisher pub_BehaviorStateRviz;
+
+  // Added by PHY & HJW
+  ros::Publisher pub_EmergencyStop;
+  ros::Publisher pub_turnMarker;
+  ros::Publisher pub_turnAngle;
+  ros::Publisher pub_currentState;
 
   // define subscribers.
   ros::Subscriber sub_current_pose;
@@ -122,11 +149,15 @@ protected: //Planning Related variables
   ros::Subscriber sub_TrafficLightStatus;
   ros::Subscriber sub_TrafficLightSignals;
   ros::Subscriber sub_Trajectory_Cost;
-  ros::Publisher pub_BehaviorStateRviz;
 
   ros::Subscriber sub_twist_cmd;
   ros::Subscriber sub_twist_raw;
   ros::Subscriber sub_ctrl_cmd;
+
+  //Added by PHY & HJW
+  ros::Subscriber sub_DistanceToPedestrian;
+  ros::Subscriber sub_SprintSwitch;
+  ros::Subscriber sub_IntersectionCondition;
 
   // Callback function for subscriber.
   void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
@@ -136,18 +167,24 @@ protected: //Planning Related variables
   void callbackGetGlobalPlannerPath(const autoware_msgs::LaneArrayConstPtr& msg);
   void callbackGetLocalPlannerPath(const autoware_msgs::LaneArrayConstPtr& msg);
   void callbackGetLocalTrajectoryCost(const autoware_msgs::LaneConstPtr& msg);
-  void callbackGetTrafficLightStatus(const autoware_msgs::TrafficLight & msg);
-  void callbackGetTrafficLightSignals(const autoware_msgs::Signals& msg);
+  void callbackDistanceToPedestrian(const std_msgs::Float64& msg);
+  void callbackIntersectionCondition(const autoware_msgs::IntersectionCondition& msg);
+
+  void callbackGetV2XTrafficLightSignals(const autoware_msgs::RUBISTrafficSignalArray& msg);
 
   void callbackGetTwistCMD(const geometry_msgs::TwistStampedConstPtr& msg);
   void callbackGetTwistRaw(const geometry_msgs::TwistStampedConstPtr& msg);
   void callbackGetCommandCMD(const autoware_msgs::ControlCommandConstPtr& msg);
+  void callbackSprintSwitch(const std_msgs::Bool& msg);
 
   //Helper Functions
   void UpdatePlanningParams(ros::NodeHandle& _nh);
   void SendLocalPlanningTopics();
   void VisualizeLocalPlanner();
   void LogLocalPlanningInfo(double dt);
+  bool GetBaseMapTF();  
+  void TransformPose(const geometry_msgs::PoseStamped &in_pose, geometry_msgs::PoseStamped& out_pose, const tf::StampedTransform &in_transform);
+  void CalculateTurnAngle(PlannerHNS::WayPoint turn_point);
 
 public:
   BehaviorGen();

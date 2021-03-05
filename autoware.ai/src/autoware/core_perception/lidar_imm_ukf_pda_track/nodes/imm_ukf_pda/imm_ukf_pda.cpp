@@ -50,12 +50,16 @@ ImmUkfPda::ImmUkfPda()
     result_file_path_ = kitti_data_dir_ + "benchmark_results.txt";
     std::remove(result_file_path_.c_str());
   }
+
+  // topic name
+  private_nh_.param<std::string>("tracker_input_topic", input_topic_, "/detection/lidar_detector/objects");
+  private_nh_.param<std::string>("tracker_output_topic", output_topic_, "/detection/object_tracker/objects");
 }
 
 void ImmUkfPda::run()
 {
-  pub_object_array_ = node_handle_.advertise<autoware_msgs::DetectedObjectArray>("/detection/objects", 1);
-  sub_detected_array_ = node_handle_.subscribe("/detection/fusion_tools/objects", 1, &ImmUkfPda::callback, this);
+  pub_object_array_ = node_handle_.advertise<autoware_msgs::DetectedObjectArray>(output_topic_.c_str(), 1);
+  sub_detected_array_ = node_handle_.subscribe(input_topic_.c_str(), 1, &ImmUkfPda::callback, this);
 
   if (use_vectormap_)
   {
