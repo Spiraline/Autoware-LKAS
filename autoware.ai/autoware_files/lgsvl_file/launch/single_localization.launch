@@ -1,9 +1,4 @@
 <launch>
-
-  <!-- setting path parameter -->
-  <arg name="use_openmp" value="false" />
-  <arg name="get_height" value="true" />
-
   <arg name="x" value="0.3679201" />
   <arg name="y" value="0.0" />
   <arg name="z" value="1.975314" />
@@ -40,9 +35,7 @@
     <arg name="child_frame_id" value="$(arg child_frame_id)" />
     <arg name="period_in_ms" value="$(arg period_in_ms)" />
   </include>
-
-  <!-- <include file="$(find vehicle_description)/launch/vehicle_model.launch" /> -->
-
+  
   <!-- points downsampler -->
   <include file="$(find points_downsampler)/launch/points_downsample.launch" />
 
@@ -54,7 +47,7 @@
   <!-- ndt_matching -->
   <include file="$(find lidar_localizer)/launch/ndt_matching.launch">
     <arg name="method_type" value="2" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
-    <arg name="get_height" value="$(arg get_height)" />
+    <arg name="get_height" value="true" />
   </include>
 
   <!-- vel_pose_mux -->

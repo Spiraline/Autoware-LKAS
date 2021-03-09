@@ -28,7 +28,7 @@ state = lgsvl.AgentState()
 state.transform = spawns[0]
 state.transform.rotation = spawns[0].rotation
 
-ego = sim.add_agent("Lexus2016RXHybrid (Autoware)", lgsvl.AgentType.EGO, state)
+ego = sim.add_agent("SingleLiDAR (Autoware)", lgsvl.AgentType.EGO, state)
 
 ego.connect_bridge(os.environ.get("BRIDGE_HOST", "127.0.0.1"), 9090)
 
