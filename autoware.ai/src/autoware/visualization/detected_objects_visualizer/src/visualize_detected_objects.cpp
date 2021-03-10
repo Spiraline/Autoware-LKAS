@@ -461,7 +461,7 @@ VisualizeDetectedObjects::ObjectsToLabels(const autoware_msgs::DetectedObjectArr
       label_marker.id = marker_id_++;
 
       if(!object.label.empty() && object.label != "unknown")
-        label_marker.text = object.label + " "; //Object Class if available
+        label_marker.text += object.label + " "; //Object Class if available
 
       std::stringstream distance_stream;
       distance_stream << std::fixed << std::setprecision(1)

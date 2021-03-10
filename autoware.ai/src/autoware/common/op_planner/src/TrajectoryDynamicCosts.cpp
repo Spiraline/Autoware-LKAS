@@ -8,7 +8,7 @@
 #include "op_planner/MatrixOperations.h"
 #include "float.h"
 
-// #define DEBUG_ENABLE
+#define DEBUG_ENABLE
 
 namespace PlannerHNS
 {
@@ -465,8 +465,10 @@ void TrajectoryDynamicCosts::CalculateLateralAndLongitudinalCostsStatic(vector<T
 
         double lateralDist = fabs(obj_info.perp_distance - distance_from_center);
 
+        // std::cout << "long : " << longitudinalDist << ", lat : " << lateralDist << std::endl;
+
         if(longitudinalDist < 0 ||
-          longitudinalDist > 20 ||
+          longitudinalDist > 30 ||
           obj_info.perp_distance < (((rollOuts.size() - 1) / 2) * params.rollOutDensity + critical_lateral_distance / 2) * (-1) ||
           obj_info.perp_distance > ((rollOuts.size() - 1) / 2 + 1) * params.rollOutDensity + critical_lateral_distance / 2)
           // obj_info.perp_distance < (((rollOuts.size() - 1) / 2) * params.rollOutDensity) * (-1) ||
@@ -488,11 +490,11 @@ void TrajectoryDynamicCosts::CalculateLateralAndLongitudinalCostsStatic(vector<T
         if(m_SafetyBorder.PointInsidePolygon(m_SafetyBorder, contourPoints.at(icon).pos) == true)
           trajectoryCosts.at(iCostIndex).bBlocked = true;
 
-        // // Disabled bj hjw
-        // if(lateralDist <= 2
-        //     && longitudinalDist >= -carInfo.length
-        //     && longitudinalDist < 5)
-        //   trajectoryCosts.at(iCostIndex).bBlocked = true;
+        // Disabled bj hjw
+        if(lateralDist <= 1.5
+            && longitudinalDist >= -5
+            && longitudinalDist < 30)
+          trajectoryCosts.at(it).bBlocked = true;
 
         // Original
         // if(lateralDist <= critical_lateral_distance

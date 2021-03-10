@@ -89,9 +89,9 @@
 
   <!-- op_motion_predictor -->
   <include file="$(find op_local_planner)/launch/op_motion_predictor.launch">
-    <arg name="input_object_list"               default="[/detection/fusion_tools/objects_left,/detection/fusion_tools/objects_right,/detection/object_tracker/objects_back]" />
-    <!-- <arg name="input_object_list"               default="[/detection/object_tracker/objects_left,/detection/object_tracker/objects_right,/detection/object_tracker/objects_back]" /> -->
-    <arg name="object_tf_list"                  default="[velodyne_left,velodyne_right,velodyne_back]" />
+    <!-- <arg name="input_object_list"               default="[/detection/fusion_tools/objects_center]" /> -->
+    <arg name="input_object_list"               default="[/detection/object_tracker/objects_center]" />
+    <arg name="object_tf_list"                  default="[velodyne]" />
     <arg name="enableCurbObstacles"             default="false" />    <!-- Detect curbs from map-->
     <arg name="enableGenrateBranches"           default="false"/>     <!-- Enable Branching -->
     <arg name="max_distance_to_lane"            default="2.0"/>       <!-- Distance to closest lane-->
@@ -121,7 +121,7 @@
     <arg name="PedestrianImageDetectionRange" default="0.75" /> <!-- (Ratio If pedestrian's center point is located in this range, our car will be stopped -->               
     <arg name="VehicleImageDetectionRange" default="0.3" /> <!-- (Ratio) If vehicle's center point is located in this range, our car set speed as max velocity --> 
     <arg name="VehicleImageWidthThreshold" default="0.018" /> <!-- (Ratio) If vehilce's width ratio is lower than this, it will be not detected -->
-    <arg name="SprintDecisionTime" default="5.0" /> <!-- Seconds -->
+    <arg name="SprintDecisionTime" default="9999999.0" /> <!-- Seconds -->
 
     <arg name="intersectionFile"                default="crossing_test/crossing_intersection.yaml" />
   </include>
@@ -130,7 +130,7 @@
   <include file="$(find op_local_planner)/launch/op_behavior_selector.launch">
     <arg name="evidence_tust_number"            default="25"/>
     <arg name="distanceToPedestrianThreshold"   default="25.0" />
-    <arg name="sprintSpeed"                    default="13.5" />
+    <arg name="sprintSpeed"                    default="10.0" />
     <arg name="obstacleWaitingTimeinIntersection"  default="2.0" />
     <arg name="turnThreshold"                   default="30.0" />
     <arg name="trafficLightFile"                default="crossing_test/crossing_traffic_light.yaml" />
