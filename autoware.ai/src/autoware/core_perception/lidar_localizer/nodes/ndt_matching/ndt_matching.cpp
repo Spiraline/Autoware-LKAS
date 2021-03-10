@@ -1370,10 +1370,12 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     //    br.sendTransform(tf::StampedTransform(transform, current_scan_time, "/map", "/base_link"));
     if (_use_local_transform == true)
     {
+      std::cout << "send with local\n";
       br.sendTransform(tf::StampedTransform(local_transform * transform, current_scan_time, "/map", "/base_link"));
     }
     else
     {
+      std::cout << "send without local\n";
       br.sendTransform(tf::StampedTransform(transform, current_scan_time, "/map", "/base_link"));
     }
 
