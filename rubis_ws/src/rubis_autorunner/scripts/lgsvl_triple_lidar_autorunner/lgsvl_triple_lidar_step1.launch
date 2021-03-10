@@ -22,29 +22,29 @@
 	<node name="image_republisher" type="republish" pkg="image_transport" output="screen" args="compressed in:=/simulator/camera_node/image raw out:=/image_raw_origin"  />
 
 	<!-- LiDAR Republisher -->
-	<include file="$(find test_package)/launch/lidar_republisher.launch">
+	<include file="$(find rubis_pkg)/launch/lidar_republisher.launch">
 		<arg name="node_name" value="lidar_republisher_left" />
 		<arg name="input_topic" value="/points_raw_l_all_direction" />
 		<arg name="output_topic" value="/points_raw_l_republished" />
 	</include>
 
-	<include file="$(find test_package)/launch/lidar_republisher.launch">
+	<include file="$(find rubis_pkg)/launch/lidar_republisher.launch">
 		<arg name="node_name" value="lidar_republisher_right" />
 		<arg name="input_topic" value="/points_raw_r_all_direction" />
 		<arg name="output_topic" value="/points_raw_r_republished" />
 	</include>
 
-	<include file="$(find test_package)/launch/lidar_republisher.launch">
+	<include file="$(find rubis_pkg)/launch/lidar_republisher.launch">
 		<arg name="node_name" value="lidar_republisher_back" />
 		<arg name="input_topic" value="/points_raw_b_all_direction" />
 		<arg name="output_topic" value="/points_raw_b_republished" />
 	</include>
 
-	<include file="$(find test_package)/launch/camera_republisher.launch"/>
-	<include file="$(find test_package)/launch/gnss_republisher.launch"/>
+	<include file="$(find rubis_pkg)/launch/camera_republisher.launch"/>
+	<include file="$(find rubis_pkg)/launch/gnss_republisher.launch"/>
 
 	<!-- Traffic Signal -->
-	<include file="$(find test_package)/launch/lgsvl_traffic_signal_test.launch">
-		<arg name="stopline_data" value="$(env HOME)/autoware.ai/rubis_ws/src/test_package/cfg/testbed_stop_line.yaml"/>
+	<include file="$(find rubis_pkg)/launch/lgsvl_traffic_signal_test.launch">
+		<arg name="stopline_data" value="$(env HOME)/rubis_ws/src/rubis_pkg/cfg/testbed_stop_line.yaml"/>
 	</include>
 </launch>
