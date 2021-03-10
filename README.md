@@ -41,11 +41,11 @@ rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
 
 * Autoware Build
 ```
-# If you have CUDA (Skip lgsvl)
-AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-skip lgsvl
+# If you have CUDA
+AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-# If you don't have CUDA (Skip lgsvl)
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-skip lgsvl       
+# If you don't have CUDA
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
 
 Since Autoware recommend to use directory name 'autoware.ai', you should make soft link with autoware.ai to this repository
