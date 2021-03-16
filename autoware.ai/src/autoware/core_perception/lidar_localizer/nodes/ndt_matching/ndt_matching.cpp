@@ -1443,7 +1443,11 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       }
     }
 
+    struct timespec ndt_time;
+    clock_gettime(CLOCK_MONOTONIC, &ndt_time);
+
     std::cout << "-----------------------------------------------------------------" << std::endl;
+    printf("Time : %lld.%.9ld\n", ndt_time.tv_sec, ndt_time.tv_nsec);    
     std::cout << "Sequence: " << input->header.seq << std::endl;
     std::cout << "Timestamp: " << input->header.stamp << std::endl;
     std::cout << "Frame ID: " << input->header.frame_id << std::endl;
