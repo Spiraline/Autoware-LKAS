@@ -53,7 +53,7 @@
 
   <!-- ndt_matching -->
   <include file="$(find lidar_localizer)/launch/ndt_matching.launch">
-    <arg name="method_type" value="3" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
+    <arg name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
     <arg name="get_height" value="true" />
   </include>
 
@@ -70,10 +70,10 @@
     yaw: $(arg init_yaw),
     use_predict_pose: 1,
     error_threshold: 1.0,
-    resolution: 10.0,
-    step_size: 0.7,
+    resolution: 3.0,
+    step_size: 0.5,
     trans_epsilon: 0.01,
-    max_iterations: 30}
+    max_iterations: 3}
   '"/>
 
   <!-- vel_pose_mux -->

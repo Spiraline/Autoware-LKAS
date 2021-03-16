@@ -18,24 +18,6 @@
     <arg name="goal_ori_y"            value="0.0" />
     <arg name="goal_ori_z"            value="-0.81" />
     <arg name="goal_ori_w"            value="0.58" /> -->
-    <!-- TestBed Avenue -->
-    <!-- <arg name="use_static_goal"       value="true" />
-    <arg name="goal_pose_x"           value="651.96" />
-    <arg name="goal_pose_y"           value="-610.03" />
-    <arg name="goal_pose_z"           value="0.0" />
-    <arg name="goal_ori_x"            value="0.0" />
-    <arg name="goal_ori_y"            value="0.0" />
-    <arg name="goal_ori_z"            value="0.74" />
-    <arg name="goal_ori_w"            value="0.67" /> -->
-    <!-- TestBed LeftTurn Scenario -->
-    <arg name="use_static_goal"       value="false" />
-    <arg name="goal_pose_x"           value="560.744" />
-    <arg name="goal_pose_y"           value="-1122.939" />
-    <arg name="goal_pose_z"           value="0.0" />
-    <arg name="goal_ori_x"            value="0.0" />
-    <arg name="goal_ori_y"            value="0.0" />
-    <arg name="goal_ori_z"            value="-0.99" />
-    <arg name="goal_ori_w"            value="0.024" />
   </include>
 
   <!-- op_common_params  -->
@@ -44,8 +26,8 @@
     <arg name="horizonDistance"                 default="120"  />     <!-- Horizon -->
     <arg name="maxLocalPlanDistance"            default="80" />       <!-- Plan Distance-->
     <arg name="pathDensity"                     default="0.5" />      <!-- Path Density-->
-    <arg name="rollOutDensity"                  default="5" />      <!-- Horizontal Density -->
-    <arg name="rollOutsNumber"                  default="1"    />     <!-- Rollouts Number -->
+    <arg name="rollOutDensity"                  default="4" />      <!-- Horizontal Density -->
+    <arg name="rollOutsNumber"                  default="2"    />     <!-- Rollouts Number -->
     <arg name="maxVelocity"                     default="10.0" />     <!-- Max Velocity -->
     <arg name="maxAcceleration"                 default="5.0" />      <!-- Acceleration -->
     <arg name="maxDeceleration"                 default="-15.0" />    <!-- Deceleration -->
@@ -109,9 +91,9 @@
     <arg name="horizontalSafetyDistance"        default="1.2" />
     <arg name="verticalSafetyDistance"          default="0.8" />
     <arg name="weightPriority"                  default="0" />
-    <arg name="weightTransition"                default="3" />
+    <arg name="weightTransition"                default="5" />
     <arg name="weightLong"                      default="4" />
-    <arg name="weightLat"                       default="10" />
+    <arg name="weightLat"                       default="4" />
     <arg name="LateralSkipDistance"             default="5.0" />
     
     <arg name="ImageWidth" default="1920" />
