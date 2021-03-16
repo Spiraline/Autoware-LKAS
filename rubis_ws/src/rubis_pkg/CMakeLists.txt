@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   nmea_msgs
   std_msgs
   tf
+  gnss
 )
 
 catkin_package(
@@ -62,38 +63,11 @@ target_link_libraries(gnss_republisher
   ${catkin_LIBRARIES}
 )
 
-# add_executable(TF_test
-#   src/TF_test.cpp
-# )
-# add_dependencies(TF_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(TF_test
-#   ${catkin_LIBRARIES}
-# )
-
-# add_executable(twist_cmd_publisher
-#   src/twist_cmd_publisher.cpp
-# )
-# add_dependencies(twist_cmd_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(twist_cmd_publisher
-#   ${catkin_LIBRARIES}
-# )
-
-# catkin_install_python(PROGRAMS src/lgsvl_traffic_signal_test.py
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
-
-# add_executable(fake_object_generator
-#   src/fake_object_generator.cpp
-# )
-# add_dependencies(fake_object_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(fake_object_generator
-#   ${catkin_LIBRARIES}
-# )
-
-# add_executable(fake_traffic_signal_generator
-#   src/fake_traffic_signal_generator.cpp
-# )
-# add_dependencies(fake_traffic_signal_generator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(fake_traffic_signal_generator
-#   ${catkin_LIBRARIES}
-# )
+add_executable(gnss_localizer
+  src/gnss_localizer_node.cpp
+  src/gnss_localizer.cpp
+)
+add_dependencies(gnss_localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gnss_localizer
+  ${catkin_LIBRARIES}
+)
