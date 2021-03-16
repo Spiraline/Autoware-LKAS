@@ -1,5 +1,5 @@
 <launch>
-  <arg name="plane" default="7"/>
+  <arg name="plane" default="0"/>
 
   <node pkg="rubis_pkg" type="gnss_localizer" name="gnss_localizer" output="screen">
     <param name="plane" value="$(arg plane)"/>

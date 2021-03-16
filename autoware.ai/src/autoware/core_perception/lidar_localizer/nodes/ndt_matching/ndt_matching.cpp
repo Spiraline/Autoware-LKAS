@@ -74,6 +74,8 @@
 
 #define PREDICT_POSE_THRESHOLD 0.5
 
+#define USING_GPS_THRESHOLD 10
+
 #define Wa 0.4
 #define Wb 0.3
 #define Wc 0.3
@@ -99,7 +101,7 @@ enum class MethodType
 };
 static MethodType _method_type = MethodType::PCL_GENERIC;
 
-static pose initial_pose, predict_pose, predict_pose_imu, predict_pose_odom, predict_pose_imu_odom, previous_pose,
+static pose initial_pose, predict_pose, predict_pose_imu, predict_pose_odom, predict_pose_imu_odom, previous_pose, previous_gnss_pose,
     ndt_pose, current_pose, current_pose_imu, current_pose_odom, current_pose_imu_odom, localizer_pose;
 
 static double offset_x, offset_y, offset_z, offset_yaw;  // current_pos - previous_pose
@@ -107,6 +109,10 @@ static double offset_imu_x, offset_imu_y, offset_imu_z, offset_imu_roll, offset_
 static double offset_odom_x, offset_odom_y, offset_odom_z, offset_odom_roll, offset_odom_pitch, offset_odom_yaw;
 static double offset_imu_odom_x, offset_imu_odom_y, offset_imu_odom_z, offset_imu_odom_roll, offset_imu_odom_pitch,
     offset_imu_odom_yaw;
+
+// For GPS backup method
+static pose current_gnss_pose;
+static double previous_score = 0.0;
 
 // Can't load if typed "pcl::PointCloud<pcl::PointXYZRGB> map, add;"
 static pcl::PointCloud<pcl::PointXYZ> map, add;
@@ -239,6 +245,8 @@ static tf::StampedTransform local_transform;
 static unsigned int points_map_num = 0;
 
 pthread_mutex_t mutex;
+
+static bool _is_init_match_finished = false;
 
 static pose convertPoseIntoRelativeCoordinate(const pose &target_pose, const pose &reference_pose)
 {
@@ -543,65 +551,36 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
                         input->pose.orientation.w);
   tf::Matrix3x3 gnss_m(gnss_q);
 
-  pose current_gnss_pose;
   current_gnss_pose.x = input->pose.position.x;
   current_gnss_pose.y = input->pose.position.y;
   current_gnss_pose.z = input->pose.position.z;
   gnss_m.getRPY(current_gnss_pose.roll, current_gnss_pose.pitch, current_gnss_pose.yaw);
 
-  static pose previous_gnss_pose = current_gnss_pose;
-  ros::Time current_gnss_time = input->header.stamp;
-  static ros::Time previous_gnss_time = current_gnss_time;
+  static int matching_fail_cnt = 0;
 
-  if ((_use_gnss == 1 && init_pos_set == 0) || fitness_score >= _gnss_reinit_fitness)
-  {
-    previous_pose.x = previous_gnss_pose.x;
-    previous_pose.y = previous_gnss_pose.y;
-    previous_pose.z = previous_gnss_pose.z;
-    previous_pose.roll = previous_gnss_pose.roll;
-    previous_pose.pitch = previous_gnss_pose.pitch;
-    previous_pose.yaw = previous_gnss_pose.yaw;
+  if(previous_score <= USING_GPS_THRESHOLD)
+    matching_fail_cnt = 0;
+  else
+    matching_fail_cnt++;
 
-    current_pose.x = current_gnss_pose.x;
-    current_pose.y = current_gnss_pose.y;
-    current_pose.z = current_gnss_pose.z;
-    current_pose.roll = current_gnss_pose.roll;
-    current_pose.pitch = current_gnss_pose.pitch;
-    current_pose.yaw = current_gnss_pose.yaw;
-
-    current_pose_imu = current_pose_odom = current_pose_imu_odom = current_pose;
-
-    diff_x = current_pose.x - previous_pose.x;
-    diff_y = current_pose.y - previous_pose.y;
-    diff_z = current_pose.z - previous_pose.z;
-    diff_yaw = current_pose.yaw - previous_pose.yaw;
-    diff = sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
-
-    const pose trans_current_pose = convertPoseIntoRelativeCoordinate(current_pose, previous_pose);
-
-    const double diff_time = (current_gnss_time - previous_gnss_time).toSec();
-    current_velocity = (diff_time > 0) ? (diff / diff_time) : 0;
-    current_velocity =  (trans_current_pose.x >= 0) ? current_velocity : -current_velocity;
-    current_velocity_x = (diff_time > 0) ? (diff_x / diff_time) : 0;
-    current_velocity_y = (diff_time > 0) ? (diff_y / diff_time) : 0;
-    current_velocity_z = (diff_time > 0) ? (diff_z / diff_time) : 0;
-    angular_velocity = (diff_time > 0) ? (diff_yaw / diff_time) : 0;
-
-    current_accel = 0.0;
-    current_accel_x = 0.0;
-    current_accel_y = 0.0;
-    current_accel_z = 0.0;
-
-    init_pos_set = 1;
+  if( previous_score == 0.0){
+    previous_score = 0.0;
+    current_pose = current_gnss_pose;
+    previous_pose = previous_gnss_pose;
+  }
+  else if( previous_score > USING_GPS_THRESHOLD && _is_init_match_finished == true){
+    previous_score = 0.0;
+    current_pose = current_gnss_pose;
+    previous_pose = previous_gnss_pose;
+  }
+  else if(matching_fail_cnt > 30){
+    previous_score = 0.0;
+    current_pose = current_gnss_pose;
+    previous_pose = previous_gnss_pose;
   }
 
-  previous_gnss_pose.x = current_gnss_pose.x;
-  previous_gnss_pose.y = current_gnss_pose.y;
-  previous_gnss_pose.z = current_gnss_pose.z;
-  previous_gnss_pose.roll = current_gnss_pose.roll;
-  previous_gnss_pose.pitch = current_gnss_pose.pitch;
-  previous_gnss_pose.yaw = current_gnss_pose.yaw;
-  previous_gnss_time = current_gnss_time;
+  previous_gnss_pose = current_gnss_pose;
+
 }
 
 static void initialpose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& input)
@@ -697,6 +676,8 @@ static void initialpose_callback(const geometry_msgs::PoseWithCovarianceStamped:
   offset_imu_odom_roll = 0.0;
   offset_imu_odom_pitch = 0.0;
   offset_imu_odom_yaw = 0.0;
+
+  previous_score = 0.0;
 
   init_pos_set = 1;
 }
@@ -924,6 +905,10 @@ static void imu_callback(const sensor_msgs::Imu::Ptr& input)
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
+  // Check inital matching is success or not
+  if(_is_init_match_finished == false && previous_score < USING_GPS_THRESHOLD && previous_score != 0.0)
+    _is_init_match_finished = true;
+
   health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
   if (map_loaded == 1 && init_pos_set == 1)
   {
@@ -1370,12 +1355,10 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     //    br.sendTransform(tf::StampedTransform(transform, current_scan_time, "/map", "/base_link"));
     if (_use_local_transform == true)
     {
-      std::cout << "send with local\n";
       br.sendTransform(tf::StampedTransform(local_transform * transform, current_scan_time, "/map", "/base_link"));
     }
     else
     {
-      std::cout << "send without local\n";
       br.sendTransform(tf::StampedTransform(transform, current_scan_time, "/map", "/base_link"));
     }
 
@@ -1403,6 +1386,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     health_checker_ptr_->CHECK_MAX_VALUE("estimate_twist_linear", current_velocity, 5, 10, 15, "value linear estimated twist is too high.");
     health_checker_ptr_->CHECK_MAX_VALUE("estimate_twist_angular", angular_velocity, 5, 10, 15, "value linear angular twist is too high.");
     estimated_vel_pub.publish(estimate_vel_msg);
+
+    previous_score = fitness_score;
 
     // Set values for /ndt_stat
     ndt_stat_msg.header.stamp = current_scan_time;
@@ -1443,11 +1428,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       }
     }
 
-    struct timespec ndt_time;
-    clock_gettime(CLOCK_MONOTONIC, &ndt_time);
-
     std::cout << "-----------------------------------------------------------------" << std::endl;
-    printf("Time : %lld.%.9ld\n", ndt_time.tv_sec, ndt_time.tv_nsec);    
     std::cout << "Sequence: " << input->header.seq << std::endl;
     std::cout << "Timestamp: " << input->header.stamp << std::endl;
     std::cout << "Frame ID: " << input->header.frame_id << std::endl;
@@ -1674,11 +1655,11 @@ int main(int argc, char** argv)
   // Subscribers
   ros::Subscriber param_sub = nh.subscribe("config/ndt", 10, param_callback);
   ros::Subscriber gnss_sub = nh.subscribe("gnss_pose", 10, gnss_callback);
-  ros::Subscriber map_sub = nh.subscribe("points_map", 1, map_callback);
+  //  ros::Subscriber map_sub = nh.subscribe("points_map", 1, map_callback);
   ros::Subscriber initialpose_sub = nh.subscribe("initialpose", 10, initialpose_callback);
   ros::Subscriber points_sub = nh.subscribe("filtered_points", _queue_size, points_callback);
-  ros::Subscriber odom_sub = nh.subscribe("/vehicle/odom", _queue_size * 10, odom_callback);
-  ros::Subscriber imu_sub = nh.subscribe(_imu_topic.c_str(), _queue_size * 10, imu_callback);
+  // ros::Subscriber odom_sub = nh.subscribe("/vehicle/odom", _queue_size * 10, odom_callback);
+  // ros::Subscriber imu_sub = nh.subscribe(_imu_topic.c_str(), _queue_size * 10, imu_callback);
 
   pthread_t thread;
   pthread_create(&thread, NULL, thread_func, NULL);
