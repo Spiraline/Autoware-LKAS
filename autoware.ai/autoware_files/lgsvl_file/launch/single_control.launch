@@ -27,4 +27,7 @@
     <arg name="loop_rate" default="30.0" />
     <arg name="use_decision_maker" default="false" />
   </include>
+
+  <node pkg="rubis_pkg" type="lkas_combiner" name="lkas_combiner" output="screen">
+  </node>
 </launch>

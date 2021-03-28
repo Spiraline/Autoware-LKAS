@@ -71,3 +71,12 @@ add_dependencies(gnss_localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXP
 target_link_libraries(gnss_localizer
   ${catkin_LIBRARIES}
 )
+
+add_executable(lkas_combiner
+  src/lkas_combiner_node.cpp
+  src/lkas_combiner.cpp
+)
+add_dependencies(lkas_combiner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(lkas_combiner
+  ${catkin_LIBRARIES}
+)
