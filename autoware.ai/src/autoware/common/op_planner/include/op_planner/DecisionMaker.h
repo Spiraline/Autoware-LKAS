@@ -64,6 +64,8 @@ public:
   bool m_riskyRight;
   double m_closestIntersectionDistance;
 
+  LKASState* m_pLKASState;
+
   void InitBehaviorStates();
 
   //For Simulation
@@ -97,8 +99,6 @@ public:
       const std::vector<TrafficLight>& trafficLight,
       const TrajectoryCost& tc,
       const bool& bEmergencyStop);
-  std::string ToString(STATE_TYPE beh);
-    
 
 protected:
   bool GetNextTrafficLight(const int& prevTrafficLightId, const std::vector<TrafficLight>& trafficLights, TrafficLight& trafficL);
@@ -106,9 +106,9 @@ protected:
   bool SelectSafeTrajectory();
   BehaviorState GenerateBehaviorState(const VehicleState& vehicleState);
   double UpdateVelocityDirectlyToTrajectory(const BehaviorState& beh, const VehicleState& CurrStatus, const double& dt);
-  bool ReachEndOfGlobalPath(const double& min_distance, const int& iGlobalPathIndex);
 
-
+  double GetGoalDistance(const int& iGlobalPathIndex);
+  double GetClosestWaypointDistance(const int& iGlobalPathIndex);
 
   std::vector<PlannerHNS::WayPoint> t_centerTrajectorySmoothed;
   std::vector<std::vector<WayPoint> > m_TotalOriginalPath;

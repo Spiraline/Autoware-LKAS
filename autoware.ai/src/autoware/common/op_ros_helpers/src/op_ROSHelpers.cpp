@@ -1071,6 +1071,9 @@ std::string ROSHelpers::GetBehaviorNameFromCode(const PlannerHNS::STATE_TYPE& be
   case PlannerHNS::INTERSECTION_STATE:
     str = "Intersection";
     break;
+  case PlannerHNS::LKAS_STATE:
+    str = "LKAS";
+    break;
   default:
     str = "Unknown";
     break;

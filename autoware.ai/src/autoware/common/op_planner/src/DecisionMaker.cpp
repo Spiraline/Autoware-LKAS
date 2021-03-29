@@ -112,8 +112,8 @@ void DecisionMaker::InitBehaviorStates()
 
   // Added by PHY
   m_pPedestrianState         = new PedestrianState(m_pStopState->m_pParams, m_pStopState->GetCalcParams(), m_pGoToGoalState);
-
   m_pIntersectionState         = new IntersectionState(m_pStopState->m_pParams, m_pStopState->GetCalcParams(), m_pGoToGoalState);
+  m_pLKASState              = new LKASState(m_pStopState->m_pParams, m_pStopState->GetCalcParams(), m_pGoToGoalState);
 
   m_pGoToGoalState->InsertNextState(m_pAvoidObstacleState);
   m_pGoToGoalState->InsertNextState(m_pStopSignStopState);
@@ -121,6 +121,7 @@ void DecisionMaker::InitBehaviorStates()
   m_pGoToGoalState->InsertNextState(m_pFollowState);
   m_pGoToGoalState->InsertNextState(m_pPedestrianState);
   m_pGoToGoalState->InsertNextState(m_pIntersectionState);
+  m_pGoToGoalState->InsertNextState(m_pLKASState);
   m_pGoToGoalState->decisionMakingCount = 0;//m_params.nReliableCount;
 
   m_pGoalState->InsertNextState(m_pGoToGoalState);
@@ -215,12 +216,21 @@ void DecisionMaker::InitBehaviorStates()
      pValues->iCurrSafeLane = info.iGlobalPath;
    }
 
-   double critical_long_front_distance =  m_CarInfo.wheel_base/2.0 + m_CarInfo.length/2.0 + m_params.verticalSafetyDistance;
+  double critical_long_front_distance = m_CarInfo.wheel_base/2.0 + m_CarInfo.length/2.0 + m_params.verticalSafetyDistance;\
 
-  if(ReachEndOfGlobalPath(pValues->minStoppingDistance + critical_long_front_distance, pValues->iCurrSafeLane))
-    pValues->currentGoalID = -1;
-  else
-    pValues->currentGoalID = goalID;
+  // HJW Added : Calculate closest waypoint distance
+  pValues->closestWaypointDistance = GetClosestWaypointDistance(pValues->iCurrSafeLane);
+
+  pValues->goalDistance = GetGoalDistance(pValues->iCurrSafeLane);
+
+  pValues->currentGoalID = goalID;
+
+  // std::cout << "w_d : " << pValues->closestWaypointDistance << std::endl;
+
+  // if(ReachEndOfGlobalPath(pValues->minStoppingDistance + critical_long_front_distance, pValues->iCurrSafeLane))
+  //   pValues->currentGoalID = -1;
+  // else
+  //   pValues->currentGoalID = goalID;
 
   m_iCurrentTotalPathId = pValues->iCurrSafeLane;
 
@@ -355,23 +365,29 @@ void DecisionMaker::InitBehaviorStates()
     pLane = 0;
  }
 
- bool DecisionMaker::ReachEndOfGlobalPath(const double& min_distance, const int& iGlobalPathIndex)
+ double DecisionMaker::GetGoalDistance(const int& iGlobalPathIndex)
  {
-   if(m_TotalPath.size()==0) return false;
+   if(m_TotalPath.size()==0) return 0.0;
 
    PlannerHNS::RelativeInfo info;
    PlanningHelpers::GetRelativeInfo(m_TotalPath.at(iGlobalPathIndex), state, info);
 
-   double d = 0;
-   for(unsigned int i = info.iFront; i < m_TotalPath.at(iGlobalPathIndex).size()-1; i++)
-   {
-     d+= hypot(m_TotalPath.at(iGlobalPathIndex).at(i+1).pos.y - m_TotalPath.at(iGlobalPathIndex).at(i).pos.y, m_TotalPath.at(iGlobalPathIndex).at(i+1).pos.x - m_TotalPath.at(iGlobalPathIndex).at(i).pos.x);
-     if(d > min_distance)
-       return false;
-   }
+   PlannerHNS::WayPoint last_wp = m_TotalPath.at(iGlobalPathIndex).at(m_TotalPath.at(iGlobalPathIndex).size() - 1);
 
-   return true;
+   return hypot(last_wp.pos.y - state.pos.y, last_wp.pos.x - state.pos.x);
  }
+
+double DecisionMaker::GetClosestWaypointDistance(const int& iGlobalPathIndex){
+  if(m_TotalPath.size()==0) return 200.0;
+
+  PlannerHNS::RelativeInfo info;
+  PlanningHelpers::GetRelativeInfo(m_TotalPath.at(iGlobalPathIndex), state, info);
+
+  double d = 0;
+  d = hypot(m_TotalPath.at(iGlobalPathIndex).at(info.iFront).pos.y - state.pos.y, m_TotalPath.at(iGlobalPathIndex).at(info.iFront).pos.x - state.pos.x);
+
+  return d;
+}
 
  void DecisionMaker::SetNewGlobalPath(const std::vector<std::vector<WayPoint> >& globalPath)
  {
@@ -543,8 +559,6 @@ void DecisionMaker::InitBehaviorStates()
     m_pidSprintVelocity.getPID(e2);
     m_pidVelocity.getPID(e2);
     m_pidIntersectionVelocity.getPID(e2);
-
-//    std::cout << "Stopping : e=" << e << ", desiredPID=" << desiredVelocity << ", PID: " << m_pidStopping.ToString() << std::endl;
 
     if(desiredVelocity > max_velocity)
       desiredVelocity = max_velocity;
@@ -759,52 +773,4 @@ void DecisionMaker::InitBehaviorStates()
     std::cout<<"RIGHT:"<<m_params.turnRight<<std::endl;
   }
 
-  std::string DecisionMaker::ToString(STATE_TYPE beh)
-  {
-    std::string str = "Unknown";
-    switch(beh)
-    {
-    case PlannerHNS::INITIAL_STATE:
-      str = "Init";
-      break;
-    case PlannerHNS::EMERGENCY_STATE:
-      str = "Emergency";
-      break;
-    case PlannerHNS::FORWARD_STATE:
-      str = "Forward";
-      break;
-    case PlannerHNS::STOPPING_STATE:
-      str = "Stop";
-      break;
-    case PlannerHNS::FINISH_STATE:
-      str = "End";
-      break;
-    case PlannerHNS::FOLLOW_STATE:
-      str = "Follow";
-      break;
-    case PlannerHNS::OBSTACLE_AVOIDANCE_STATE:
-      str = "Swerving";
-      break;
-    case PlannerHNS::TRAFFIC_LIGHT_STOP_STATE:
-      str = "Light Stop";
-      break;
-    case PlannerHNS::TRAFFIC_LIGHT_WAIT_STATE:
-      str = "Light Wait";
-      break;
-    case PlannerHNS::STOP_SIGN_STOP_STATE:
-      str = "Sign Stop";
-      break;
-    case PlannerHNS::STOP_SIGN_WAIT_STATE:
-      str = "Sign Wait";
-      break;
-    case PlannerHNS::INTERSECTION_STATE:
-      str = "Intersection";
-      break;
-    default:
-      str = "Unknown";
-      break;
-    }
-
-    return str;
-  }
 } /* namespace PlannerHNS */

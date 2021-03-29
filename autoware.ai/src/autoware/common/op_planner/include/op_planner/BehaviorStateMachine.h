@@ -292,6 +292,15 @@ public:
   virtual BehaviorStateMachine* GetNextState();
 };
 
+class LKASState : public BehaviorStateMachine
+{
+public:
+  LKASState(PlanningParams* pParams, PreCalculatedConditions* pPreCalcVal, BehaviorStateMachine* pNextState)
+  : BehaviorStateMachine(pParams, pPreCalcVal, pNextState){m_Behavior = LKAS_STATE;}
+  virtual ~LKASState(){}
+  virtual BehaviorStateMachine* GetNextState();
+};
+
 } /* namespace PlannerHNS */
 
 #endif /* BEHAVIORSTATEMACHINE_H_ */
