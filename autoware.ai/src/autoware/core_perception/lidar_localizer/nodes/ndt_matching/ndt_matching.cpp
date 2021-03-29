@@ -36,6 +36,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
 #include <velodyne_pointcloud/point_types.h>
 #include <velodyne_pointcloud/rawdata.h>
@@ -113,6 +114,8 @@ static double offset_imu_odom_x, offset_imu_odom_y, offset_imu_odom_z, offset_im
 // For GPS backup method
 static pose current_gnss_pose;
 static double previous_score = 0.0;
+
+static bool isLKAS = false;
 
 // Can't load if typed "pcl::PointCloud<pcl::PointXYZRGB> map, add;"
 static pcl::PointCloud<pcl::PointXYZ> map, add;
@@ -563,17 +566,22 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
   else
     matching_fail_cnt++;
 
-  if( previous_score == 0.0){
+  if(previous_score == 0.0){
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
-  else if( previous_score > USING_GPS_THRESHOLD && _is_init_match_finished == true){
+  else if(previous_score > USING_GPS_THRESHOLD && _is_init_match_finished == true){
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
   else if(matching_fail_cnt > 30){
+    previous_score = 0.0;
+    current_pose = current_gnss_pose;
+    previous_pose = previous_gnss_pose;
+  }
+  else if(isLKAS){
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
@@ -680,6 +688,13 @@ static void initialpose_callback(const geometry_msgs::PoseWithCovarianceStamped:
   previous_score = 0.0;
 
   init_pos_set = 1;
+}
+
+static void state_callback(const std_msgs::Int32::ConstPtr& msg)
+{
+  // 19 stands for LKAS State
+  if(msg->data == 19) isLKAS = true;
+  else isLKAS = false;
 }
 
 static void imu_odom_calc(ros::Time current_time)
@@ -1660,6 +1675,8 @@ int main(int argc, char** argv)
   ros::Subscriber points_sub = nh.subscribe("filtered_points", _queue_size, points_callback);
   // ros::Subscriber odom_sub = nh.subscribe("/vehicle/odom", _queue_size * 10, odom_callback);
   // ros::Subscriber imu_sub = nh.subscribe(_imu_topic.c_str(), _queue_size * 10, imu_callback);
+
+  ros::Subscriber state_sub = nh.subscribe("current_state", 10, state_callback);
 
   pthread_t thread;
   pthread_create(&thread, NULL, thread_func, NULL);

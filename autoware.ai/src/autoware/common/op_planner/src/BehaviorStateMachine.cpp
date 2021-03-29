@@ -453,7 +453,7 @@ BehaviorStateMachine* GoalStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
 
-  if(pCParams->currentGoalID == -1)
+  if(pCParams->closestWaypointDistance < 3 && pCParams->goalDistance < 10)
     return FindBehaviorState(FINISH_STATE);
 
   else
