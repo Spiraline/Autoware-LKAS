@@ -435,11 +435,20 @@ void TrajectoryEval::MainLoop()
   nh.getParam("/op_trajectory_evaluator/intersection_list", intersection_xml);
   PlannerHNS::MappingHelpers::ConstructIntersection_RUBIS(intersection_list, intersection_xml);
 
+  nh.getParam("/op_trajectory_evaluator/output_log", _output_log);
+
+  if(_output_log){
+    std::string print_file_path = "/home/jwhan/Documents/tmp/op_trajectory_evaluator.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
+
   while (ros::ok())
   {
+    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
     UpdateMyParams();
     UpdateTf();
-    
 
     ros::spinOnce();
     PlannerHNS::TrajectoryCost tc;
@@ -529,6 +538,15 @@ void TrajectoryEval::MainLoop()
     }
     else
       sub_GlobalPlannerPaths = nh.subscribe("/lane_waypoints_array",   1,    &TrajectoryEval::callbackGetGlobalPlannerPath,   this);
+
+    if(_output_log){
+      clock_gettime(CLOCK_MONOTONIC, &end_time);
+      std::string print_file_path = "/home/jwhan/Documents/tmp/op_trajectory_evaluator.csv";
+      FILE *fp;
+      fp = fopen(print_file_path.c_str(), "a");
+      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fclose(fp);
+    }
 
     loop_rate.sleep();
   }

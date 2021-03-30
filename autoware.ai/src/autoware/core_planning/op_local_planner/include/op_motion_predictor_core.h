@@ -100,6 +100,9 @@ protected:
 
   timespec m_SensingTimer;
 
+  struct timespec start_time, end_time;
+  bool _output_log;
+
   // Object Msg List
   std::vector<autoware_msgs::DetectedObjectArray> object_msg_list_;  
 

@@ -42,11 +42,7 @@
 #include <autoware_health_checker/health_checker/health_checker.h>
 
 #include <opencv2/core/version.hpp>
-#if (CV_MAJOR_VERSION == 3)
 #include "gencolors.cpp"
-#else
-#include <opencv2/contrib/contrib.hpp>
-#endif
 
 class RayGroundFilter
 {
@@ -76,6 +72,9 @@ private:
 
   size_t radial_dividers_num_;
   size_t concentric_dividers_num_;
+
+  struct timespec start_time, end_time;
+  bool _output_log;
 
   std::vector<cv::Scalar> colors_;
   const size_t color_num_ = 60;  // different number of color to generate

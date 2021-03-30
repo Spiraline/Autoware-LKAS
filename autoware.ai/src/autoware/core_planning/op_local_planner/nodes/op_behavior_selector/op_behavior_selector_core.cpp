@@ -41,6 +41,7 @@ BehaviorGen::BehaviorGen()
   nh.getParam("/op_behavior_selector/distanceToPedestrianThreshold", m_distanceToPedestrianThreshold);
   nh.param("/op_behavior_selector/turnThreshold", m_turnThreshold, 20.0);
 
+  nh.getParam("/op_behavior_selector/output_log", _output_log);
 
   tf::StampedTransform transform;
   PlannerHNS::ROSHelpers::GetTransformFromTF("map", "world", transform);
@@ -595,6 +596,12 @@ void BehaviorGen::MainLoop()
 {
   ros::Rate loop_rate(100);
 
+  if(_output_log){
+    std::string print_file_path = "/home/jwhan/Documents/tmp/op_behavior_selector.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
 
   timespec planningTimer;
   UtilityHNS::UtilityH::GetTickCount(planningTimer);
@@ -604,6 +611,8 @@ void BehaviorGen::MainLoop()
 
   while (ros::ok())
   {
+    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
     ros::spinOnce();
 
     // Check Pedestrian is Appeared
@@ -739,6 +748,15 @@ void BehaviorGen::MainLoop()
     }
     else
       sub_GlobalPlannerPaths = nh.subscribe("/lane_waypoints_array",   1,    &BehaviorGen::callbackGetGlobalPlannerPath,   this);
+
+    if(_output_log){
+      clock_gettime(CLOCK_MONOTONIC, &end_time);
+      std::string print_file_path = "/home/jwhan/Documents/tmp/op_behavior_selector.csv";
+      FILE *fp;
+      fp = fopen(print_file_path.c_str(), "a");
+      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fclose(fp);
+    }
 
     loop_rate.sleep();
   }

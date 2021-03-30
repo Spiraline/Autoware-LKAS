@@ -16,6 +16,8 @@
   <arg name="merge_distance_threshold" default="0.5"/>
   <arg name="use_sukf" default="false" />
 
+  <arg name="output_log" default="false" />
+
   <!-- Vectormap -->
   <arg name="use_map_info" default="false" />
   <arg name="lane_direction_chi_threshold" default="2.71" />
@@ -40,6 +42,8 @@
     <param name="use_sukf" value="$(arg use_sukf)" />
     <param name="use_vectormap" value="$(arg use_map_info)" />
     <param name="merge_distance_threshold" value="$(arg merge_distance_threshold)" />
+
+    <param name="output_log" value="$(arg output_log)" />
 
     <!-- <remap from="detection/fusion_tools/objects_$(arg label)" to="$(arg tracker_input_topic)_$(arg label)" />
     <remap from="detection/objects_$(arg label)" to="$(arg tracker_output_topic)_$(arg label)" /> -->

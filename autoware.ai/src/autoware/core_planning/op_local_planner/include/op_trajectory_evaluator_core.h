@@ -92,6 +92,10 @@ protected:
   double m_VehicleImageWidthThreshold;
   int m_noVehicleCnt;
 
+  bool _output_log;
+
+  struct timespec start_time, end_time;
+
   //ROS messages (topics)
   ros::NodeHandle nh;
 

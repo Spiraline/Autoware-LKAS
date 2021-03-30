@@ -121,6 +121,9 @@ protected: //Planning Related variables
   bool m_sprintSwitch;
   double m_obstacleWaitingTimeinIntersection;
 
+  bool _output_log;
+  struct timespec start_time, end_time;
+
   //ROS messages (topics)
   ros::NodeHandle nh;
 

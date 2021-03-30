@@ -124,6 +124,9 @@ static int map_loaded = 0;
 static int _use_gnss = 1;
 static int init_pos_set = 0;
 
+struct timespec start_time, end_time;
+static bool _output_log;
+
 static pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> ndt;
 static cpu::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> anh_ndt;
 #ifdef CUDA_FOUND
@@ -909,6 +912,8 @@ static void imu_callback(const sensor_msgs::Imu::Ptr& input)
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
+  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
   // Check inital matching is success or not
   if(_is_init_match_finished == false && previous_score < SCORE_THRESHOLD && previous_score != 0.0)
     _is_init_match_finished = true;
@@ -1493,6 +1498,15 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
     previous_estimated_vel_kmph.data = estimated_vel_kmph.data;
   }
+
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = "/home/jwhan/Documents/tmp/ndt_matching.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
+  }
 }
 
 void* thread_func(void* args)
@@ -1552,6 +1566,14 @@ int main(int argc, char** argv)
   private_nh.getParam("imu_topic", _imu_topic);
   private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
+  private_nh.getParam("output_log", _output_log);
+
+  if(_output_log){
+    std::string print_file_path = "/home/jwhan/Documents/tmp/ndt_matching.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
 
   if (nh.getParam("localizer", _localizer) == false)
   {

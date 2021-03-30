@@ -57,20 +57,13 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/core/version.hpp>
-
-#if (CV_MAJOR_VERSION == 3)
+#include "opencv2/core/core_c.h"
 
 #include "gencolors.cpp"
 
-#else
-
-#include <opencv2/contrib/contrib.hpp>
 #include <autoware_msgs/DetectedObjectArray.h>
-
-#endif
 
 #include "cluster.h"
 
@@ -97,6 +90,9 @@ ros::Publisher _pub_detected_objects;
 std_msgs::Header _velodyne_header;
 
 std::string _output_frame;
+
+static bool _output_log;
+struct timespec start_time, end_time;
 
 static bool _velodyne_transform_available;
 static bool _downsample_cloud;
@@ -851,7 +847,7 @@ void removePointsUpTo(const pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr,
 
 void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 {
-  //_start = std::chrono::system_clock::now();
+  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   if (!_using_sensor_cloud)
   {
@@ -927,6 +923,15 @@ void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 
     _using_sensor_cloud = false;
   }
+
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = "/home/jwhan/Documents/tmp/lidar_euclidean_cluster.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
+  }
 }
 int main(int argc, char **argv)
 {
@@ -944,13 +949,7 @@ int main(int argc, char **argv)
   _transform = &transform;
   _transform_listener = &listener;
 
-#if (CV_MAJOR_VERSION == 3)
   generateColors(_colors, 255);
-#else
-  cv::generateColors(_colors, 255);
-#endif
-
-
 
   std::string label;
   std::string output_lane_str;
@@ -959,6 +958,15 @@ int main(int argc, char **argv)
   std::string point_cluster_str;
   std::string cluster_centeroids_str;
   std::string points_ground_str;
+
+  private_nh.getParam("output_log", _output_log);
+
+  if(_output_log){
+    std::string print_file_path = "/home/jwhan/Documents/tmp/lidar_euclidean_cluster.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
 
   private_nh.param<std::string>("label", label, "center");
   output_lane_str = std::string("/points_lanes_")+label;

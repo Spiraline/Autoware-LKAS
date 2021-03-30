@@ -32,11 +32,6 @@
 #include "autoware_config_msgs/ConfigRayGroundFilter.h"
 
 #include <opencv2/core/version.hpp>
-#if (CV_MAJOR_VERSION == 3)
-#include "gencolors.cpp"
-#else
-#include <opencv2/contrib/contrib.hpp>
-#endif
 
 #include "points_preprocessor/ray_ground_filter/ray_ground_filter.h"
 
@@ -325,6 +320,8 @@ void RayGroundFilter::RemovePointsUpTo(const pcl::PointCloud<pcl::PointXYZI>::Pt
 
 void RayGroundFilter::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 {
+  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
   health_checker_ptr_->NODE_ACTIVATE();
   health_checker_ptr_->CHECK_RATE("topic_rate_points_raw_slow", 8, 5, 1, "topic points_raw subscribe rate slow.");
 
@@ -373,6 +370,15 @@ void RayGroundFilter::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& in_s
 
   publish_cloud(ground_points_pub_, ground_cloud_ptr, in_sensor_cloud->header);
   publish_cloud(groundless_points_pub_, no_ground_cloud_ptr, in_sensor_cloud->header);
+
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = "/home/jwhan/Documents/tmp/ring_ground_filter.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
+  }
 }
 
 RayGroundFilter::RayGroundFilter() : node_handle_("~"), tf_listener_(tf_buffer_)
@@ -393,6 +399,16 @@ void RayGroundFilter::Run()
   // VLP-16  |     0.1-0.4    |     2.0      |  -15.0<=x<=15.0   (30    / 0.52)
   // VLP-16HD|     0.1-0.4    |     1.33     |  -10.0<=x<=10.0   (20    / 0.35)
   ROS_INFO("Initializing Ground Filter, please wait...");
+
+  node_handle_.param("output_log", _output_log, false);
+
+  if(_output_log){
+    std::string print_file_path = "/home/jwhan/Documents/tmp/ring_ground_filter.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
+
   node_handle_.param<std::string>("input_point_topic", input_point_topic_, "/points_raw");
   ROS_INFO("Input point_topic: %s", input_point_topic_.c_str());
 
@@ -420,11 +436,7 @@ void RayGroundFilter::Run()
   node_handle_.param("reclass_distance_threshold", reclass_distance_threshold_, 0.2);  // 0.5 meters default
   ROS_INFO("reclass_distance_threshold[meters]: %f", reclass_distance_threshold_);
 
-#if (CV_MAJOR_VERSION == 3)
   generateColors(colors_, color_num_);
-#else
-  cv::generateColors(colors_, color_num_);
-#endif
 
   radial_dividers_num_ = ceil(360 / radial_divider_angle_);
   ROS_INFO("Radial Divisions: %d", (int)radial_dividers_num_);

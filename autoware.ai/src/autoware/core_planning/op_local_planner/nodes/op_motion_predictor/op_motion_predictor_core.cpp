@@ -48,6 +48,8 @@ MotionPrediction::MotionPrediction()
 
   sub_StepSignal = nh.subscribe("/pred_step_signal",     1, &MotionPrediction::callbackGetStepForwardSignals,     this);
   // sub_tracked_objects  = nh.subscribe("/tracked_objects",       1,    &MotionPrediction::callbackGetTrackedObjects,     this);
+
+  _nh.param<bool>("/op_motion_predictor/output_log", _output_log, false);
   
   // Setup tf
   std::string tf_str_list_str;
@@ -211,7 +213,6 @@ void MotionPrediction::UpdatePlanningParams(ros::NodeHandle& _nh)
   _nh.getParam("/op_motion_predictor/enableStepByStepSignal",   m_PredictBeh.m_bStepByStep );
   _nh.getParam("/op_motion_predictor/enableParticleFilterPrediction",   m_PredictBeh.m_bParticleFilter);
 
-
   UtilityHNS::UtilityH::GetTickCount(m_SensingTimer);
 }
 
@@ -304,7 +305,6 @@ autoware_msgs::DetectedObjectArray MotionPrediction::TrasformObjAryToVeldoyne(co
 
 void MotionPrediction::callbackGetTrackedObjects(const autoware_msgs::DetectedObjectArrayConstPtr& in_msg)
 {
-  
   UtilityHNS::UtilityH::GetTickCount(m_SensingTimer);
   m_TrackedObjects.clear();
   bTrackedObjects = true;
@@ -531,11 +531,18 @@ void MotionPrediction::VisualizePrediction()
 
 void MotionPrediction::MainLoop()
 {
+  if(_output_log){
+    std::string print_file_path = "/home/jwhan/Documents/tmp/op_motion_predictor.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
 
   ros::Rate loop_rate(25);
 
   while (ros::ok())
   {
+    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
     ros::spinOnce();
 
     if(m_MapType == PlannerHNS::MAP_KML_FILE && !bMap)
@@ -596,6 +603,15 @@ void MotionPrediction::MainLoop()
 //      m_PredictedResultsResults.objects.clear();
 //      pub_predicted_objects_trajectories.publish(m_PredictedResultsResults);
 //    }
+
+    if(_output_log){
+      clock_gettime(CLOCK_MONOTONIC, &end_time);
+      std::string print_file_path = "/home/jwhan/Documents/tmp/op_motion_predictor.csv";
+      FILE *fp;
+      fp = fopen(print_file_path.c_str(), "a");
+      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fclose(fp);
+    }
 
     loop_rate.sleep();
   }

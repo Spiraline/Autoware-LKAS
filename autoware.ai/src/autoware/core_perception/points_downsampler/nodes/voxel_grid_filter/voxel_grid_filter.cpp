@@ -41,6 +41,8 @@ static points_downsampler::PointsDownsamplerInfo points_downsampler_info_msg;
 
 static std::chrono::time_point<std::chrono::system_clock> filter_start, filter_end;
 
+struct timespec start_time, end_time;
+
 static bool _output_log = false;
 static std::ofstream ofs;
 static std::string filename;
@@ -56,6 +58,8 @@ static void config_callback(const autoware_config_msgs::ConfigVoxelGridFilter::C
 
 static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
+  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
   pcl::PointCloud<pcl::PointXYZI> scan;
   pcl::fromROSMsg(*input, scan);
 
@@ -68,7 +72,7 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
   sensor_msgs::PointCloud2 filtered_msg;
 
-  filter_start = std::chrono::system_clock::now();
+  // filter_start = std::chrono::system_clock::now();
 
   // if voxel_leaf_size < 0.1 voxel_grid_filter cannot down sample (It is specification in PCL)
   if (voxel_leaf_size >= 0.1)
@@ -85,7 +89,7 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     pcl::toROSMsg(*scan_ptr, filtered_msg);
   }
 
-  filter_end = std::chrono::system_clock::now();
+  // filter_end = std::chrono::system_clock::now();
 
   filtered_msg.header = input->header;
   filtered_points_pub.publish(filtered_msg);
@@ -107,23 +111,14 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   points_downsampler_info_msg.exe_time = std::chrono::duration_cast<std::chrono::microseconds>(filter_end - filter_start).count() / 1000.0;
   points_downsampler_info_pub.publish(points_downsampler_info_msg);
 
-  if(_output_log == true){
-    if(!ofs){
-      std::cerr << "Could not open " << filename << "." << std::endl;
-      exit(1);
-    }
-    ofs << points_downsampler_info_msg.header.seq << ","
-      << points_downsampler_info_msg.header.stamp << ","
-      << points_downsampler_info_msg.header.frame_id << ","
-      << points_downsampler_info_msg.filter_name << ","
-      << points_downsampler_info_msg.original_points_size << ","
-      << points_downsampler_info_msg.filtered_points_size << ","
-      << points_downsampler_info_msg.original_ring_size << ","
-      << points_downsampler_info_msg.filtered_ring_size << ","
-      << points_downsampler_info_msg.exe_time << ","
-      << std::endl;
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = "/home/jwhan/Documents/tmp/voxel_grid_filter.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
   }
-
 }
 
 int main(int argc, char** argv)
@@ -135,14 +130,14 @@ int main(int argc, char** argv)
 
   private_nh.getParam("points_topic", POINTS_TOPIC);
   private_nh.getParam("output_log", _output_log);
-  if(_output_log == true){
-    char buffer[80];
-    std::time_t now = std::time(NULL);
-    std::tm *pnow = std::localtime(&now);
-    std::strftime(buffer,80,"%Y%m%d_%H%M%S",pnow);
-    filename = "voxel_grid_filter_" + std::string(buffer) + ".csv";
-    ofs.open(filename.c_str(), std::ios::app);
+
+  if(_output_log){
+    std::string print_file_path = "/home/jwhan/Documents/tmp/voxel_grid_filter.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
   }
+
   private_nh.param<double>("measurement_range", measurement_range, MAX_MEASUREMENT_RANGE);
 
   // Publishers

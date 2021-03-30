@@ -36,6 +36,8 @@ ImmUkfPda::ImmUkfPda()
   private_nh_.param<double>("merge_distance_threshold", merge_distance_threshold_, 0.5);
   private_nh_.param<bool>("use_sukf", use_sukf_, false);
 
+  private_nh_.param<bool>("output_log", _output_log, false);
+
   // for vectormap assisted tracking
   private_nh_.param<bool>("use_vectormap", use_vectormap_, false);
   private_nh_.param<double>("lane_direction_chi_threshold", lane_direction_chi_threshold_, 2.71);
@@ -58,6 +60,15 @@ ImmUkfPda::ImmUkfPda()
 
 void ImmUkfPda::run()
 {
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = "/home/jwhan/Documents/tmp/imm_ukf_pda.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
+  }
+
   pub_object_array_ = node_handle_.advertise<autoware_msgs::DetectedObjectArray>(output_topic_.c_str(), 1);
   sub_detected_array_ = node_handle_.subscribe(input_topic_.c_str(), 1, &ImmUkfPda::callback, this);
 
@@ -71,6 +82,8 @@ void ImmUkfPda::run()
 
 void ImmUkfPda::callback(const autoware_msgs::DetectedObjectArray& input)
 {
+  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
   input_header_ = input.header;
 
   if(use_vectormap_)
@@ -96,6 +109,15 @@ void ImmUkfPda::callback(const autoware_msgs::DetectedObjectArray& input)
   if (is_benchmark_)
   {
     dumpResultText(detected_objects_output);
+  }
+
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = "/home/jwhan/Documents/tmp/imm_ukf_pda.csv";
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
   }
 }
 

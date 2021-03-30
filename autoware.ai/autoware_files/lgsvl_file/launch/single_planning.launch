@@ -1,4 +1,6 @@
 <launch>
+  <arg name="output_log" value="true" />
+
   <!-- op_global_planning -->
   <include file="$(find op_global_planner)/launch/op_global_planner.launch">
     <arg name="pathDensity"           value="1" /> <!-- distance between each two waypoints-->
@@ -83,6 +85,8 @@
     <!-- Not included in app window -->   
     <arg name="distanceBetweenCurbs"            default="1.5" />
     <arg name="visualizationTime"               default="0.25" />
+
+    <arg name="output_log"                      default="$(arg output_log)" />
   </include>
 
   <!-- op_trajectory_evaluator -->
@@ -106,6 +110,8 @@
     <arg name="SprintDecisionTime" default="9999999.0" /> <!-- Seconds -->
 
     <arg name="intersectionFile"                default="crossing_test/crossing_intersection.yaml" />
+
+    <arg name="output_log"                      default="$(arg output_log)" />
   </include>
 
   <!-- op_behavior_selector -->
