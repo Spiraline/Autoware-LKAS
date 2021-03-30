@@ -18,6 +18,8 @@ catkin_package(
   DEPENDS rviz
 )
 
+find_package(OpenCV REQUIRED)
+
 if(rviz_QT_VERSION VERSION_LESS "5")
   find_package(Qt4 ${rviz_QT_VERSION} EXACT REQUIRED QtCore QtGui)
   include(${QT_USE_FILE})
@@ -58,6 +60,7 @@ include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
   include
   lib/
 )
@@ -103,6 +106,7 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${QT_LIBRARIES}
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 add_dependencies(${PROJECT_NAME}

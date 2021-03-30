@@ -29,12 +29,9 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/calib3d/calib3d_c.h"
 
-#if (CV_MAJOR_VERSION == 3)
-  #include <opencv2/imgcodecs.hpp>
-#else
-  #include <opencv2/contrib/contrib.hpp>
-#endif
+#include <opencv2/imgcodecs.hpp>
 
 #define __APP_NAME__ "autoware_camera_lidar_calibration_node"
 

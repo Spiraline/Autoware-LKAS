@@ -66,6 +66,7 @@ add_library(object_map_utils_lib
 )
 target_link_libraries(object_map_utils_lib
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 ### laserscan2costmap ###
@@ -75,6 +76,7 @@ add_executable(laserscan2costmap
 
 target_link_libraries(laserscan2costmap
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 
@@ -87,6 +89,7 @@ add_dependencies(potential_field
 )
 target_link_libraries(potential_field
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
 )
 
 ### grid_map_filter ###
@@ -97,6 +100,7 @@ add_library(grid_map_filter_lib
 )
 target_link_libraries(grid_map_filter_lib
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
   object_map_utils_lib
 )
 add_executable(grid_map_filter
@@ -105,6 +109,7 @@ add_executable(grid_map_filter
 )
 target_link_libraries(grid_map_filter
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
   object_map_utils_lib
   grid_map_filter_lib
 )
@@ -117,6 +122,7 @@ add_library(wayarea2grid_lib
 )
 target_link_libraries(wayarea2grid_lib
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
   object_map_utils_lib
 )
 
@@ -127,6 +133,7 @@ add_executable(wayarea2grid
 
 target_link_libraries(wayarea2grid
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
   wayarea2grid_lib
 )
       
@@ -136,6 +143,7 @@ add_library(wayarea2grid_lanelet2_lib
 )
 target_link_libraries(wayarea2grid_lanelet2_lib
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
   object_map_utils_lib
 )
 
@@ -145,6 +153,7 @@ add_executable(wayarea2grid_lanelet2
 
 target_link_libraries(wayarea2grid_lanelet2
   ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
   wayarea2grid_lanelet2_lib
 )
 
