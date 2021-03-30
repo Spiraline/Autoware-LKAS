@@ -75,7 +75,8 @@
 
 #define PREDICT_POSE_THRESHOLD 0.5
 
-#define USING_GPS_THRESHOLD 10
+#define SCORE_THRESHOLD 10
+#define POSE_DIFF_THRESHOLD 5
 
 #define Wa 0.4
 #define Wb 0.3
@@ -114,8 +115,6 @@ static double offset_imu_odom_x, offset_imu_odom_y, offset_imu_odom_z, offset_im
 // For GPS backup method
 static pose current_gnss_pose;
 static double previous_score = 0.0;
-
-static bool isLKAS = false;
 
 // Can't load if typed "pcl::PointCloud<pcl::PointXYZRGB> map, add;"
 static pcl::PointCloud<pcl::PointXYZ> map, add;
@@ -561,7 +560,9 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   static int matching_fail_cnt = 0;
 
-  if(previous_score <= USING_GPS_THRESHOLD)
+  double gnss_ndt_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
+
+  if(previous_score < SCORE_THRESHOLD || gnss_ndt_diff > POSE_DIFF_THRESHOLD)
     matching_fail_cnt = 0;
   else
     matching_fail_cnt++;
@@ -571,17 +572,12 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
-  else if(previous_score > USING_GPS_THRESHOLD && _is_init_match_finished == true){
+  else if(previous_score > SCORE_THRESHOLD && _is_init_match_finished == true){
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
-  else if(matching_fail_cnt > 30){
-    previous_score = 0.0;
-    current_pose = current_gnss_pose;
-    previous_pose = previous_gnss_pose;
-  }
-  else if(isLKAS){
+  else if(matching_fail_cnt > 10){
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
@@ -688,13 +684,6 @@ static void initialpose_callback(const geometry_msgs::PoseWithCovarianceStamped:
   previous_score = 0.0;
 
   init_pos_set = 1;
-}
-
-static void state_callback(const std_msgs::Int32::ConstPtr& msg)
-{
-  // 19 stands for LKAS State
-  if(msg->data == 19) isLKAS = true;
-  else isLKAS = false;
 }
 
 static void imu_odom_calc(ros::Time current_time)
@@ -921,7 +910,7 @@ static void imu_callback(const sensor_msgs::Imu::Ptr& input)
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
   // Check inital matching is success or not
-  if(_is_init_match_finished == false && previous_score < USING_GPS_THRESHOLD && previous_score != 0.0)
+  if(_is_init_match_finished == false && previous_score < SCORE_THRESHOLD && previous_score != 0.0)
     _is_init_match_finished = true;
 
   health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
@@ -1675,8 +1664,6 @@ int main(int argc, char** argv)
   ros::Subscriber points_sub = nh.subscribe("filtered_points", _queue_size, points_callback);
   // ros::Subscriber odom_sub = nh.subscribe("/vehicle/odom", _queue_size * 10, odom_callback);
   // ros::Subscriber imu_sub = nh.subscribe(_imu_topic.c_str(), _queue_size * 10, imu_callback);
-
-  ros::Subscriber state_sub = nh.subscribe("current_state", 10, state_callback);
 
   pthread_t thread;
   pthread_create(&thread, NULL, thread_func, NULL);

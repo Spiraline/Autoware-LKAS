@@ -914,6 +914,8 @@ public:
   double weightLong;
   double weightLat;
   double LateralSkipDistance;
+
+  double ndt_gnss_diff;
   
   // Added by HJW for traffic signal parameter
   double stopLineMargin;

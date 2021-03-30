@@ -56,7 +56,7 @@ double PurePursuit::calcCurvature(geometry_msgs::Point target) const
       kappa = -KAPPA_MIN_;
     }
   }
-  ROS_INFO("kappa : %lf", kappa);
+  // ROS_INFO("kappa : %lf", kappa);
   return kappa;
 }
 

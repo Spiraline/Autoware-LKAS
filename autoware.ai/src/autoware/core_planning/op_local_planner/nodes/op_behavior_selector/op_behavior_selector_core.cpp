@@ -62,6 +62,8 @@ BehaviorGen::BehaviorGen()
 
   sub_current_pose = nh.subscribe("/current_pose", 10,  &BehaviorGen::callbackGetCurrentPose, this);
 
+  sub_gnss_pose = nh.subscribe("/gnss_pose", 10,  &BehaviorGen::callbackGetGNSSPose, this);
+
   int bVelSource = 1;
   _nh.getParam("/op_trajectory_evaluator/velocitySource", bVelSource);
   if(bVelSource == 0)
@@ -234,6 +236,11 @@ void BehaviorGen::callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPt
 {
   m_CurrentPos = PlannerHNS::WayPoint(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z, tf::getYaw(msg->pose.orientation));
   bNewCurrentPos = true;
+}
+
+void BehaviorGen::callbackGetGNSSPose(const geometry_msgs::PoseStampedConstPtr& msg)
+{
+  m_PlanningParams.ndt_gnss_diff = hypot(msg->pose.position.x - m_CurrentPos.pos.x, msg->pose.position.y - m_CurrentPos.pos.y);
 }
 
 void BehaviorGen::callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg)

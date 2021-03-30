@@ -158,9 +158,11 @@ protected: //Planning Related variables
   ros::Subscriber sub_DistanceToPedestrian;
   ros::Subscriber sub_SprintSwitch;
   ros::Subscriber sub_IntersectionCondition;
+  ros::Subscriber sub_gnss_pose;
 
   // Callback function for subscriber.
   void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
+  void callbackGetGNSSPose(const geometry_msgs::PoseStampedConstPtr& msg);
   void callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg);
   void callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg);
   void callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg);
