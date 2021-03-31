@@ -62,7 +62,7 @@ void ImmUkfPda::run()
 {
   if(_output_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = std::getenv("PATH");
+    std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/imm_ukf_pda.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "a");
@@ -114,7 +114,7 @@ void ImmUkfPda::callback(const autoware_msgs::DetectedObjectArray& input)
 
   if(_output_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = std::getenv("PATH");
+    std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/imm_ukf_pda.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "a");

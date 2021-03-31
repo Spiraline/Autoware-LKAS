@@ -438,7 +438,7 @@ void TrajectoryEval::MainLoop()
   nh.getParam("/op_trajectory_evaluator/output_log", _output_log);
 
   if(_output_log){
-    std::string print_file_path = std::getenv("PATH");
+    std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/op_trajectory_evaluator.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "w");
@@ -542,7 +542,7 @@ void TrajectoryEval::MainLoop()
 
     if(_output_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
-      std::string print_file_path = std::getenv("PATH");
+      std::string print_file_path = std::getenv("HOME");
       print_file_path.append("/Documents/tmp/op_trajectory_evaluator.csv");
       FILE *fp;
       fp = fopen(print_file_path.c_str(), "a");

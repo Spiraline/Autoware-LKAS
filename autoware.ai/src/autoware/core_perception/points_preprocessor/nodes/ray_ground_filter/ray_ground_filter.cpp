@@ -373,7 +373,7 @@ void RayGroundFilter::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& in_s
 
   if(_output_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = std::getenv("PATH");
+    std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/ring_ground_filter.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "a");
@@ -404,7 +404,7 @@ void RayGroundFilter::Run()
   node_handle_.param("output_log", _output_log, false);
 
   if(_output_log){
-    std::string print_file_path = std::getenv("PATH");
+    std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/ring_ground_filter.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "w");
