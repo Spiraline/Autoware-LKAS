@@ -926,7 +926,8 @@ void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 
   if(_output_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = "/home/jwhan/Documents/tmp/lidar_euclidean_cluster.csv";
+    std::string print_file_path = std::getenv("PATH");
+    print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "a");
     fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
@@ -962,7 +963,8 @@ int main(int argc, char **argv)
   private_nh.getParam("output_log", _output_log);
 
   if(_output_log){
-    std::string print_file_path = "/home/jwhan/Documents/tmp/lidar_euclidean_cluster.csv";
+    std::string print_file_path = std::getenv("PATH");
+    print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "w");
     fclose(fp);
