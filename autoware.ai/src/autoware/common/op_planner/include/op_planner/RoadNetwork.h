@@ -1029,6 +1029,7 @@ public:
   double      closestWaypointDistance;
   double      ndt_gnss_diff;
   double      goalDistance;
+  bool        bNewLocalPlan;
   //-------------------------------------------//
   //Following
   double         distanceToNext;

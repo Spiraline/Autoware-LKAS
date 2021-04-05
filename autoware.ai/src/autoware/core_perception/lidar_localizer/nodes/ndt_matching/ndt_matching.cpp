@@ -563,9 +563,9 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   static int matching_fail_cnt = 0;
 
-  double gnss_ndt_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
+  double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
-  if(previous_score < SCORE_THRESHOLD || gnss_ndt_diff > POSE_DIFF_THRESHOLD)
+  if(previous_score < SCORE_THRESHOLD && ndt_gnss_diff < POSE_DIFF_THRESHOLD)
     matching_fail_cnt = 0;
   else
     matching_fail_cnt++;
@@ -575,12 +575,12 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
-  else if(previous_score > SCORE_THRESHOLD && _is_init_match_finished == true){
-    previous_score = 0.0;
-    current_pose = current_gnss_pose;
-    previous_pose = previous_gnss_pose;
-  }
-  else if(matching_fail_cnt > 10){
+  // else if(previous_score > SCORE_THRESHOLD && _is_init_match_finished == true){
+  //   previous_score = 0.0;
+  //   current_pose = current_gnss_pose;
+  //   previous_pose = previous_gnss_pose;
+  // }
+  else if(matching_fail_cnt > 5){
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;

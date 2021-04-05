@@ -32,6 +32,8 @@ public:
   bool m_turn_left = false;
   bool m_turn_right = false;
 
+  int LKASWaitingCount = 0;
+
   PreCalculatedConditions* GetCalcParams()
   {
     if(!m_pCalculatedValues)

@@ -410,25 +410,30 @@ class lane_keeping_module:
         self.image_sub = rospy.Subscriber('/simulator/camera_node/image/compressed',CompressedImage,self.callback)
 
     def lane_keeping_params(self, center_offset):
-        velocity = 0
-        angle = 0
-        if center_offset > 0 :
-            if center_offset > 30 :
-                angle = - 0.5
-            if center_offset > 20 :
-                angle = - 0.2
-        elif center_offset < 0 : 
-            if center_offset < -30 :
-                angle = 0.5
-            if center_offset < -20 :
-                angle = 0.2
-        else :
-            angle = 0
+        velocity = 5
+        angle = center_offset * (-1) / 20
+        if angle > 0.2:
+            angle = 0.2
+        elif angle < -0.2:
+            angle = -0.2
         
-        if angle == 0:
-            velocity = 5
-        else:
-            velocity = 2
+        # if center_offset > 0 :
+        #     if center_offset > 30 :
+        #         angle = - 0.5
+        #     if center_offset > 20 :
+        #         angle = - 0.2
+        # elif center_offset < 0 : 
+        #     if center_offset < -30 :
+        #         angle = 0.5
+        #     if center_offset < -20 :
+        #         angle = 0.2
+        # else :
+        #     angle = 0
+        
+        # if angle == 0:
+        #     velocity = 5
+        # else:
+        #     velocity = 2
         return velocity, angle
 
 

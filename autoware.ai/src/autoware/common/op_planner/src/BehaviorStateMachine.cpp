@@ -568,12 +568,15 @@ BehaviorStateMachine* IntersectionState::GetNextState()
 
 BehaviorStateMachine* LKASState::GetNextState()
 {
+  LKASWaitingCount += 1;
   PreCalculatedConditions* pCParams = GetCalcParams();
-  if(pCParams->ndt_gnss_diff > 5){
-    return FindBehaviorState(this->m_Behavior);
+  if(pCParams->ndt_gnss_diff < 5 && LKASWaitingCount > 100 && pCParams->bNewLocalPlan){
+    pCParams->bNewLocalPlan = false;
+    LKASWaitingCount = 1;
+    return FindBehaviorState(FORWARD_STATE);
   }
   else
-    return FindBehaviorState(FORWARD_STATE);
+    return FindBehaviorState(this->m_Behavior);
 }
 
 } /* namespace PlannerHNS */
