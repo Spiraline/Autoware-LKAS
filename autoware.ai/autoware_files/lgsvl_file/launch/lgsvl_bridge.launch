@@ -10,6 +10,9 @@
       <param name="/output_topic" value="/points_raw" />
   </node>
 
+  <node pkg="rubis_pkg" type="lane_keeping_module.py" name="lane_keeping_module" output="screen">
+  </node>
+
   <!-- <include file="$(find rubis_pkg)/launch/lidar_republisher.launch"/>
   <include file="$(find rubis_pkg)/launch/camera_republisher.launch"/> -->
 

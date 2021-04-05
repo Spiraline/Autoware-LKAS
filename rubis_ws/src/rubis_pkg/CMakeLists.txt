@@ -80,3 +80,7 @@ add_dependencies(lkas_combiner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPO
 target_link_libraries(lkas_combiner
   ${catkin_LIBRARIES}
 )
+
+catkin_install_python(PROGRAMS src/lane_keeping_module.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
