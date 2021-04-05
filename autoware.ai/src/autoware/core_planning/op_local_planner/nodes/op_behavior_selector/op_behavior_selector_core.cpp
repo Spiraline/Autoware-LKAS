@@ -241,7 +241,7 @@ void BehaviorGen::callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPt
 
 void BehaviorGen::callbackGetGNSSPose(const geometry_msgs::PoseStampedConstPtr& msg)
 {
-  m_PlanningParams.ndt_gnss_diff = hypot(msg->pose.position.x - m_CurrentPos.pos.x, msg->pose.position.y - m_CurrentPos.pos.y);
+  m_ndt_gnss_diff = hypot(msg->pose.position.x - m_CurrentPos.pos.x, msg->pose.position.y - m_CurrentPos.pos.y);
 }
 
 void BehaviorGen::callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg)
@@ -702,6 +702,8 @@ void BehaviorGen::MainLoop()
         for(unsigned int itls = 0 ; itls < m_PrevTrafficLight.size() ; itls++)
           m_PrevTrafficLight.at(itls).lightState = m_CurrLightStatus;
       }
+
+      m_BehaviorGenerator.m_ndt_gnss_diff = m_ndt_gnss_diff;
       
       m_BehaviorGenerator.m_sprintSwitch = m_sprintSwitch;
       m_CurrentBehavior = m_BehaviorGenerator.DoOneStep(dt, m_CurrentPos, m_VehicleStatus, 1, m_CurrTrafficLight, m_TrajectoryBestCost, 0);

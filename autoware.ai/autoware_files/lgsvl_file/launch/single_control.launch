@@ -28,6 +28,10 @@
     <arg name="use_decision_maker" default="false" />
   </include>
 
+  <node pkg="rubis_pkg" type="lane_keeping_module.py" name="lane_keeping_module" output="screen">
+  </node>
+
   <node pkg="rubis_pkg" type="lkas_combiner" name="lkas_combiner" output="screen">
   </node>
+  
 </launch>

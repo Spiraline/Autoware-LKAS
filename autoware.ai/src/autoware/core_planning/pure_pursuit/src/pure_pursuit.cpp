@@ -213,7 +213,7 @@ void PurePursuit::getNextWaypoint()
     // if search waypoint is the last
     if (i == (path_size - 1))
     {
-      ROS_INFO("search waypoint is the last");
+      // ROS_INFO("search waypoint is the last");
       next_waypoint_number_ = i;
       return;
     }
@@ -239,7 +239,7 @@ bool PurePursuit::canGetCurvature(double* output_kappa)
   getNextWaypoint();
   if (next_waypoint_number_ == -1)
   {
-    ROS_INFO("lost next waypoint");
+    // ROS_INFO("lost next waypoint");
     return false;
   }
   // check whether curvature is valid or not

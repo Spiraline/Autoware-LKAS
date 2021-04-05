@@ -8,7 +8,7 @@
 #include "op_planner/MatrixOperations.h"
 #include "float.h"
 
-#define DEBUG_ENABLE
+// #define DEBUG_ENABLE
 
 namespace PlannerHNS
 {
@@ -239,17 +239,17 @@ TrajectoryCost TrajectoryDynamicCosts::DoOneStepStatic(const vector<vector<WayPo
   // std::cout << "b_all_free : " << bAllFree << " , t_a : " << turn_angle << std::endl;
 
   // Keep state when Intersection state
-  if(state == PlannerHNS::INTERSECTION_STATE){
-    smallestIndex = m_PrevSelectedIndex;
-  }
-  // For Left Turn
-  else if(bAllFree && turn_angle > 45){
-    smallestIndex = 0;
-  }
-  // For Right Turn
-  else if(bAllFree && turn_angle < -45){
-    smallestIndex = params.rollOutNumber - 1;
-  }
+  // if(state == PlannerHNS::INTERSECTION_STATE){
+  //   smallestIndex = m_PrevSelectedIndex;
+  // }
+  // // For Left Turn
+  // else if(bAllFree && turn_angle > 45){
+  //   smallestIndex = 0;
+  // }
+  // // For Right Turn
+  // else if(bAllFree && turn_angle < -45){
+  //   smallestIndex = params.rollOutNumber - 1;
+  // }
 
   if(smallestIndex == -1)
   {

@@ -349,9 +349,9 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   // hjw added
-  if(m_pParams->ndt_gnss_diff > 5)
+  if(pCParams->ndt_gnss_diff > 5)
     return FindBehaviorState(LKAS_STATE);
-  else if(m_pParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
+  else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
     return FindBehaviorState(GOAL_STATE);
   // else if(pCParams->currentGoalID != pCParams->prevGoalID)
   //   return FindBehaviorState(GOAL_STATE);
@@ -390,9 +390,9 @@ BehaviorStateMachine* FollowStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
 
-  if(m_pParams->ndt_gnss_diff > 5)
+  if(pCParams->ndt_gnss_diff > 5)
     return FindBehaviorState(LKAS_STATE);
-  else if(m_pParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
+  else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
     return FindBehaviorState(GOAL_STATE);
   // if(pCParams->currentGoalID != pCParams->prevGoalID)
   //   return FindBehaviorState(GOAL_STATE);
@@ -569,7 +569,7 @@ BehaviorStateMachine* IntersectionState::GetNextState()
 BehaviorStateMachine* LKASState::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
-  if(m_pParams->ndt_gnss_diff > 5){
+  if(pCParams->ndt_gnss_diff > 5){
     return FindBehaviorState(this->m_Behavior);
   }
   else

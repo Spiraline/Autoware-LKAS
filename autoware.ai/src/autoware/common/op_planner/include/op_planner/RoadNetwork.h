@@ -1027,6 +1027,7 @@ public:
   int         currentGoalID;
   int         prevGoalID;
   double      closestWaypointDistance;
+  double      ndt_gnss_diff;
   double      goalDistance;
   //-------------------------------------------//
   //Following
@@ -1071,7 +1072,6 @@ public:
   int         bOutsideControl; // 0 waiting, 1 start, 2 Green Traffic Light, 3 Red Traffic Light, 5 Emergency Stop
   bool        bGreenOutsideControl;
   std::vector<double> stoppingDistances;
-
 
   double distanceToStop()
   {

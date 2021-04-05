@@ -113,6 +113,8 @@ protected: //Planning Related variables
   geometry_msgs::TwistStamped m_Twist_cmd;
   autoware_msgs::ControlCommand m_Ctrl_cmd;
 
+  double m_ndt_gnss_diff;
+
   //Added by PHY
   double m_distanceToPedestrianThreshold;
   double m_turnAngle;

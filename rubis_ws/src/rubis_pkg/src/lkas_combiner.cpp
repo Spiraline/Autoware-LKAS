@@ -57,9 +57,9 @@ namespace lkas_combiner
     void LKASCombinerNode::ndt_stat_cb(const autoware_msgs::NDTStat::ConstPtr& msg){
         double score = msg->score;
         int iter = msg->iteration;
-        std::cout << "iter : " << iter << ", score : " << score << std::endl;
+        // std::cout << "iter : " << iter << ", score : " << score << std::endl;
 
-        if(score > 10 || iter > 5){
+        if(score > 30){
             usingNDT = false;
         }
         else{
