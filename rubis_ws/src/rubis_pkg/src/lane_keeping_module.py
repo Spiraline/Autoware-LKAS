@@ -365,7 +365,7 @@ def advanced_lane_detection_pipeline(original_image):
     if crossection == False:
         # Center offset
         calc_center = (pts_right[0][0][0] + pts_left[0][-1][0]) / 2
-        center_offset = (calc_center - 640)
+        center_offset = (calc_center - original_image.shape[1]/2)
 
     else:
         center_offset = 0
@@ -406,7 +406,7 @@ def advanced_lane_detection_pipeline(original_image):
 class lane_keeping_module:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("/vehicle_cmd",VehicleCmd, queue_size = 1)
+        self.image_pub = rospy.Publisher("/vehicle_cmd_lkas",VehicleCmd, queue_size = 1)
         self.image_sub = rospy.Subscriber('/simulator/camera_node/image/compressed',CompressedImage,self.callback)
 
     def lane_keeping_params(self, center_offset):
@@ -420,7 +420,7 @@ class lane_keeping_module:
         elif center_offset < 0 : 
             if center_offset < -30 :
                 angle = 0.5
-            if center_offset < 20 :
+            if center_offset < -20 :
                 angle = 0.2
         else :
             angle = 0
