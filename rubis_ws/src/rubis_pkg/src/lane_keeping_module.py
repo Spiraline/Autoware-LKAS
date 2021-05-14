@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
+from numpy.lib.polynomial import poly1d
+from numpy.linalg.linalg import slogdet
 import rospy
 import cv2
 import sys
@@ -27,7 +29,10 @@ ym_per_pix = 30/720 # meters per pixel in y dimension
 xm_per_pix = 3.7/70
 
 prev_left_fit = None
+prev_linear_left_fit = None
+
 prev_right_fit = None
+prev_linear_right_fit = None
 
 __all__ = ["monotonic_time"]
 
@@ -49,6 +54,7 @@ prev_pts_right = None
 
 def find_firstfit(binary_array, direction, lower_threshold=20) :
     start, end = (binary_array.shape[0]-1, -1) if direction == -1 else (0, binary_array.shape[0])
+    # print(start, end, direction)
     for i in range(start, end, direction) :
         if binary_array[i] > lower_threshold :
             return i
@@ -153,24 +159,24 @@ def detect_lane_pixels(binary_warped):
     global prev_left_fit
     global prev_right_fit
 
-    
-
     # Assuming you have created a warped binary image called "binary_warped"
     # Take a histogram of the bottom half of the image
 
-    histogram = np.sum(binary_warped[round(binary_warped.shape[0]/2):,:], axis=0)
+    # histogram = np.sum(binary_warped[round(binary_warped.shape[0]/2):,:], axis=0)
 
     # Create an output image to draw on and  visualize the result
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
     
     # Find the peak of the left and right halves of the histogram
     # These will be the starting point for the left and right lines
-    midpoint = np.int(histogram.shape[0]/2)
-
+    # midpoint = np.int(histogram.shape[0]/2)
+    midpoint = np.int(binary_warped.shape[1]/2)
+    
     # leftx_base = np.argmax(histogram[:midpoint])
     # rightx_base = np.argmax(histogram[midpoint:]) + midpoint
     # binary_warped[:midpoint, 0]
-    hj_window = 80
+    hj_window = 160
+    # print(binary_warped[-hj_window:])
     leftx_base = find_firstfit(np.sum(binary_warped[-hj_window:,:midpoint], axis=0), -1)
     rightx_base = find_firstfit(np.sum(binary_warped[-hj_window:,midpoint:], axis=0), 1) + midpoint
     # print(leftx_base, rightx_base)    
@@ -235,18 +241,23 @@ def detect_lane_pixels(binary_warped):
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds] 
 
-
     # Fit a second order polynomial to each
     try:
+        linear_slope_left = np.polyfit(lefty, leftx, 1)
         left_fit = np.polyfit(lefty, leftx, 2)
         prev_left_fit = left_fit
+        prev_linear_left_fit = linear_slope_left
     except TypeError as te:
         left_fit = prev_left_fit
+        linear_slope_left = prev_linear_left_fit
     try:
+        linear_slope_right = np.polyfit(righty, rightx, 1)
         right_fit = np.polyfit(righty, rightx, 2)
         prev_right_fit = right_fit
+        prev_linear_right_fit = linear_slope_right
     except TypeError as te:
         right_fit = prev_right_fit
+        linear_slope_right = prev_linear_right_fit
 
     # Generate x and y values for plotting
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
@@ -260,36 +271,36 @@ def detect_lane_pixels(binary_warped):
     # Assume you now have a new warped binary image 
     # from the next frame of video (also called "binary_warped")
     # It's now much easier to find line pixels!
-    nonzero = binary_warped.nonzero()
-    nonzeroy = np.array(nonzero[0])
-    nonzerox = np.array(nonzero[1])
-    margin = 100
-    left_lane_inds = ((nonzerox > (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] - margin)) & (nonzerox < (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] + margin))) 
-    right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] + margin)))  
+    # nonzero = binary_warped.nonzero()
+    # nonzeroy = np.array(nonzero[0])
+    # nonzerox = np.array(nonzero[1])
+    # margin = 100
+    # left_lane_inds = ((nonzerox > (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] - margin)) & (nonzerox < (left_fit[0]*(nonzeroy**2) + left_fit[1]*nonzeroy + left_fit[2] + margin))) 
+    # right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy + right_fit[2] + margin)))  
 
-    # Again, extract left and right line pixel positions
-    leftx = nonzerox[left_lane_inds]
-    lefty = nonzeroy[left_lane_inds] 
-    rightx = nonzerox[right_lane_inds]
-    righty = nonzeroy[right_lane_inds]
+    # # Again, extract left and right line pixel positions
+    # leftx = nonzerox[left_lane_inds]
+    # lefty = nonzeroy[left_lane_inds] 
+    # rightx = nonzerox[right_lane_inds]
+    # righty = nonzeroy[right_lane_inds]
 
-    # Fit a second order polynomial to each
+    # # Fit a second order polynomial to each
     
-    try:
-        left_fit = np.polyfit(lefty, leftx, 2)
-        prev_left_fit = left_fit
-    except TypeError as te:
-        left_fit = prev_left_fit
-    try:
-        right_fit = np.polyfit(righty, rightx, 2)
-        prev_right_fit = right_fit
-    except TypeError as te:
-        right_fit = prev_right_fit
+    # try:
+    #     left_fit = np.polyfit(lefty, leftx, 2)
+    #     prev_left_fit = left_fit
+    # except TypeError as te:
+    #     left_fit = prev_left_fit
+    # try:
+    #     right_fit = np.polyfit(righty, rightx, 2)
+    #     prev_right_fit = right_fit
+    # except TypeError as te:
+    #     right_fit = prev_right_fit
 
-    # Generate x and y values for plotting
-    ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
-    left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
-    right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
+    # # Generate x and y values for plotting
+    # ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0] )
+    # left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
+    # right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
 
 
     # Create an image to draw on and an image to show the selection window
@@ -309,11 +320,21 @@ def detect_lane_pixels(binary_warped):
     # right_line_pts = np.hstack((right_line_window1, right_line_window2))
 
     # Draw the lane onto the warped blank image
-    # cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
-    # cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
-    # result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
-    
-    return ploty, left_fit, right_fit, left_fitx, right_fitx, leftx, lefty, rightx, righty, out_img
+    cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
+    cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
+    result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
+    slope_left =  np.poly1d(linear_slope_left)
+    slope_right =  np.poly1d(linear_slope_right)
+    print(slope_left[0],slope_right[0])
+    # = linear_slope_left.tolist()
+
+    for idx in range(1000):
+        slope_left_idx = slope_left(idx)
+        slope_right_idx = slope_right(idx)
+        cv2.line(out_img, (idx,int(slope_left_idx)),(idx,int(slope_left_idx)), (0,255,0), 5)
+        cv2.line(out_img, (idx,int(slope_right_idx)),(idx,int(slope_right_idx)), (0,255,255), 5)
+
+    return ploty, left_fit, right_fit, left_fitx, right_fitx, leftx, lefty, rightx, righty, out_img, slope_left[0], slope_right[0]
     
 def determine_curvature(ploty, left_fit, right_fit, leftx, lefty, rightx, righty):
     global ym_per_pix
@@ -324,12 +345,12 @@ def determine_curvature(ploty, left_fit, right_fit, leftx, lefty, rightx, righty
     left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
     right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
     # Define conversions in x and y from pixels space to meters
-    #ym_per_pix = 30/720 # meters per pixel in y dimension
-    #xm_per_pix = 3.7/700 # meters per pixel in x dimension
+    # ym_per_pix = 30/720 # meters per pixel in y dimension
+    # xm_per_pix = 3.7/700 # meters per pixel in x dimension
 
     # Fit new polynomials to x,y in world space
-    #left_fit_cr = np.polyfit(ploty*ym_per_pix, leftx*xm_per_pix, 2)
-    #right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
+    # left_fit_cr = np.polyfit(ploty*ym_per_pix, leftx*xm_per_pix, 2)
+    # right_fit_cr = np.polyfit(ploty*ym_per_pix, rightx*xm_per_pix, 2)
     left_fit_cr = np.polyfit(lefty*ym_per_pix, leftx*xm_per_pix, 2)
     right_fit_cr = np.polyfit(righty*ym_per_pix, rightx*xm_per_pix, 2)
     # Calculate the new radii of curvature
@@ -338,6 +359,20 @@ def determine_curvature(ploty, left_fit, right_fit, leftx, lefty, rightx, righty
     # Now our radius of curvature is in meters
 
     return left_curverad, right_curverad
+
+def labeling_lane(original_image):
+    warped, M = warp(original_image)
+    warped_color_binary, binary_warped = color_gradient_transform(warped)
+    cnt, labels, stats, centroids = cv2.connectedComponentsWithStats(binary_warped)
+    out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+    for i in range(1,cnt):
+        (x,y,w,h,area) = stats[i]
+        print(area)
+        if area < 10:
+            continue
+        cv2.rectangle(out_img, (x,y,w,h), (0,255,255))
+
+    return out_img
 
 def advanced_lane_detection_pipeline(original_image):
     global xm_per_pix
@@ -350,7 +385,7 @@ def advanced_lane_detection_pipeline(original_image):
     warped, M = warp(original_image)
     warped_color_binary, binary_warped = color_gradient_transform(warped)
     # Detect Lane pixels
-    ploty, left_fit, right_fit, left_fitx, right_fitx, leftx, lefty, rightx, righty, sliding_window = detect_lane_pixels(binary_warped)
+    ploty, left_fit, right_fit, left_fitx, right_fitx, leftx, lefty, rightx, righty, sliding_window, sl, sr = detect_lane_pixels(binary_warped)
     
     crossection = 0
     # Get curvature of each lane
@@ -370,9 +405,6 @@ def advanced_lane_detection_pipeline(original_image):
     # Create an image to draw the lines on
     # warp_zero = np.zeros_like(binary_warped).astype(np.uint8)
     # color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
-    
-    
-    
     
     # Recast the x and y points into usable format for cv2.fillPoly()
     pts_left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
@@ -419,7 +451,7 @@ def advanced_lane_detection_pipeline(original_image):
     # cv2.putText(result, 'Center offset: %.2f '%(center_offset), (30, 120), font, 1, (255,255,0), 2)
     
     # Debug
-    return result, center_offset, binary_warped, sliding_window, warped
+    return result, center_offset, binary_warped, sliding_window, warped, sl, sr
 
 class lane_keeping_module:
 
@@ -427,14 +459,25 @@ class lane_keeping_module:
         self.image_pub = rospy.Publisher("/vehicle_cmd_lkas",VehicleCmd, queue_size = 1)
         self.image_sub = rospy.Subscriber('/simulator/camera_node/image/compressed',CompressedImage,self.callback)
 
-    def lane_keeping_params(self, center_offset):
-        velocity = 5
-        angle = center_offset * (-1) / 20
-        if angle > 0.2:
-            angle = 0.2
-        elif angle < -0.2:
-            angle = -0.2
+    def lane_keeping_params(self, center_offset, slope_left, slope_right):
+        velocity = 10
+        # angle = center_offset * (-1) / 20
+        angle = 0
         
+        # base slope values are 390, 869 respectively
+        b_slope_left = 390
+        b_slope_right = 869
+        if slope_left:
+            angle = - (slope_left - b_slope_left)/1000
+        elif slope_right:
+            angle = (slope_right - b_slope_right)/1000  
+        print(angle)
+        # if angle > 0.2:
+        #     angle = 0.2
+        # elif angle < -0.2:
+        #     angle = -0.2
+        
+        # print(angle)
         # if center_offset > 0 :
         #     if center_offset > 30 :
         #         angle = - 0.5
@@ -454,15 +497,20 @@ class lane_keeping_module:
         #     velocity = 2
         return velocity, angle
 
-
     def callback(self, data):
         start_time = timespec() ; end_time = timespec()
         clock_gettime(CLOCK_MONOTONIC_RAW , ctypes.pointer(start_time))
         
         np_arr = np.fromstring(data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-        result, center_offset, binary_warped, sliding_window, warped = advanced_lane_detection_pipeline(image_np)
-
+        
+        # result = labeling_lane(image_np)
+        # cv2.imshow('filtered', result) #(warp*255).astype(np.uint8 ))
+        
+        result, center_offset, binary_warped, sliding_window, warped, sl, sr = advanced_lane_detection_pipeline(image_np)
+        # cv2.line(sliding_window, (640,0), (640,720), (255,0,0), 4)
+        # cv2.line(sliding_window, (0,0), (1280,int(f(1280, 0.17054316,44.60857191))), (255,0,0), 4)
+        
         # cv2.imshow('original_image', image_np)
         # cv2.imshow('bird-eye view', warped)
         # cv2.imshow('sliding_window', sliding_window)
@@ -471,7 +519,7 @@ class lane_keeping_module:
         # cv2.waitKey(2)
 
         msg = VehicleCmd()
-        velocity, angle = self.lane_keeping_params(center_offset)
+        velocity, angle = self.lane_keeping_params(center_offset, sl, sr)
         msg.twist_cmd.twist.linear.x = velocity
         msg.twist_cmd.twist.angular.z = angle 
         self.image_pub.publish(msg)
@@ -483,6 +531,9 @@ class lane_keeping_module:
         with open(print_file_path , "a") as f:
             f.write(f"{start_time.tv_sec + start_time.tv_nsec * 1e-9}, {end_time.tv_sec + end_time.tv_nsec * 1e-9}, {os.getpid()}\n")
 
+def f(x, m, n):
+    y = m*x + n
+    return y
 
 def main(args):
   ic = lane_keeping_module()
