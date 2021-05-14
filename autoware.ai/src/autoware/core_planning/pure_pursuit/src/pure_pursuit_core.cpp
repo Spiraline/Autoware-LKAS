@@ -127,8 +127,12 @@ void PurePursuitNode::run()
 {
   ROS_INFO_STREAM("pure pursuit start");
   ros::Rate loop_rate(LOOP_RATE_);
+  struct timespec start_time, end_time;
+
   while (ros::ok())
   {
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
+
     ros::spinOnce();
     if (!is_pose_set_ || !is_waypoint_set_ || !is_velocity_set_)
     {
@@ -172,6 +176,14 @@ void PurePursuitNode::run()
     is_pose_set_ = false;
     is_velocity_set_ = false;
     is_waypoint_set_ = false;
+
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/pure_pursuit.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
 
     loop_rate.sleep();
   }

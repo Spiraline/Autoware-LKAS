@@ -30,7 +30,7 @@ state.transform.rotation = spawns[0].rotation
 
 ego = sim.add_agent("LiDAR Only", lgsvl.AgentType.EGO, state)
 
-ego.connect_bridge(os.environ.get("BRIDGE_HOST", "147.46.174.234"), 9090)
+ego.connect_bridge(os.environ.get("BRIDGE_HOST", "147.46.174.234"), 9002)
 
 #set npc vehicle1's initial position
 state = lgsvl.AgentState()

@@ -8,7 +8,10 @@ import pickle
 import imutils
 import glob
 import matplotlib.image as mpimg
-import rospkg 
+import rospkg
+import os
+import time
+import ctypes
 
 from sensor_msgs.msg import CompressedImage
 from autoware_msgs.msg import VehicleCmd
@@ -25,6 +28,20 @@ xm_per_pix = 3.7/70
 
 prev_left_fit = None
 prev_right_fit = None
+
+__all__ = ["monotonic_time"]
+
+CLOCK_MONOTONIC_RAW = 4 # see <linux/time.h>
+
+class timespec(ctypes.Structure):
+    _fields_ = [
+        ('tv_sec', ctypes.c_long),
+        ('tv_nsec', ctypes.c_long)
+    ]
+
+librt = ctypes.CDLL('librt.so.1', use_errno=True)
+clock_gettime = librt.clock_gettime
+clock_gettime.argtypes = [ctypes.c_int, ctypes.POINTER(timespec)]
 
 # Seonghyeon 
 prev_pts_left = None
@@ -191,8 +208,8 @@ def detect_lane_pixels(binary_warped):
         win_xright_low = rightx_current - margin
         win_xright_high = rightx_current + margin
         # Draw the windows on the visualization image
-        cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high),(0,255,0), 2) 
-        cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),(0,255,0), 2) 
+        # cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high),(0,255,0), 2) 
+        # cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),(0,255,0), 2) 
         # Identify the nonzero pixels in x and y within the window
         good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)).nonzero()[0]
         good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
@@ -236,8 +253,8 @@ def detect_lane_pixels(binary_warped):
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
 
-    out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-    out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
+    # out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+    # out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
     
     # Assume you now have a new warped binary image 
@@ -277,24 +294,24 @@ def detect_lane_pixels(binary_warped):
 
     # Create an image to draw on and an image to show the selection window
     # out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
-    window_img = np.zeros_like(out_img)
+    # window_img = np.zeros_like(out_img)
     # Color in left and right line pixels
-    out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-    out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
+    # out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+    # out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
     # Generate a polygon to illustrate the search window area
     # And recast the x and y points into usable format for cv2.fillPoly()
-    left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-margin, ploty]))])
-    left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+margin, ploty])))])
-    left_line_pts = np.hstack((left_line_window1, left_line_window2))
-    right_line_window1 = np.array([np.transpose(np.vstack([right_fitx-margin, ploty]))])
-    right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx+margin, ploty])))])
-    right_line_pts = np.hstack((right_line_window1, right_line_window2))
+    # left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-margin, ploty]))])
+    # left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+margin, ploty])))])
+    # left_line_pts = np.hstack((left_line_window1, left_line_window2))
+    # right_line_window1 = np.array([np.transpose(np.vstack([right_fitx-margin, ploty]))])
+    # right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx+margin, ploty])))])
+    # right_line_pts = np.hstack((right_line_window1, right_line_window2))
 
     # Draw the lane onto the warped blank image
-    cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
-    cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
-    result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
+    # cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
+    # cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
+    # result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
     
     return ploty, left_fit, right_fit, left_fitx, right_fitx, leftx, lefty, rightx, righty, out_img
     
@@ -351,8 +368,8 @@ def advanced_lane_detection_pipeline(original_image):
         crossection = 1
         
     # Create an image to draw the lines on
-    warp_zero = np.zeros_like(binary_warped).astype(np.uint8)
-    color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
+    # warp_zero = np.zeros_like(binary_warped).astype(np.uint8)
+    # color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
     
     
     
@@ -360,7 +377,7 @@ def advanced_lane_detection_pipeline(original_image):
     # Recast the x and y points into usable format for cv2.fillPoly()
     pts_left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
     pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, ploty])))])
-    pts = np.hstack((pts_left, pts_right))
+    # pts = np.hstack((pts_left, pts_right))
 
     if crossection == False:
         # Center offset
@@ -381,24 +398,25 @@ def advanced_lane_detection_pipeline(original_image):
     cnt += 1
     
     # Draw the lane onto the warped blank image
-    cv2.fillPoly(color_warp, np.int_([pts]), (0,255, 0))
+    # cv2.fillPoly(color_warp, np.int_([pts]), (0,255, 0))
     
     # Matrix for unwarping
-    inverse_perspective_M = np.linalg.inv(M)
+    # inverse_perspective_M = np.linalg.inv(M)
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
-    img_size = (color_warp.shape[1], color_warp.shape[0])
-    newwarp = cv2.warpPerspective(color_warp, inverse_perspective_M, img_size) 
+    # img_size = (color_warp.shape[1], color_warp.shape[0])
+    # newwarp = cv2.warpPerspective(color_warp, inverse_perspective_M, img_size) 
     
     # Find center offset
     
     # Combine the result with the original image
-    result = cv2.addWeighted(original_image, 1, newwarp, 0.3, 0)    
-    font = cv2.FONT_HERSHEY_COMPLEX
+    # result = cv2.addWeighted(original_image, 1, newwarp, 0.3, 0)    
+    result = original_image
+    # font = cv2.FONT_HERSHEY_COMPLEX
 
     # cv2.putText(result, 'Left_curvrad: %.2f m'%(left_curverad), (30, 60), font, 1, (255,255,0), 2)
     # cv2.putText(result, 'Right_curvrad: %.2f m'%(right_curverad), (30, 90), font, 1, (255,255,0), 2)
-    cv2.putText(result, 'Center offset: %.2f '%(center_offset), (30, 120), font, 1, (255,255,0), 2)
+    # cv2.putText(result, 'Center offset: %.2f '%(center_offset), (30, 120), font, 1, (255,255,0), 2)
     
     # Debug
     return result, center_offset, binary_warped, sliding_window, warped
@@ -438,6 +456,8 @@ class lane_keeping_module:
 
 
     def callback(self, data):
+        start_time = timespec() ; end_time = timespec()
+        clock_gettime(CLOCK_MONOTONIC_RAW , ctypes.pointer(start_time))
         
         np_arr = np.fromstring(data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -446,9 +466,9 @@ class lane_keeping_module:
         # cv2.imshow('original_image', image_np)
         # cv2.imshow('bird-eye view', warped)
         # cv2.imshow('sliding_window', sliding_window)
-        cv2.imshow('result_window', result)
+        # cv2.imshow('result_window', result)
         # cv2.imshow('filtered', (binary_warped*255).astype(np.uint8 )) #(warp*255).astype(np.uint8 ))
-        cv2.waitKey(2)
+        # cv2.waitKey(2)
 
         msg = VehicleCmd()
         velocity, angle = self.lane_keeping_params(center_offset)
@@ -456,10 +476,23 @@ class lane_keeping_module:
         msg.twist_cmd.twist.angular.z = angle 
         self.image_pub.publish(msg)
 
+        clock_gettime(CLOCK_MONOTONIC_RAW , ctypes.pointer(end_time))
+
+        print_file_path = os.getenv("HOME") + "/Documents/tmp/LKAS.csv"
+
+        with open(print_file_path , "a") as f:
+            f.write(f"{start_time.tv_sec + start_time.tv_nsec * 1e-9}, {end_time.tv_sec + end_time.tv_nsec * 1e-9}, {os.getpid()}\n")
+
 
 def main(args):
   ic = lane_keeping_module()
   rospy.init_node('lane_keeping_module')
+
+  print_file_path = os.getenv("HOME") + "/Documents/tmp/LKAS.csv"
+
+  with open(print_file_path , "w") as f:
+      pass
+
   try:
     rospy.spin()
   except KeyboardInterrupt:

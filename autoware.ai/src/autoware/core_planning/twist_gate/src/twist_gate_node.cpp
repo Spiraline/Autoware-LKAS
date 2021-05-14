@@ -27,7 +27,27 @@ int main(int argc, char** argv)
   ros::NodeHandle private_nh("~");
 
   TwistGate twist_gate(nh, private_nh);
+  struct timespec start_time, end_time;
 
-  ros::spin();
+  ros::Rate loop_rate(10);
+
+  while (ros::ok())
+  {
+
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
+
+    ros::spinOnce();
+
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/twist_gate.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
+
+    loop_rate.sleep();
+  }
+
   return 0;
 }
