@@ -74,11 +74,11 @@
     pitch: $(arg init_pitch),
     yaw: $(arg init_yaw),
     use_predict_pose: 1,
-    error_threshold: 1.0,
-    resolution: 2.0,
-    step_size: 0.5,
+    error_threshold: 0.1,
+    resolution: 1.0,
+    step_size: 0.1,
     trans_epsilon: 0.01,
-    max_iterations: 5}
+    max_iterations: 100}
   '"/>
 
   <!-- vel_pose_mux -->

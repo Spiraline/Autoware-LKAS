@@ -304,20 +304,20 @@ def detect_lane_pixels(binary_warped):
 
 
     # Create an image to draw on and an image to show the selection window
-    # out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
-    # window_img = np.zeros_like(out_img)
+    out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
+    window_img = np.zeros_like(out_img)
     # Color in left and right line pixels
-    # out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-    # out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
+    out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+    out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
     # Generate a polygon to illustrate the search window area
     # And recast the x and y points into usable format for cv2.fillPoly()
-    # left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-margin, ploty]))])
-    # left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+margin, ploty])))])
-    # left_line_pts = np.hstack((left_line_window1, left_line_window2))
-    # right_line_window1 = np.array([np.transpose(np.vstack([right_fitx-margin, ploty]))])
-    # right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx+margin, ploty])))])
-    # right_line_pts = np.hstack((right_line_window1, right_line_window2))
+    left_line_window1 = np.array([np.transpose(np.vstack([left_fitx-margin, ploty]))])
+    left_line_window2 = np.array([np.flipud(np.transpose(np.vstack([left_fitx+margin, ploty])))])
+    left_line_pts = np.hstack((left_line_window1, left_line_window2))
+    right_line_window1 = np.array([np.transpose(np.vstack([right_fitx-margin, ploty]))])
+    right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fitx+margin, ploty])))])
+    right_line_pts = np.hstack((right_line_window1, right_line_window2))
 
     # Draw the lane onto the warped blank image
     cv2.fillPoly(window_img, np.int_([left_line_pts]), (0,255, 0))
@@ -460,7 +460,7 @@ class lane_keeping_module:
         self.image_sub = rospy.Subscriber('/simulator/camera_node/image/compressed',CompressedImage,self.callback)
 
     def lane_keeping_params(self, center_offset, slope_left, slope_right):
-        velocity = 10
+        velocity = 5
         # angle = center_offset * (-1) / 20
         angle = 0
         
@@ -514,9 +514,9 @@ class lane_keeping_module:
         # cv2.imshow('original_image', image_np)
         # cv2.imshow('bird-eye view', warped)
         # cv2.imshow('sliding_window', sliding_window)
-        # cv2.imshow('result_window', result)
+        cv2.imshow('result_window', result)
         # cv2.imshow('filtered', (binary_warped*255).astype(np.uint8 )) #(warp*255).astype(np.uint8 ))
-        # cv2.waitKey(2)
+        cv2.waitKey(2)
 
         msg = VehicleCmd()
         velocity, angle = self.lane_keeping_params(center_offset, sl, sr)
