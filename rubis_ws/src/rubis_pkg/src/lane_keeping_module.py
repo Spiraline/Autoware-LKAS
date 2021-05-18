@@ -513,7 +513,7 @@ class lane_keeping_module:
         
         # cv2.imshow('original_image', image_np)
         # cv2.imshow('bird-eye view', warped)
-        # cv2.imshow('sliding_window', sliding_window)
+        cv2.imshow('sliding_window', sliding_window)
         cv2.imshow('result_window', result)
         # cv2.imshow('filtered', (binary_warped*255).astype(np.uint8 )) #(warp*255).astype(np.uint8 ))
         cv2.waitKey(2)
