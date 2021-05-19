@@ -181,10 +181,10 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
       converged_ = true;
     }
 
-    double score = getFitnessScore();
+    double score = getFitnessScore(delta_p_norm);
 
     #ifdef DEBUG_ENABLE
-      fprintf(fp, "%lf ", score);
+      fprintf(fp, "%lf ", delta_p_norm);
     #endif
 
     nr_iterations_++;
@@ -735,34 +735,66 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeHess
 
 }
 
+// template <typename PointSourceType, typename PointTargetType>
+// double NormalDistributionsTransform<PointSourceType, PointTargetType>::getFitnessScore(double max_range)
+// {
+//   double fitness_score = 0.0;
+
+//   typename pcl::PointCloud<PointSourceType> trans_cloud;
+
+//   transformPointCloud(*source_cloud_, trans_cloud, final_transformation_);
+
+//   double distance;
+//   int nr = 0;
+
+//   for (int i = 0; i < trans_cloud.points.size(); i++) {
+//     PointSourceType q = trans_cloud.points[i];
+
+//     distance = voxel_grid_.nearestNeighborDistance(q, max_range);
+
+//     if (distance < max_range) {
+//       fitness_score += distance;
+//       nr++;
+//     }
+//   }
+
+//   if (nr > 0) {
+//     return (fitness_score / nr);
+//   }
+
+//   return DBL_MAX;
+// }
+
+// My NDT
 template <typename PointSourceType, typename PointTargetType>
 double NormalDistributionsTransform<PointSourceType, PointTargetType>::getFitnessScore(double max_range)
 {
-  double fitness_score = 0.0;
+  return max_range;
+  // double fitness_score = 0.0;
 
-  typename pcl::PointCloud<PointSourceType> trans_cloud;
+  // typename pcl::PointCloud<PointSourceType> trans_cloud;
 
-  transformPointCloud(*source_cloud_, trans_cloud, final_transformation_);
+  // transformPointCloud(*source_cloud_, trans_cloud, final_transformation_);
 
-  double distance;
-  int nr = 0;
+  // double distance;
+  // int nr = 0;
 
-  for (int i = 0; i < trans_cloud.points.size(); i++) {
-    PointSourceType q = trans_cloud.points[i];
+  // for (int i = 0; i < trans_cloud.points.size(); i++) {
+  //   PointSourceType q = trans_cloud.points[i];
 
-    distance = voxel_grid_.nearestNeighborDistance(q, max_range);
+  //   distance = voxel_grid_.nearestNeighborDistance(q, max_range);
 
-    if (distance < max_range) {
-      fitness_score += distance;
-      nr++;
-    }
-  }
+  //   if (distance < max_range) {
+  //     fitness_score += distance;
+  //     nr++;
+  //   }
+  // }
 
-  if (nr > 0) {
-    return (fitness_score / nr);
-  }
+  // if (nr > 0) {
+  //   return (fitness_score / nr);
+  // }
 
-  return DBL_MAX;
+  // return DBL_MAX;
 }
 
 

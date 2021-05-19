@@ -1,0 +1,53 @@
+exp:
+  iteration: 2
+
+origin:
+  offset:
+    x: 0
+    y: 0
+    z: 0
+    r: 0
+
+simulator:
+  address: localhost
+  port: 8181
+  scene: SanFrancisco
+  timeout: 0 # (sec), 0 = infinite 
+
+
+# lgsvl_bridge:
+#   address: '192.168.10.24'
+#   port: 9090
+
+lgsvl_bridge:
+  address: 127.0.0.1
+  port: 9090
+
+ego:
+  asset-id: 787db474-5220-496f-adcd-c8e6abce010d
+
+npc:
+  - npc0:
+    name: DongMin
+    type: Sedan
+    offset:
+      forward: 10
+      right: 0
+
+pedestrian:
+  - ped1:
+    name: BKPark
+    type: Bob
+    offset:
+      forward: 40
+      right: 0
+
+waypoint:
+  length: 100
+  interval: 1
+  cruise_speed: 6
+  idle_time: 0
+  stop_every: 10
+  stop_for: 2
+  stop_speed: 0.5
+  

@@ -581,6 +581,7 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
   //   previous_pose = previous_gnss_pose;
   // }
   else if(matching_fail_cnt > 5){
+    matching_fail_cnt = 0.0;
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;

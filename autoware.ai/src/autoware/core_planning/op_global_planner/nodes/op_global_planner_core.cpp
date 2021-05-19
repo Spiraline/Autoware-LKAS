@@ -423,8 +423,20 @@ void GlobalPlanner::MainLoop()
   timespec animation_timer;
   UtilityHNS::UtilityH::GetTickCount(animation_timer);
 
+  nh.getParam("/op_global_planner/output_log", _output_log);
+
+  if(_output_log){
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/op_global_planner.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
+
   while (ros::ok())
   {
+    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
     ros::spinOnce();
     bool bMakeNewPlan = false;
 
@@ -520,6 +532,16 @@ void GlobalPlanner::MainLoop()
         }
       }
       VisualizeDestinations(m_GoalsPos, m_iCurrentGoalIndex);
+    }
+
+    if(_output_log){
+      clock_gettime(CLOCK_MONOTONIC, &end_time);
+      std::string print_file_path = std::getenv("HOME");
+      print_file_path.append("/Documents/tmp/op_global_planner.csv");
+      FILE *fp;
+      fp = fopen(print_file_path.c_str(), "a");
+      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fclose(fp);
     }
 
     loop_rate.sleep();

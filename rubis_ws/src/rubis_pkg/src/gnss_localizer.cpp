@@ -59,7 +59,36 @@ void Nmea2TFPoseNode::initForROS()
 
 void Nmea2TFPoseNode::run()
 {
-  ros::spin();
+  nh_.getParam("/gnss_localizer/output_log", _output_log);
+
+  ros::Rate loop_rate(10);
+
+  if(_output_log){
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/gnss_localizer.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
+
+  while (ros::ok())
+  {
+    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
+    ros::spinOnce();
+
+    if(_output_log){
+      clock_gettime(CLOCK_MONOTONIC, &end_time);
+      std::string print_file_path = std::getenv("HOME");
+      print_file_path.append("/Documents/tmp/gnss_localizer.csv");
+      FILE *fp;
+      fp = fopen(print_file_path.c_str(), "a");
+      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fclose(fp);
+    }
+
+    loop_rate.sleep();
+  }
 }
 
 void Nmea2TFPoseNode::publishPoseStamped()

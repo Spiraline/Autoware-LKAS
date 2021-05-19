@@ -108,6 +108,10 @@ protected:
 
   bool m_bFirstStart;
 
+  bool _output_log;
+
+  struct timespec start_time, end_time;
+
   ros::NodeHandle nh;
 
   ros::Publisher pub_MapRviz;

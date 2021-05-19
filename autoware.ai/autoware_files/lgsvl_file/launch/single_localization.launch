@@ -11,9 +11,18 @@
   <arg name="child_frame_id" value="/velodyne" />
   <arg name="period_in_ms" value="10" />
 
-  <arg name="init_x" value="-8.57" />
+  <!-- testbed -->
+  <!-- <arg name="init_x" value="-8.57" />
   <arg name="init_y" value="50.94" />
   <arg name="init_z" value="-0.75" />
+  <arg name="init_roll" value="0.0" />
+  <arg name="init_pitch" value="0.0" />
+  <arg name="init_yaw" value="-1.8" /> -->
+
+  <!-- san francisco -->
+  <arg name="init_x" value="-308.7" />
+  <arg name="init_y" value="-705.6" />
+  <arg name="init_z" value="10.0" />
   <arg name="init_roll" value="0.0" />
   <arg name="init_pitch" value="0.0" />
   <arg name="init_yaw" value="-1.8" />
@@ -73,12 +82,12 @@
     roll: $(arg init_roll),
     pitch: $(arg init_pitch),
     yaw: $(arg init_yaw),
-    use_predict_pose: 1,
-    error_threshold: 0.1,
+    use_predict_pose: 0,
+    error_threshold: 0.01,
     resolution: 1.0,
-    step_size: 0.1,
+    step_size: 0.5,
     trans_epsilon: 0.01,
-    max_iterations: 100}
+    max_iterations: 10}
   '"/>
 
   <!-- vel_pose_mux -->

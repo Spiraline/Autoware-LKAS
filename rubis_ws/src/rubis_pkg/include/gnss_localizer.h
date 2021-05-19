@@ -68,6 +68,10 @@ private:
   tf::TransformListener listener_;
   tf::StampedTransform transform_;
 
+  bool _output_log;
+
+  struct timespec start_time, end_time;
+
   // callbacks
   void callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg);
   void callbackFromIMU(const sensor_msgs::Imu& msg);
