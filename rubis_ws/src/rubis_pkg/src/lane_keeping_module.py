@@ -124,13 +124,21 @@ def warp(img):
     # bottom = 500
     # bird_eye_margin = 450
 
-    # Complete Bird-eye Transform variables. 
+    # Complete Bird-eye Transform variables(1280*720 ver). 
+    # x_mid = x_size/2
+    # top_margin = 80
+    # bottom_margin = 420
+    # top = 390
+    # bottom = 550
+    # bird_eye_margin = 450
+
+    # 320*240 ver
     x_mid = x_size/2
-    top_margin = 80
-    bottom_margin = 420
-    top = 390
-    bottom = 550
-    bird_eye_margin = 450
+    top_margin = 20
+    bottom_margin = 110
+    top = 130
+    bottom = 185
+    bird_eye_margin = 100
 
     # 4 Source coordinates
     src1 = [x_mid + top_margin, top] # top_right
@@ -175,14 +183,16 @@ def detect_lane_pixels(binary_warped):
     # leftx_base = np.argmax(histogram[:midpoint])
     # rightx_base = np.argmax(histogram[midpoint:]) + midpoint
     # binary_warped[:midpoint, 0]
-    hj_window = 160
+    # hj_window = 160
+    hj_window = 60
     # print(binary_warped[-hj_window:])
     leftx_base = find_firstfit(np.sum(binary_warped[-hj_window:,:midpoint], axis=0), -1)
     rightx_base = find_firstfit(np.sum(binary_warped[-hj_window:,midpoint:], axis=0), 1) + midpoint
     # print(leftx_base, rightx_base)    
 
     # Choose the number of sliding windows
-    nwindows = 9
+    nwindows = 8
+    # nwindows = 9
     # Set height of windows
     window_height = np.int(binary_warped.shape[0]/nwindows)
     # Identify the x and y positions of all nonzero pixels in the image
@@ -193,10 +203,11 @@ def detect_lane_pixels(binary_warped):
     leftx_current = leftx_base
     rightx_current = rightx_base
     # Set the width of the windows +/- margin
-    margin = 100
+    # margin = 100
+    margin = 20
     # Set minimum number of pixels found to recenter window
-    minpix = 50
-    maxpix = 800
+    minpix = 10
+
     # Create empty lists to receive left and right lane pixel indices
     left_lane_inds = []
     right_lane_inds = []
@@ -214,8 +225,8 @@ def detect_lane_pixels(binary_warped):
         win_xright_low = rightx_current - margin
         win_xright_high = rightx_current + margin
         # Draw the windows on the visualization image
-        # cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high),(0,255,0), 2) 
-        # cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),(0,255,0), 2) 
+        cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high),(0,255,0), 2) 
+        cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high),(0,255,0), 2) 
         # Identify the nonzero pixels in x and y within the window
         good_left_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)).nonzero()[0]
         good_right_inds = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
@@ -264,8 +275,8 @@ def detect_lane_pixels(binary_warped):
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
 
-    # out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
-    # out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
+    out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
+    out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
     
     # Assume you now have a new warped binary image 
@@ -460,18 +471,27 @@ class lane_keeping_module:
         self.image_sub = rospy.Subscriber('/simulator/camera_node/image/compressed',CompressedImage,self.callback)
 
     def lane_keeping_params(self, center_offset, slope_left, slope_right):
-        velocity = 5
+        velocity = 10
         # angle = center_offset * (-1) / 20
         angle = 0
         
-        # base slope values are 390, 869 respectively
-        b_slope_left = 390
-        b_slope_right = 869
+        # # base slope values are 390, 869 respectively
+        # b_slope_left = 390
+        # b_slope_right = 869
+
+        b_slope_left = 83
+        b_slope_right = 229
+
         if slope_left:
-            angle = - (slope_left - b_slope_left)/1000
+            angle = - (slope_left - b_slope_left)/500
         elif slope_right:
-            angle = (slope_right - b_slope_right)/1000  
-        print(angle)
+            angle = (slope_right - b_slope_right)/500  
+
+        # if slope_left:
+        #     angle = - (slope_left - b_slope_left)/1000
+        # elif slope_right:
+        #     angle = (slope_right - b_slope_right)/1000  
+        # print(angle)
         # if angle > 0.2:
         #     angle = 0.2
         # elif angle < -0.2:
@@ -506,15 +526,15 @@ class lane_keeping_module:
         
         # result = labeling_lane(image_np)
         # cv2.imshow('filtered', result) #(warp*255).astype(np.uint8 ))
-        
+        # result = advanced_lane_detection_pipeline(image_np)
         result, center_offset, binary_warped, sliding_window, warped, sl, sr = advanced_lane_detection_pipeline(image_np)
         # cv2.line(sliding_window, (640,0), (640,720), (255,0,0), 4)
         # cv2.line(sliding_window, (0,0), (1280,int(f(1280, 0.17054316,44.60857191))), (255,0,0), 4)
         
         # cv2.imshow('original_image', image_np)
         # cv2.imshow('bird-eye view', warped)
-        cv2.imshow('sliding_window', sliding_window)
-        cv2.imshow('result_window', result)
+        # cv2.imshow('sliding_window', sliding_window)
+        # cv2.imshow('result_window', result)
         # cv2.imshow('filtered', (binary_warped*255).astype(np.uint8 )) #(warp*255).astype(np.uint8 ))
         cv2.waitKey(2)
 
