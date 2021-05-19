@@ -43,12 +43,16 @@ public:
 
   virtual ~Registration();
 
+  double getPNorm();
+
 protected:
 
   virtual void computeTransformation(const Eigen::Matrix<float, 4, 4> &guess);
 
   double transformation_epsilon_;
   int max_iterations_;
+
+  double p_norm_;
 
   //Original scanned point clouds
   typename pcl::PointCloud<PointSourceType>::Ptr source_cloud_;

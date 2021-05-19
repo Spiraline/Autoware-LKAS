@@ -21,14 +21,14 @@
     <arg name="goal_ori_z"            value="-0.11" />
     <arg name="goal_ori_w"            value="0.99" /> -->
     <!-- Testbed -->
-    <!-- <arg name="use_static_goal"       value="true" />
+    <arg name="use_static_goal"       value="true" />
     <arg name="goal_pose_x"           value="608.26" />
     <arg name="goal_pose_y"           value="-1739.6" />
     <arg name="goal_pose_z"           value="0.0" />
     <arg name="goal_ori_x"            value="0.0" />
     <arg name="goal_ori_y"            value="0.0" />
     <arg name="goal_ori_z"            value="0.05" />
-    <arg name="goal_ori_w"            value="0.99" /> -->
+    <arg name="goal_ori_w"            value="0.99" />
     <!-- San Francisco -->
     <!-- <arg name="use_static_goal"       value="true" />
     <arg name="goal_pose_x"           value="-85" />
@@ -38,14 +38,14 @@
     <arg name="goal_ori_y"            value="0.0" />
     <arg name="goal_ori_z"            value="-0.007" />
     <arg name="goal_ori_w"            value="0.999" /> -->
-    <arg name="use_static_goal"       value="true" />
+    <!-- <arg name="use_static_goal"       value="true" />
     <arg name="goal_pose_x"           value="-220" />
     <arg name="goal_pose_y"           value="-767.4" />
     <arg name="goal_pose_z"           value="0.0" />
     <arg name="goal_ori_x"            value="0.0" />
     <arg name="goal_ori_y"            value="0.0" />
     <arg name="goal_ori_z"            value="-0.015" />
-    <arg name="goal_ori_w"            value="0.999" />
+    <arg name="goal_ori_w"            value="0.999" /> -->
   </include>
 
   <!-- op_common_params  -->

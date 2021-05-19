@@ -61,6 +61,12 @@ int Registration<PointSourceType, PointTargetType>::getFinalNumIteration() const
 }
 
 template <typename PointSourceType, typename PointTargetType>
+double Registration<PointSourceType, PointTargetType>::getPNorm()
+{
+  return p_norm_;
+}
+
+template <typename PointSourceType, typename PointTargetType>
 bool Registration<PointSourceType, PointTargetType>::hasConverged() const
 {
   return converged_;

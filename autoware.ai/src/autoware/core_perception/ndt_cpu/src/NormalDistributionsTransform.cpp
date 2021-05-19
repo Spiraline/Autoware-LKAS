@@ -181,7 +181,7 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
       converged_ = true;
     }
 
-    double score = getFitnessScore(delta_p_norm);
+    double score = getFitnessScore();
 
     #ifdef DEBUG_ENABLE
       fprintf(fp, "%lf ", delta_p_norm);
@@ -189,6 +189,8 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
 
     nr_iterations_++;
   }
+
+  p_norm_ = std::fabs(delta_p_norm);
 
   #ifdef DEBUG_ENABLE
     fprintf(fp, "\n");
@@ -249,6 +251,14 @@ double NormalDistributionsTransform<PointSourceType, PointTargetType>::computeDe
 
   return score;
 }
+
+template <typename PointSourceType, typename PointTargetType>
+double Registration<PointSourceType, PointTargetType>::getPNorm()
+{
+  return p_norm_;
+}
+
+
 
 template <typename PointSourceType, typename PointTargetType>
 void NormalDistributionsTransform<PointSourceType, PointTargetType>::computePointDerivatives(Eigen::Vector3d &x, Eigen::Matrix<double, 3, 6> &point_gradient, Eigen::Matrix<double, 18, 6> &point_hessian, bool compute_hessian)
@@ -735,68 +745,35 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeHess
 
 }
 
-// template <typename PointSourceType, typename PointTargetType>
-// double NormalDistributionsTransform<PointSourceType, PointTargetType>::getFitnessScore(double max_range)
-// {
-//   double fitness_score = 0.0;
-
-//   typename pcl::PointCloud<PointSourceType> trans_cloud;
-
-//   transformPointCloud(*source_cloud_, trans_cloud, final_transformation_);
-
-//   double distance;
-//   int nr = 0;
-
-//   for (int i = 0; i < trans_cloud.points.size(); i++) {
-//     PointSourceType q = trans_cloud.points[i];
-
-//     distance = voxel_grid_.nearestNeighborDistance(q, max_range);
-
-//     if (distance < max_range) {
-//       fitness_score += distance;
-//       nr++;
-//     }
-//   }
-
-//   if (nr > 0) {
-//     return (fitness_score / nr);
-//   }
-
-//   return DBL_MAX;
-// }
-
-// My NDT
 template <typename PointSourceType, typename PointTargetType>
 double NormalDistributionsTransform<PointSourceType, PointTargetType>::getFitnessScore(double max_range)
 {
-  return max_range;
-  // double fitness_score = 0.0;
+  double fitness_score = 0.0;
 
-  // typename pcl::PointCloud<PointSourceType> trans_cloud;
+  typename pcl::PointCloud<PointSourceType> trans_cloud;
 
-  // transformPointCloud(*source_cloud_, trans_cloud, final_transformation_);
+  transformPointCloud(*source_cloud_, trans_cloud, final_transformation_);
 
-  // double distance;
-  // int nr = 0;
+  double distance;
+  int nr = 0;
 
-  // for (int i = 0; i < trans_cloud.points.size(); i++) {
-  //   PointSourceType q = trans_cloud.points[i];
+  for (int i = 0; i < trans_cloud.points.size(); i++) {
+    PointSourceType q = trans_cloud.points[i];
 
-  //   distance = voxel_grid_.nearestNeighborDistance(q, max_range);
+    distance = voxel_grid_.nearestNeighborDistance(q, max_range);
 
-  //   if (distance < max_range) {
-  //     fitness_score += distance;
-  //     nr++;
-  //   }
-  // }
+    if (distance < max_range) {
+      fitness_score += distance;
+      nr++;
+    }
+  }
 
-  // if (nr > 0) {
-  //   return (fitness_score / nr);
-  // }
+  if (nr > 0) {
+    return (fitness_score / nr);
+  }
 
-  // return DBL_MAX;
+  return DBL_MAX;
 }
-
 
 template <typename PointSourceType, typename PointTargetType>
 void NormalDistributionsTransform<PointSourceType, PointTargetType>::updateVoxelGrid(typename pcl::PointCloud<PointTargetType>::Ptr new_cloud)
