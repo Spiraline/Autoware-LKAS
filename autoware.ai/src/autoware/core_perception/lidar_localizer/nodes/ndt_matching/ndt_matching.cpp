@@ -76,7 +76,7 @@
 #define PREDICT_POSE_THRESHOLD 0.5
 
 #define SCORE_THRESHOLD 10
-#define POSE_DIFF_THRESHOLD 5
+#define POSE_DIFF_THRESHOLD 3
 
 #define Wa 0.4
 #define Wb 0.3
@@ -575,16 +575,26 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
-  // else if(previous_score > SCORE_THRESHOLD && _is_init_match_finished == true){
-  //   previous_score = 0.0;
-  //   current_pose = current_gnss_pose;
-  //   previous_pose = previous_gnss_pose;
-  // }
-  else if(matching_fail_cnt > 5){
-    matching_fail_cnt = 0.0;
+  else if(matching_fail_cnt > 10){
+    // matching_fail_cnt = 0.0;
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
+    current_velocity = 0.0;
+    current_velocity_x = 0.0;
+    current_velocity_y = 0.0;
+    current_velocity_z = 0.0;
+    angular_velocity = 0.0;
+
+    current_accel = 0.0;
+    current_accel_x = 0.0;
+    current_accel_y = 0.0;
+    current_accel_z = 0.0;
+
+    offset_x = 0.0;
+    offset_y = 0.0;
+    offset_z = 0.0;
+    offset_yaw = 0.0;
   }
 
   previous_gnss_pose = current_gnss_pose;

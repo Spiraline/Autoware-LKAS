@@ -1,5 +1,5 @@
 <launch>
-  <arg name="output_log" value="true" />
+  <arg name="output_log" value="false" />
 
   <!-- op_global_planning -->
   <include file="$(find op_global_planner)/launch/op_global_planner.launch">
@@ -21,7 +21,7 @@
     <arg name="goal_ori_z"            value="-0.11" />
     <arg name="goal_ori_w"            value="0.99" /> -->
     <!-- Testbed -->
-    <arg name="use_static_goal"       value="true" />
+    <arg name="use_static_goal"       value="false" />
     <arg name="goal_pose_x"           value="608.26" />
     <arg name="goal_pose_y"           value="-1739.6" />
     <arg name="goal_pose_z"           value="0.0" />
@@ -75,7 +75,7 @@
     <arg name="length"                          default="4.2"  />
     <arg name="wheelBaseLength"                 default="2.7"  />
     <arg name="turningRadius"                   default="5.2"  />
-    <arg name="maxSteerAngle"                   default="0.45" />
+    <arg name="maxSteerAngle"                   default="0.2" />
     <arg name="steeringDelay"                   default="1.2" />
     <!-- Not included in app window -->
     <arg name="minPursuiteDistance"             default="3.0"  />
@@ -144,7 +144,7 @@
   <include file="$(find op_local_planner)/launch/op_behavior_selector.launch">
     <arg name="evidence_tust_number"            default="25"/>
     <arg name="distanceToPedestrianThreshold"   default="25.0" />
-    <arg name="sprintSpeed"                    default="13.0" />
+    <arg name="sprintSpeed"                    default="10.0" />
     <arg name="obstacleWaitingTimeinIntersection"  default="2.0" />
     <arg name="turnThreshold"                   default="30.0" />
     <!-- <arg name="trafficLightFile"                default="crossing_test/crossing_traffic_light.yaml" />

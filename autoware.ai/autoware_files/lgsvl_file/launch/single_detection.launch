@@ -7,7 +7,7 @@
   <arg name="is_publish_projection_matrix" default="true" />
   <arg name="is_publish_camera_info" default="true" />
   <arg name="camera_calib" default="$(env HOME)/autoware.ai/autoware_files/data/calibration/single_lidar/Lexus2016RXHybrid.yaml"/>
-  <arg name="output_log" value="true" />
+  <arg name="output_log" value="false" />
 
   <!-- calibration_publisher -->
   <!-- <include file="$(find runtime_manager)/launch_files/calibration_publisher.launch">

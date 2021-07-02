@@ -28,7 +28,7 @@ forward = lgsvl.utils.transform_to_forward(spawns[0])
 right = lgsvl.utils.transform_to_right(spawns[0])
 
 state = lgsvl.AgentState()
-state.transform.position = spawns[0].position + 150 * forward
+state.transform.position = spawns[0].position + 150 * forward - 0.3 * right
 state.transform.rotation = spawns[0].rotation
 
 ego = sim.add_agent("SingleLiDAR (Autoware)", lgsvl.AgentType.EGO, state)
@@ -37,16 +37,7 @@ ego.connect_bridge(os.environ.get("BRIDGE_HOST", "127.0.0.1"), 9090)
 
 #------- Stand vehicle -------#
 #set stand vehicle's initial position
-
-
 sv_state_arr = []
-
-# for (x, y) in pose_arr:
-#   sv_state_arr.append(lgsvl.AgentState())
-#   sv_state_arr[-1].transform.position = spawns[0].position + y * forward + x * right
-#   sv_state_arr[-1].transform.rotation = spawns[0].rotation
-
-  # _ = sim.add_agent("Sedan", lgsvl.AgentType.NPC, sv_state_arr[-1])
 
 for i in range(30):
   sv_state_arr.append(lgsvl.AgentState())

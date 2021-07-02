@@ -349,22 +349,23 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   // hjw added
-  // if(pCParams->ndt_gnss_diff > 5)
-  //   return FindBehaviorState(LKAS_STATE);
-  // else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
-  if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
+  if(pCParams->ndt_gnss_diff > 5)
+    return FindBehaviorState(LKAS_STATE);
+
+  // if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
+  else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
     return FindBehaviorState(GOAL_STATE);
   // else if(pCParams->currentGoalID != pCParams->prevGoalID)
   //   return FindBehaviorState(GOAL_STATE);
-  else if(m_pParams->pedestrianAppearence){
-    return FindBehaviorState(PEDESTRIAN_STATE);
-  }
+  // else if(m_pParams->pedestrianAppearence){
+  //   return FindBehaviorState(PEDESTRIAN_STATE);
+  // }
   // hjw added
-  else if(m_pParams->enableTrafficLightBehavior
-        && pCParams->currentTrafficLightID > 0
-        && pCParams->bTrafficIsRed)
-        // && pCParams->currentTrafficLightID != pCParams->prevTrafficLightID)
-      return FindBehaviorState(TRAFFIC_LIGHT_STOP_STATE);
+  // else if(m_pParams->enableTrafficLightBehavior
+  //       && pCParams->currentTrafficLightID > 0
+  //       && pCParams->bTrafficIsRed)
+  //       // && pCParams->currentTrafficLightID != pCParams->prevTrafficLightID)
+  //     return FindBehaviorState(TRAFFIC_LIGHT_STOP_STATE);
   // else if(m_pParams->isInsideIntersection
   //   && (m_pParams->turnLeft || m_pParams->turnRight)){
   //   return FindBehaviorState(INTERSECTION_STATE);
@@ -373,7 +374,6 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   //     && pCParams->currentStopSignID > 0
   //     && pCParams->currentStopSignID != pCParams->prevStopSignID)
   //   return FindBehaviorState(STOP_SIGN_STOP_STATE);
-
   else if(m_pParams->enableFollowing && pCParams->bFullyBlock)
     return FindBehaviorState(FOLLOW_STATE);
 
