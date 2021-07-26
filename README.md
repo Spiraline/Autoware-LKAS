@@ -106,7 +106,7 @@ source ~/autoware.ai/install/setup.bash
 ```
 cd ${WORKSPACE_DIR}/rubis_ws/src
 catkin_init_workspace
-``
+```
 
 * Build rubis_ws packages
 ```
