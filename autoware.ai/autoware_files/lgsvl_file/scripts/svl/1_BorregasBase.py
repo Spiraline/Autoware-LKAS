@@ -17,6 +17,8 @@ class Exp(object):
 		self.sim = lgsvl.Simulator(
 		    address=self.cfg['simulator']['address'],
 		    port=self.cfg['simulator']['port'])
+		# self.sim = lgsvl.Simulator(os.environ.get("SIMULATOR_HOST","127.0.0.1"), 8181)
+
 
 		# reset scene
 		target_scene = self.cfg['simulator']['scene']
@@ -49,14 +51,9 @@ class Exp(object):
 		ego = sim.add_agent(self.cfg['ego']['asset-id'],
 			lgsvl.AgentType.EGO, ego_state)
 		
-		# ego.connect_bridge(
-		#     self.cfg['lgsvl_bridge']['address'],
-		#     self.cfg['lgsvl_bridge']['port'])	
-		# print(lgsvl.wise.SimulatorSettings.bridge_host)	
-		ego.connect_bridge(os.environ.get("BRIDGE_HOST","147.46.174.234"),
-		    9001)		
-		# ego.connect_bridge(os.environ.get("BRIDGE_HOST","127.0.0.1"),
-		#     9090)		
+		ego.connect_bridge(
+		    self.cfg['lgsvl_bridge']['address'],
+		    self.cfg['lgsvl_bridge']['port'])		
 
 		def ego_collision(agent1, agent2, contact):
 			self.collisions.append([agent1, agent2, contact])
@@ -119,13 +116,12 @@ class Exp(object):
 			self.cfg['pedestrian'][0]['type'],
 			lgsvl.AgentType.PEDESTRIAN, pedestrian_state)
 		
-
 		return
 
 	def setup_sim(self):
 		self.create_ego(self.sim)
 		# self.create_npc(self.sim)
-		self.create_pedestrian(self.sim)
+		# self.create_pedestrian(self.sim)
 		return
 
 	def run(self):

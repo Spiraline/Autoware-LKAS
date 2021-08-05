@@ -5,26 +5,27 @@ origin:
   offset:
     x: 0
     y: 0
-    z: 0
-    r: 0
+    z: 18.3
+    r: 90
 
 simulator:
   address: localhost
   port: 8181
-  scene: SanFrancisco
+  scene: CubeTown
   timeout: 0 # (sec), 0 = infinite 
 
-
-# lgsvl_bridge:
-#   address: '192.168.10.24'
-#   port: 9090
-
+# Host
 lgsvl_bridge:
   address: 127.0.0.1
-  port: 9090
+  port: 9091
+
+# Remote
+# lgsvl_bridge:
+#   address: 192.168.0.16
+#   port: 9000
 
 ego:
-  asset-id: 787db474-5220-496f-adcd-c8e6abce010d
+  asset-id: c881c8c1-4b85-4604-beed-67c41492fd95 # multi-lab
 
 npc:
   - npc0:
