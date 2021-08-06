@@ -3,8 +3,8 @@
 
 #ifndef Q_MOC_RUN
 #include <ros/ros.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui_c.h>
 #include <rviz/panel.h>
 #include <string>
 #include <map>

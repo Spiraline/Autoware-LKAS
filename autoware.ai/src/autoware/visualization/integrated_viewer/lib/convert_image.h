@@ -4,8 +4,8 @@
 #include <QImage>
 #include <QPixmap>
 
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui_c.h>
 
 namespace convert_image {
   inline QImage CvMatToQImage(const cv::Mat &input) {

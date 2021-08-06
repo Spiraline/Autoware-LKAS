@@ -36,6 +36,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
 #include <velodyne_pointcloud/point_types.h>
 #include <velodyne_pointcloud/rawdata.h>
@@ -70,15 +71,18 @@
 #include <autoware_msgs/NDTStat.h>
 
 //headers in Autoware Health Checker
-#include <autoware_health_checker/node_status_publisher.h>
+#include <autoware_health_checker/health_checker/health_checker.h>
 
 #define PREDICT_POSE_THRESHOLD 0.5
+
+#define SCORE_THRESHOLD 10
+#define POSE_DIFF_THRESHOLD 3
 
 #define Wa 0.4
 #define Wb 0.3
 #define Wc 0.3
 
-static std::shared_ptr<autoware_health_checker::NodeStatusPublisher> node_status_publisher_ptr_;
+static std::shared_ptr<autoware_health_checker::HealthChecker> health_checker_ptr_;
 
 struct pose
 {
@@ -99,7 +103,7 @@ enum class MethodType
 };
 static MethodType _method_type = MethodType::PCL_GENERIC;
 
-static pose initial_pose, predict_pose, predict_pose_imu, predict_pose_odom, predict_pose_imu_odom, previous_pose,
+static pose initial_pose, predict_pose, predict_pose_imu, predict_pose_odom, predict_pose_imu_odom, previous_pose, previous_gnss_pose,
     ndt_pose, current_pose, current_pose_imu, current_pose_odom, current_pose_imu_odom, localizer_pose;
 
 static double offset_x, offset_y, offset_z, offset_yaw;  // current_pos - previous_pose
@@ -108,6 +112,10 @@ static double offset_odom_x, offset_odom_y, offset_odom_z, offset_odom_roll, off
 static double offset_imu_odom_x, offset_imu_odom_y, offset_imu_odom_z, offset_imu_odom_roll, offset_imu_odom_pitch,
     offset_imu_odom_yaw;
 
+// For GPS backup method
+static pose current_gnss_pose;
+static double previous_score = 0.0;
+
 // Can't load if typed "pcl::PointCloud<pcl::PointXYZRGB> map, add;"
 static pcl::PointCloud<pcl::PointXYZ> map, add;
 
@@ -115,6 +123,9 @@ static pcl::PointCloud<pcl::PointXYZ> map, add;
 static int map_loaded = 0;
 static int _use_gnss = 1;
 static int init_pos_set = 0;
+
+struct timespec start_time, end_time;
+static bool _output_log;
 
 static pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> ndt;
 static cpu::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> anh_ndt;
@@ -167,6 +178,9 @@ static int iteration = 0;
 static double fitness_score = 0.0;
 static double trans_probability = 0.0;
 
+// reference for comparing fitness_score, default value set to 500.0
+static double _gnss_reinit_fitness = 500.0;
+
 static double diff = 0.0;
 static double diff_x = 0.0, diff_y = 0.0, diff_z = 0.0, diff_yaw;
 
@@ -206,7 +220,12 @@ static autoware_msgs::NDTStat ndt_stat_msg;
 
 static double predict_pose_error = 0.0;
 
-static double _tf_x, _tf_y, _tf_z, _tf_roll, _tf_pitch, _tf_yaw;
+static double _tf_x = 1.2;
+static double _tf_y = 0.0;
+static double _tf_z = 2.0;
+static double _tf_roll = 0.0;
+static double _tf_pitch = 0.0;
+static double _tf_yaw = 0.0;
 static Eigen::Matrix4f tf_btol;
 
 static std::string _localizer = "velodyne";
@@ -236,6 +255,8 @@ static tf::StampedTransform local_transform;
 static unsigned int points_map_num = 0;
 
 pthread_mutex_t mutex;
+
+static bool _is_init_match_finished = false;
 
 static pose convertPoseIntoRelativeCoordinate(const pose &target_pose, const pose &reference_pose)
 {
@@ -540,65 +561,49 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
                         input->pose.orientation.w);
   tf::Matrix3x3 gnss_m(gnss_q);
 
-  pose current_gnss_pose;
   current_gnss_pose.x = input->pose.position.x;
   current_gnss_pose.y = input->pose.position.y;
   current_gnss_pose.z = input->pose.position.z;
   gnss_m.getRPY(current_gnss_pose.roll, current_gnss_pose.pitch, current_gnss_pose.yaw);
 
-  static pose previous_gnss_pose = current_gnss_pose;
-  ros::Time current_gnss_time = input->header.stamp;
-  static ros::Time previous_gnss_time = current_gnss_time;
+  static int matching_fail_cnt = 0;
 
-  if ((_use_gnss == 1 && init_pos_set == 0) || fitness_score >= 500.0)
-  {
-    previous_pose.x = previous_gnss_pose.x;
-    previous_pose.y = previous_gnss_pose.y;
-    previous_pose.z = previous_gnss_pose.z;
-    previous_pose.roll = previous_gnss_pose.roll;
-    previous_pose.pitch = previous_gnss_pose.pitch;
-    previous_pose.yaw = previous_gnss_pose.yaw;
+  double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
-    current_pose.x = current_gnss_pose.x;
-    current_pose.y = current_gnss_pose.y;
-    current_pose.z = current_gnss_pose.z;
-    current_pose.roll = current_gnss_pose.roll;
-    current_pose.pitch = current_gnss_pose.pitch;
-    current_pose.yaw = current_gnss_pose.yaw;
+  if(previous_score < SCORE_THRESHOLD && ndt_gnss_diff < POSE_DIFF_THRESHOLD)
+    matching_fail_cnt = 0;
+  else
+    matching_fail_cnt++;
 
-    current_pose_imu = current_pose_odom = current_pose_imu_odom = current_pose;
-
-    diff_x = current_pose.x - previous_pose.x;
-    diff_y = current_pose.y - previous_pose.y;
-    diff_z = current_pose.z - previous_pose.z;
-    diff_yaw = current_pose.yaw - previous_pose.yaw;
-    diff = sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
-
-    const pose trans_current_pose = convertPoseIntoRelativeCoordinate(current_pose, previous_pose);
-
-    const double diff_time = (current_gnss_time - previous_gnss_time).toSec();
-    current_velocity = (diff_time > 0) ? (diff / diff_time) : 0;
-    current_velocity =  (trans_current_pose.x >= 0) ? current_velocity : -current_velocity;
-    current_velocity_x = (diff_time > 0) ? (diff_x / diff_time) : 0;
-    current_velocity_y = (diff_time > 0) ? (diff_y / diff_time) : 0;
-    current_velocity_z = (diff_time > 0) ? (diff_z / diff_time) : 0;
-    angular_velocity = (diff_time > 0) ? (diff_yaw / diff_time) : 0;
+  if(previous_score == 0.0){
+    previous_score = 0.0;
+    current_pose = current_gnss_pose;
+    previous_pose = previous_gnss_pose;
+  }
+  else if(matching_fail_cnt > 10){
+    // matching_fail_cnt = 0.0;
+    previous_score = 0.0;
+    current_pose = current_gnss_pose;
+    previous_pose = previous_gnss_pose;
+    current_velocity = 0.0;
+    current_velocity_x = 0.0;
+    current_velocity_y = 0.0;
+    current_velocity_z = 0.0;
+    angular_velocity = 0.0;
 
     current_accel = 0.0;
     current_accel_x = 0.0;
     current_accel_y = 0.0;
     current_accel_z = 0.0;
 
-    init_pos_set = 1;
+    offset_x = 0.0;
+    offset_y = 0.0;
+    offset_z = 0.0;
+    offset_yaw = 0.0;
   }
 
-  previous_gnss_pose.x = current_gnss_pose.x;
-  previous_gnss_pose.y = current_gnss_pose.y;
-  previous_gnss_pose.z = current_gnss_pose.z;
-  previous_gnss_pose.roll = current_gnss_pose.roll;
-  previous_gnss_pose.pitch = current_gnss_pose.pitch;
-  previous_gnss_pose.yaw = current_gnss_pose.yaw;
-  previous_gnss_time = current_gnss_time;
+  previous_gnss_pose = current_gnss_pose;
+
 }
 
 static void initialpose_callback(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& input)
@@ -694,6 +699,8 @@ static void initialpose_callback(const geometry_msgs::PoseWithCovarianceStamped:
   offset_imu_odom_roll = 0.0;
   offset_imu_odom_pitch = 0.0;
   offset_imu_odom_yaw = 0.0;
+
+  previous_score = 0.0;
 
   init_pos_set = 1;
 }
@@ -921,9 +928,16 @@ static void imu_callback(const sensor_msgs::Imu::Ptr& input)
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
-  node_status_publisher_ptr_->CHECK_RATE("/topic/rate/points_raw/slow",8,5,1,"topic points_raw subscribe rate low.");
+  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+
+  // Check inital matching is success or not
+  if(_is_init_match_finished == false && previous_score < SCORE_THRESHOLD && previous_score != 0.0)
+    _is_init_match_finished = true;
+
+  health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
   if (map_loaded == 1 && init_pos_set == 1)
   {
+
     matching_start = std::chrono::system_clock::now();
 
     static tf::TransformBroadcaster br;
@@ -1048,7 +1062,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       iteration = anh_ndt.getFinalNumIteration();
 
       getFitnessScore_start = std::chrono::system_clock::now();
-      fitness_score = anh_ndt.getFitnessScore();
+      // fitness_score = anh_ndt.getFitnessScore();
+      fitness_score = anh_ndt.getPNorm();
       getFitnessScore_end = std::chrono::system_clock::now();
 
       trans_probability = anh_ndt.getTransformationProbability();
@@ -1354,7 +1369,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     }
 
     predict_pose_pub.publish(predict_pose_msg);
-    node_status_publisher_ptr_->CHECK_RATE("/topic/rate/ndt_pose/slow",8,5,1,"topic points_raw publish rate low.");
+    health_checker_ptr_->CHECK_RATE("topic_rate_ndt_pose_slow", 8, 5, 1, "topic ndt_pose publish rate slow.");
     ndt_pose_pub.publish(ndt_pose_msg);
     // current_pose is published by vel_pose_mux
     //    current_pose_pub.publish(current_pose_msg);
@@ -1376,7 +1391,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     matching_end = std::chrono::system_clock::now();
     exe_time = std::chrono::duration_cast<std::chrono::microseconds>(matching_end - matching_start).count() / 1000.0;
     time_ndt_matching.data = exe_time;
-    node_status_publisher_ptr_->CHECK_MAX_VALUE("/value/time_ndt_matching",time_ndt_matching.data,50,70,100,"value time_ndt_matching is too high.");
+    health_checker_ptr_->CHECK_MAX_VALUE("time_ndt_matching", time_ndt_matching.data, 50, 70, 100, "value time_ndt_matching is too high.");
     time_ndt_matching_pub.publish(time_ndt_matching);
 
     // Set values for /estimate_twist
@@ -1394,9 +1409,11 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     geometry_msgs::Vector3Stamped estimate_vel_msg;
     estimate_vel_msg.header.stamp = current_scan_time;
     estimate_vel_msg.vector.x = current_velocity;
-    node_status_publisher_ptr_->CHECK_MAX_VALUE("/value/estimate_twist/linear",current_velocity,5,10,15,"value linear estimated twist is too high.");
-    node_status_publisher_ptr_->CHECK_MAX_VALUE("/value/estimate_twist/angular",angular_velocity,5,10,15,"value linear angular twist is too high.");
+    health_checker_ptr_->CHECK_MAX_VALUE("estimate_twist_linear", current_velocity, 5, 10, 15, "value linear estimated twist is too high.");
+    health_checker_ptr_->CHECK_MAX_VALUE("estimate_twist_angular", angular_velocity, 5, 10, 15, "value linear angular twist is too high.");
     estimated_vel_pub.publish(estimate_vel_msg);
+
+    previous_score = fitness_score;
 
     // Set values for /ndt_stat
     ndt_stat_msg.header.stamp = current_scan_time;
@@ -1441,7 +1458,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     std::cout << "Sequence: " << input->header.seq << std::endl;
     std::cout << "Timestamp: " << input->header.stamp << std::endl;
     std::cout << "Frame ID: " << input->header.frame_id << std::endl;
-    //		std::cout << "Number of Scan Points: " << scan_ptr->size() << " points." << std::endl;
+    //    std::cout << "Number of Scan Points: " << scan_ptr->size() << " points." << std::endl;
     std::cout << "Number of Filtered Scan Points: " << scan_points_num << " points." << std::endl;
     std::cout << "NDT has converged: " << has_converged << std::endl;
     std::cout << "Fitness Score: " << fitness_score << std::endl;
@@ -1498,6 +1515,16 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
     previous_estimated_vel_kmph.data = estimated_vel_kmph.data;
   }
+
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/ndt_matching.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
+  }
 }
 
 void* thread_func(void* args)
@@ -1524,9 +1551,9 @@ int main(int argc, char** argv)
 
   ros::NodeHandle nh;
   ros::NodeHandle private_nh("~");
-  node_status_publisher_ptr_ = std::make_shared<autoware_health_checker::NodeStatusPublisher>(nh,private_nh);
-  node_status_publisher_ptr_->ENABLE();
-  node_status_publisher_ptr_->NODE_ACTIVATE();
+  health_checker_ptr_ = std::make_shared<autoware_health_checker::HealthChecker>(nh,private_nh);
+  health_checker_ptr_->ENABLE();
+  health_checker_ptr_->NODE_ACTIVATE();
 
   // Set log file name.
   private_nh.getParam("output_log_data", _output_log_data);
@@ -1555,41 +1582,44 @@ int main(int argc, char** argv)
   private_nh.getParam("use_odom", _use_odom);
   private_nh.getParam("imu_upside_down", _imu_upside_down);
   private_nh.getParam("imu_topic", _imu_topic);
+  private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
-  if (nh.getParam("localizer", _localizer) == false)
-  {
-    std::cout << "localizer is not set." << std::endl;
-    return 1;
+  private_nh.getParam("output_log", _output_log);
+
+  if(_output_log){
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/ndt_matching.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
   }
-  if (nh.getParam("tf_x", _tf_x) == false)
+
+  nh.param<std::string>("/ndt_matching/localizer", _localizer, "velodyne");
+
+  try
   {
-    std::cout << "tf_x is not set." << std::endl;
-    return 1;
+    tf::TransformListener base_localizer_listener;
+    tf::StampedTransform  m_base_to_localizer;
+    base_localizer_listener.waitForTransform("/base_link", _localizer, ros::Time(0), ros::Duration(1.0));
+    base_localizer_listener.lookupTransform("/base_link", _localizer, ros::Time(0), m_base_to_localizer);
+
+    _tf_x = m_base_to_localizer.getOrigin().x();
+    _tf_y = m_base_to_localizer.getOrigin().y();
+    _tf_z = m_base_to_localizer.getOrigin().z();
+
+    tf::Quaternion b_l_q(
+      m_base_to_localizer.getRotation().x(),
+      m_base_to_localizer.getRotation().y(),
+      m_base_to_localizer.getRotation().z(),
+      m_base_to_localizer.getRotation().w()
+    );
+
+    tf::Matrix3x3 b_l_m(b_l_q);
+    b_l_m.getRPY(_tf_roll, _tf_pitch, _tf_yaw);
   }
-  if (nh.getParam("tf_y", _tf_y) == false)
+  catch (tf::TransformException& ex)
   {
-    std::cout << "tf_y is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_z", _tf_z) == false)
-  {
-    std::cout << "tf_z is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_roll", _tf_roll) == false)
-  {
-    std::cout << "tf_roll is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_pitch", _tf_pitch) == false)
-  {
-    std::cout << "tf_pitch is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_yaw", _tf_yaw) == false)
-  {
-    std::cout << "tf_yaw is not set." << std::endl;
-    return 1;
+    ROS_ERROR("%s", ex.what());
   }
 
   std::cout << "-----------------------------------------------------------------" << std::endl;
@@ -1605,6 +1635,7 @@ int main(int argc, char** argv)
   std::cout << "imu_upside_down: " << _imu_upside_down << std::endl;
   std::cout << "imu_topic: " << _imu_topic << std::endl;
   std::cout << "localizer: " << _localizer << std::endl;
+  std::cout << "gnss_reinit_fitness: " << _gnss_reinit_fitness << std::endl;
   std::cout << "(tf_x,tf_y,tf_z,tf_roll,tf_pitch,tf_yaw): (" << _tf_x << ", " << _tf_y << ", " << _tf_z << ", "
             << _tf_roll << ", " << _tf_pitch << ", " << _tf_yaw << ")" << std::endl;
   std::cout << "-----------------------------------------------------------------" << std::endl;
@@ -1664,8 +1695,8 @@ int main(int argc, char** argv)
   //  ros::Subscriber map_sub = nh.subscribe("points_map", 1, map_callback);
   ros::Subscriber initialpose_sub = nh.subscribe("initialpose", 10, initialpose_callback);
   ros::Subscriber points_sub = nh.subscribe("filtered_points", _queue_size, points_callback);
-  ros::Subscriber odom_sub = nh.subscribe("/vehicle/odom", _queue_size * 10, odom_callback);
-  ros::Subscriber imu_sub = nh.subscribe(_imu_topic.c_str(), _queue_size * 10, imu_callback);
+  // ros::Subscriber odom_sub = nh.subscribe("/vehicle/odom", _queue_size * 10, odom_callback);
+  // ros::Subscriber imu_sub = nh.subscribe(_imu_topic.c_str(), _queue_size * 10, imu_callback);
 
   pthread_t thread;
   pthread_create(&thread, NULL, thread_func, NULL);

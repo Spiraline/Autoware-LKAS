@@ -16,6 +16,7 @@
 
 #ifndef OP_TRAJECTORY_EVALUATOR_CORE
 #define OP_TRAJECTORY_EVALUATOR_CORE
+#define TF_DEBUG false
 
 #include <ros/ros.h>
 #include <geometry_msgs/TwistStamped.h>
@@ -27,10 +28,20 @@
 #include <autoware_msgs/LaneArray.h>
 #include <autoware_can_msgs/CANInfo.h>
 #include <autoware_msgs/DetectedObjectArray.h>
+#include <autoware_msgs/DetectedObject.h>
+#include <autoware_msgs/IntersectionCondition.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <tf/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/Int32.h>
+#include <std_msgs/Bool.h>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/TrajectoryDynamicCosts.h"
+
+
 
 namespace TrajectoryEvaluatorNS
 {
@@ -39,77 +50,102 @@ class TrajectoryEval
 {
 protected:
 
-	PlannerHNS::TrajectoryDynamicCosts m_TrajectoryCostsCalculator;
-	bool m_bUseMoveingObjectsPrediction;
+  PlannerHNS::TrajectoryDynamicCosts m_TrajectoryCostsCalculator;
+  bool m_bUseMoveingObjectsPrediction;
 
-	geometry_msgs::Pose m_OriginPos;
+  geometry_msgs::Pose m_OriginPos;
 
-	PlannerHNS::WayPoint m_CurrentPos;
-	bool bNewCurrentPos;
+  PlannerHNS::WayPoint m_CurrentPos;
+  bool bNewCurrentPos;
 
-	PlannerHNS::VehicleState m_VehicleStatus;
-	bool bVehicleStatus;
+  PlannerHNS::VehicleState m_VehicleStatus;
+  bool bVehicleStatus;
 
-	std::vector<PlannerHNS::WayPoint> m_temp_path;
-	std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPaths;
-	std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPathsToUse;
-	std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPathSections;
-	std::vector<PlannerHNS::WayPoint> t_centerTrajectorySmoothed;
-	bool bWayGlobalPath;
-	bool bWayGlobalPathToUse;
-	std::vector<std::vector<PlannerHNS::WayPoint> > m_GeneratedRollOuts;
-	bool bRollOuts;
+  std::vector<PlannerHNS::WayPoint> m_temp_path;
+  std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPaths;
+  std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPathsToUse;
+  std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPathSections;
+  std::vector<PlannerHNS::WayPoint> t_centerTrajectorySmoothed;
+  bool bWayGlobalPath;
+  bool bWayGlobalPathToUse;
+  std::vector<std::vector<PlannerHNS::WayPoint> > m_GeneratedRollOuts;
+  bool bRollOuts;
 
-	std::vector<PlannerHNS::DetectedObject> m_PredictedObjects;
-	bool bPredictedObjects;
+  std::vector<PlannerHNS::DetectedObject> m_PredictedObjects;
+  bool bPredictedObjects;
+  // Added by PHY
+  double m_SprintDecisionTime;
+
+  struct timespec m_PlanningTimer;
+  std::vector<std::string>    m_LogData;
+  PlannerHNS::PlanningParams  m_PlanningParams;
+  PlannerHNS::CAR_BASIC_INFO  m_CarInfo;
+  PlannerHNS::BehaviorState   m_CurrentBehavior;
+  visualization_msgs::MarkerArray m_CollisionsDummy;
+  visualization_msgs::MarkerArray m_CollisionsActual;
+  int m_ImageWidth;
+  int m_ImageHeight;
+  double m_PedestrianRightThreshold;
+  double m_PedestrianLeftThreshold;
+  double m_PedestrianImageDetectionRange;  
+  double m_VehicleImageDetectionRange;
+  double m_VehicleImageWidthThreshold;
+  int m_noVehicleCnt;
+
+  bool _output_log;
+
+  struct timespec start_time, end_time;
+
+  //ROS messages (topics)
+  ros::NodeHandle nh;
+
+  //define publishers
+  ros::Publisher pub_CollisionPointsRviz;
+  ros::Publisher pub_LocalWeightedTrajectoriesRviz;
+  ros::Publisher pub_LocalWeightedTrajectories;
+  ros::Publisher pub_TrajectoryCost;
+  ros::Publisher pub_SafetyBorderRviz;
+  ros::Publisher pub_DistanceToPedestrian;
+  ros::Publisher pub_IntersectionCondition;
+  ros::Publisher pub_SprintSwitch;
+  ros::Publisher pub_currentTraj;
+
+  // define subscribers.
+  ros::Subscriber sub_current_pose;
+  ros::Subscriber sub_current_velocity;
+  ros::Subscriber sub_robot_odom;
+  ros::Subscriber sub_can_info;
+  ros::Subscriber sub_GlobalPlannerPaths;
+  ros::Subscriber sub_LocalPlannerPaths;
+  ros::Subscriber sub_predicted_objects;
+  ros::Subscriber sub_current_behavior;
+
+  // HJW added
+  ros::Subscriber sub_current_state;
+
+  // TF
+  tf::TransformListener m_vtob_listener;
+  tf::TransformListener m_vtom_listener;
+  tf::StampedTransform  m_velodyne_to_base_link;
+  tf::StampedTransform  m_velodyne_to_map;
 
 
-	struct timespec m_PlanningTimer;
-  	std::vector<std::string>    m_LogData;
+  // Callback function for subscriber.
+  void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
+  void callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg);
+  void callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg);
+  void callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg);
+  void callbackGetGlobalPlannerPath(const autoware_msgs::LaneArrayConstPtr& msg);
+  void callbackGetLocalPlannerPath(const autoware_msgs::LaneArrayConstPtr& msg);
+  void callbackGetPredictedObjects(const autoware_msgs::DetectedObjectArrayConstPtr& msg);
+  void callbackGetBehaviorState(const geometry_msgs::TwistStampedConstPtr & msg);
+  void callbackGetCurrentState(const std_msgs::Int32 & msg);
 
-  	PlannerHNS::PlanningParams m_PlanningParams;
-  	PlannerHNS::CAR_BASIC_INFO m_CarInfo;
-
-  	PlannerHNS::BehaviorState m_CurrentBehavior;
-
-
-  	visualization_msgs::MarkerArray m_CollisionsDummy;
-	visualization_msgs::MarkerArray m_CollisionsActual;
-
-	//ROS messages (topics)
-	ros::NodeHandle nh;
-
-	//define publishers
-	ros::Publisher pub_CollisionPointsRviz;
-	ros::Publisher pub_LocalWeightedTrajectoriesRviz;
-	ros::Publisher pub_LocalWeightedTrajectories;
-	ros::Publisher pub_TrajectoryCost;
-	ros::Publisher pub_SafetyBorderRviz;
-
-	// define subscribers.
-	ros::Subscriber sub_current_pose;
-	ros::Subscriber sub_current_velocity;
-	ros::Subscriber sub_robot_odom;
-	ros::Subscriber sub_can_info;
-	ros::Subscriber sub_GlobalPlannerPaths;
-	ros::Subscriber sub_LocalPlannerPaths;
-	ros::Subscriber sub_predicted_objects;
-	ros::Subscriber sub_current_behavior;
-
-
-
-	// Callback function for subscriber.
-	void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
-	void callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg);
-	void callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg);
-	void callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg);
-	void callbackGetGlobalPlannerPath(const autoware_msgs::LaneArrayConstPtr& msg);
-	void callbackGetLocalPlannerPath(const autoware_msgs::LaneArrayConstPtr& msg);
-	void callbackGetPredictedObjects(const autoware_msgs::DetectedObjectArrayConstPtr& msg);
-	void callbackGetBehaviorState(const geometry_msgs::TwistStampedConstPtr & msg);
-
-	//Helper Functions
+  //Helper Functions
   void UpdatePlanningParams(ros::NodeHandle& _nh);
+
+  void UpdateMyParams();
+  bool UpdateTf();
 
 public:
   TrajectoryEval();

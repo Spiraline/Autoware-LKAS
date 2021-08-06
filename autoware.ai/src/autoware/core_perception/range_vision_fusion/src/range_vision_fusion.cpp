@@ -351,7 +351,7 @@ ROSRangeVisionFusionApp::FuseRangeVisionDetections(
     int vision_rect_area = vision_rect.area();
     long closest_index = -1;
     double closest_distance = std::numeric_limits<double>::max();
-
+    
     for (size_t j = 0; j < range_in_cv.objects.size(); j++)
     {
       double current_distance = GetDistanceToObject(range_in_cv.objects[j]);
@@ -359,7 +359,14 @@ ROSRangeVisionFusionApp::FuseRangeVisionDetections(
       cv::Rect range_rect = ProjectDetectionToRect(range_in_cv.objects[j]);
       int range_rect_area = range_rect.area();
 
+      // If vision rect is too small, skip fusion
+      if(((double)vision_rect_area / camera_area_) < vision_area_ratio_threshold_){ 
+        vision_range_closest[i] = closest_index;
+        continue;
+      }
+
       cv::Rect overlap = range_rect & vision_rect;
+
       if ((overlap.area() > range_rect_area * overlap_threshold_)
           || (overlap.area() > vision_rect_area * overlap_threshold_)
         )
@@ -374,14 +381,16 @@ ROSRangeVisionFusionApp::FuseRangeVisionDetections(
         range_in_cv.objects[j].width = vision_object.width;
         range_in_cv.objects[j].height = vision_object.height;
         range_in_cv.objects[j].angle = vision_object.angle;
-        range_in_cv.objects[j].id = vision_object.id;
+        //range_in_cv.objects[j].id = vision_object.id;
         CheckMinimumDimensions(range_in_cv.objects[j]);
+
         if (vision_object.pose.orientation.x > 0
             || vision_object.pose.orientation.y > 0
             || vision_object.pose.orientation.z > 0)
         {
           range_in_cv.objects[i].pose.orientation = vision_object.pose.orientation;
         }
+
         if (current_distance < closest_distance)
         {
           closest_index = j;
@@ -406,12 +415,12 @@ ROSRangeVisionFusionApp::FuseRangeVisionDetections(
   for (size_t i = 0; i < used_vision_detections.size(); i++)
   {
     if (!used_vision_detections[i])
-    {
+    { 
       fused_objects.objects.push_back(in_vision_detections->objects[i]);
     }
   }
-  //add also objects outside the image
-  for (auto &object: range_out_cv.objects)
+  //add also all objects created from lidar
+  for (auto &object: in_range_detections->objects)
   {
     fused_objects.objects.push_back(object);
   }
@@ -550,6 +559,8 @@ ROSRangeVisionFusionApp::IntrinsicsCallback(const sensor_msgs::CameraInfo &in_me
   intrinsics_subscriber_.shutdown();
   camera_info_ok_ = true;
   image_frame_id_ = in_message.header.frame_id;
+  camera_area_ = in_message.height * in_message.width;
+  ROS_INFO("[%d] Camera Area Size.", camera_area_);
   ROS_INFO("[%s] CameraIntrinsics obtained.", __APP_NAME__);
 }
 
@@ -579,7 +590,7 @@ ROSRangeVisionFusionApp::InitializeROSIo(ros::NodeHandle &in_private_handle)
 {
   //get params
   std::string camera_info_src, detected_objects_vision, min_car_dimensions, min_person_dimensions, min_truck_dimensions;
-  std::string detected_objects_range, fused_topic_str = "/detection/fusion_tools/objects";
+  std::string detected_objects_range, fused_topic_str, label;
   std::string name_space_str = ros::this_node::getNamespace();
   bool sync_topics = false;
 
@@ -609,9 +620,15 @@ ROSRangeVisionFusionApp::InitializeROSIo(ros::NodeHandle &in_private_handle)
   in_private_handle.param<std::string>("min_truck_dimensions", min_truck_dimensions, "[4,2,2]");
   ROS_INFO("[%s] min_truck_dimensions: %s", __APP_NAME__, min_truck_dimensions.c_str());
 
-
   in_private_handle.param<bool>("sync_topics", sync_topics, false);
   ROS_INFO("[%s] sync_topics: %d", __APP_NAME__, sync_topics);
+
+  in_private_handle.param<double>("vision_area_ratio_threshold", vision_area_ratio_threshold_, 0.005);
+  ROS_INFO("[%s] vision_area_ratio_threshold: %d", __APP_NAME__, vision_area_ratio_threshold_);
+
+  in_private_handle.param<std::string>("label", label, "center");
+  in_private_handle.param<std::string>("output_topic_str", fused_topic_str, "/detection/fusion_tools/objects");
+  fused_topic_str = fused_topic_str+"_"+label;
 
   YAML::Node car_dimensions = YAML::Load(min_car_dimensions);
   YAML::Node person_dimensions = YAML::Load(min_person_dimensions);

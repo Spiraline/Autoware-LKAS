@@ -21,11 +21,7 @@
  */
 #include "vision_darknet_detect.h"
 
-#if (CV_MAJOR_VERSION <= 2)
-#include <opencv2/contrib/contrib.hpp>
-#else
 #include "gencolors.cpp"
-#endif
 
 namespace darknet
 {
@@ -176,6 +172,10 @@ void Yolo3DetectorNode::convert_rect_to_image_obj(std::vector< RectClassScore<fl
                     obj.label = "unknown";
             }
             obj.valid = true;
+            obj.pose.orientation.x = 0;
+            obj.pose.orientation.y = 0;
+            obj.pose.orientation.z = 0;
+            obj.pose.orientation.w = 1;
 
             out_message.objects.push_back(obj);
 
@@ -345,11 +345,7 @@ void Yolo3DetectorNode::Run()
     yolo_detector_.load(network_definition_file, pretrained_model_file, score_threshold_, nms_threshold_);
     ROS_INFO("Initialization complete.");
 
-    #if (CV_MAJOR_VERSION <= 2)
-        cv::generateColors(colors_, 80);
-    #else
-        generateColors(colors_, 80);
-    #endif
+    generateColors(colors_, 80);
 
     publisher_objects_ = node_handle_.advertise<autoware_msgs::DetectedObjectArray>("/detection/image_detector/objects", 1);
 

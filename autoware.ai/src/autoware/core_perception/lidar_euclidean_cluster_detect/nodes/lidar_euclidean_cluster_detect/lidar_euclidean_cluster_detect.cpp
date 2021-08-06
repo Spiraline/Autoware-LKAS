@@ -57,20 +57,13 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 #include <opencv2/core/version.hpp>
-
-#if (CV_MAJOR_VERSION == 3)
+#include "opencv2/core/core_c.h"
 
 #include "gencolors.cpp"
 
-#else
-
-#include <opencv2/contrib/contrib.hpp>
 #include <autoware_msgs/DetectedObjectArray.h>
-
-#endif
 
 #include "cluster.h"
 
@@ -98,6 +91,9 @@ std_msgs::Header _velodyne_header;
 
 std::string _output_frame;
 
+static bool _output_log;
+struct timespec start_time, end_time;
+
 static bool _velodyne_transform_available;
 static bool _downsample_cloud;
 static bool _pose_estimation;
@@ -118,7 +114,6 @@ static bool _keep_lanes;
 static double _keep_lane_left_distance;
 static double _keep_lane_right_distance;
 
-static double _max_boundingbox_side;
 static double _remove_points_upto;
 static double _cluster_merge_threshold;
 static double _clustering_distance;
@@ -211,7 +206,7 @@ void publishDetectedObjects(const autoware_msgs::CloudClusterArray &in_clusters)
     detected_object.pointcloud = in_clusters.clusters[i].cloud;
     detected_object.convex_hull = in_clusters.clusters[i].convex_hull;
     detected_object.valid = true;
-
+    
     detected_objects.objects.push_back(detected_object);
   }
   _pub_detected_objects.publish(detected_objects);
@@ -246,7 +241,7 @@ void publishCloudClusters(const ros::Publisher *in_publisher, const autoware_msg
         cluster_transformed.dimensions = i->dimensions;
         cluster_transformed.eigen_values = i->eigen_values;
         cluster_transformed.eigen_vectors = i->eigen_vectors;
-        
+
         cluster_transformed.convex_hull = i->convex_hull;
         cluster_transformed.bounding_box.pose.position = i->bounding_box.pose.position;
         if(_pose_estimation)
@@ -267,7 +262,7 @@ void publishCloudClusters(const ros::Publisher *in_publisher, const autoware_msg
     in_publisher->publish(clusters_transformed);
     publishDetectedObjects(clusters_transformed);
   } else
-  {
+  { 
     in_publisher->publish(in_clusters);
     publishDetectedObjects(in_clusters);
   }
@@ -440,7 +435,7 @@ std::vector<ClusterPtr> clusterAndColor(const pcl::PointCloud<pcl::PointXYZ>::Pt
   // use indices on 3d cloud
 
   /////////////////////////////////
-  //---	3. Color clustered points
+  //---  3. Color clustered points
   /////////////////////////////////
   unsigned int k = 0;
   // pcl::PointCloud<pcl::PointXYZRGB>::Ptr final_cluster (new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -852,7 +847,7 @@ void removePointsUpTo(const pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr,
 
 void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 {
-  //_start = std::chrono::system_clock::now();
+  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   if (!_using_sensor_cloud)
   {
@@ -928,6 +923,16 @@ void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 
     _using_sensor_cloud = false;
   }
+
+  if(_output_log){
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "a");
+    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fclose(fp);
+  }
 }
 int main(int argc, char **argv)
 {
@@ -945,19 +950,40 @@ int main(int argc, char **argv)
   _transform = &transform;
   _transform_listener = &listener;
 
-#if (CV_MAJOR_VERSION == 3)
   generateColors(_colors, 255);
-#else
-  cv::generateColors(_colors, 255);
-#endif
 
-  _pub_cluster_cloud = h.advertise<sensor_msgs::PointCloud2>("/points_cluster", 1);
-  _pub_ground_cloud = h.advertise<sensor_msgs::PointCloud2>("/points_ground", 1);
-  _centroid_pub = h.advertise<autoware_msgs::Centroids>("/cluster_centroids", 1);
+  std::string label;
+  std::string output_lane_str;
+  std::string output_cluster_str;
+  std::string output_objects_str;
+  std::string point_cluster_str;
+  std::string cluster_centeroids_str;
+  std::string points_ground_str;
 
-  _pub_points_lanes_cloud = h.advertise<sensor_msgs::PointCloud2>("/points_lanes", 1);
-  _pub_clusters_message = h.advertise<autoware_msgs::CloudClusterArray>("/detection/lidar_detector/cloud_clusters", 1);
-  _pub_detected_objects = h.advertise<autoware_msgs::DetectedObjectArray>("/detection/lidar_detector/objects", 1);
+  private_nh.getParam("output_log", _output_log);
+
+  if(_output_log){
+    std::string print_file_path = std::getenv("HOME");
+    print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
+    FILE *fp;
+    fp = fopen(print_file_path.c_str(), "w");
+    fclose(fp);
+  }
+
+  private_nh.param<std::string>("label", label, "center");
+  output_lane_str = std::string("/points_lanes_")+label;
+  output_cluster_str = std::string("/detection/lidar_detector/cloud_clusters_")+label;
+  output_objects_str = std::string("/detection/lidar_detector/objects_")+label;
+  point_cluster_str = std::string("/points_cluster_")+label;
+  cluster_centeroids_str = std::string("/points_ground_")+label;
+  points_ground_str = std::string("/cluster_centroids_")+label;
+
+  _pub_cluster_cloud = h.advertise<sensor_msgs::PointCloud2>(point_cluster_str.c_str(), 1);
+  _pub_ground_cloud = h.advertise<sensor_msgs::PointCloud2>(cluster_centeroids_str.c_str(), 1);
+  _centroid_pub = h.advertise<autoware_msgs::Centroids>(points_ground_str.c_str(), 1);
+  _pub_points_lanes_cloud = h.advertise<sensor_msgs::PointCloud2>(output_lane_str.c_str(), 1);
+  _pub_clusters_message = h.advertise<autoware_msgs::CloudClusterArray>(output_cluster_str.c_str(), 1);
+  _pub_detected_objects = h.advertise<autoware_msgs::DetectedObjectArray>(output_objects_str.c_str(), 1);
 
   std::string points_topic, gridmap_topic;
 
@@ -1006,8 +1032,6 @@ int main(int argc, char **argv)
   ROS_INFO("[%s] keep_lane_left_distance: %f", __APP_NAME__, _keep_lane_left_distance);
   private_nh.param("keep_lane_right_distance", _keep_lane_right_distance, 5.0);
   ROS_INFO("[%s] keep_lane_right_distance: %f", __APP_NAME__, _keep_lane_right_distance);
-  private_nh.param("max_boundingbox_side", _max_boundingbox_side, 10.0);
-  ROS_INFO("[%s] max_boundingbox_side: %f", __APP_NAME__, _max_boundingbox_side);
   private_nh.param("cluster_merge_threshold", _cluster_merge_threshold, 1.5);
   ROS_INFO("[%s] cluster_merge_threshold: %f", __APP_NAME__, _cluster_merge_threshold);
   private_nh.param<std::string>("output_frame", _output_frame, "velodyne");

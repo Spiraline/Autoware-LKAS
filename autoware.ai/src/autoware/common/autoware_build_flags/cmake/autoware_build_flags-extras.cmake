@@ -4,11 +4,11 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-undefined,error")
 endif()
 
-# Enable support for C++11
+# Enable support for C++14
 if(${CMAKE_VERSION} VERSION_LESS "3.1.0")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 else()
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 
 message(STATUS "CUDA compilation status: $ENV{AUTOWARE_COMPILE_WITH_CUDA}.")
@@ -18,10 +18,6 @@ macro(AW_CHECK_CUDA)
     find_package(CUDA REQUIRED)
     find_package(Eigen3 REQUIRED)
 
-    if(NOT ${CUDA_VERSION} VERSION_LESS "10.0"
-            AND NOT ${CUDA_VERSION} VERSION_EQUAL "10.0" )
-      message(FATAL_ERROR "GPU support on Melodic requires CUDA<=10.0")
-    endif()
     if(${CUDA_VERSION} VERSION_GREATER "9.1"
           AND ${CMAKE_VERSION} VERSION_LESS "3.12.3")
       unset(CUDA_cublas_device_LIBRARY CACHE)
