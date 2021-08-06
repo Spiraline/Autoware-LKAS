@@ -336,7 +336,7 @@ def detect_lane_pixels(binary_warped):
     result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
     slope_left =  np.poly1d(linear_slope_left)
     slope_right =  np.poly1d(linear_slope_right)
-    print(slope_left[0],slope_right[0])
+    # print(slope_left[0],slope_right[0])
     # = linear_slope_left.tolist()
 
     for idx in range(1000):
