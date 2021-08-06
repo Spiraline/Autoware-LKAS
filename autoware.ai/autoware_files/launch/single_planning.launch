@@ -48,9 +48,9 @@
     <arg name="pathDensity"                     default="0.5" />      <!-- Path Density-->
     <arg name="rollOutDensity"                  default="4" />      <!-- Horizontal Density -->
     <arg name="rollOutsNumber"                  default="0"    />     <!-- Rollouts Number -->
-    <arg name="maxVelocity"                     default="13.0" />     <!-- Max Velocity -->
-    <arg name="maxAcceleration"                 default="20.0" />      <!-- Acceleration -->
-    <arg name="maxDeceleration"                 default="-20.0" />    <!-- Deceleration -->
+    <arg name="maxVelocity"                     default="10.0" />     <!-- Max Velocity -->
+    <arg name="maxAcceleration"                 default="10.0" />      <!-- Acceleration -->
+    <arg name="maxDeceleration"                 default="-10.0" />    <!-- Deceleration -->
     <arg name="enableFollowing"                 default="false" />     <!-- Enable Following -->
     <arg name="enableSwerving"                  default="false"  />    <!-- Enable Avoidance -->
     <arg name="minFollowingDistance"            default="30.0"  />    <!-- Follow Distance --> <!-- should be bigger than Distance to follow -->  
