@@ -604,6 +604,8 @@ void BehaviorGen::MainLoop()
     fclose(fp);
   }
 
+  m_sprintSwitch = false;
+
   timespec planningTimer;
   UtilityHNS::UtilityH::GetTickCount(planningTimer);
   std_msgs::Bool emergency_stop_msg;
