@@ -423,7 +423,7 @@ void GlobalPlanner::MainLoop()
   timespec animation_timer;
   UtilityHNS::UtilityH::GetTickCount(animation_timer);
 
-  nh.getParam("/op_global_planner/output_log", _output_log);
+  nh.param<bool>("/op_global_planner/output_log", _output_log, false);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");

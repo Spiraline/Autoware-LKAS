@@ -41,7 +41,7 @@ BehaviorGen::BehaviorGen()
   nh.getParam("/op_behavior_selector/distanceToPedestrianThreshold", m_distanceToPedestrianThreshold);
   nh.param("/op_behavior_selector/turnThreshold", m_turnThreshold, 20.0);
 
-  nh.getParam("/op_behavior_selector/output_log", _output_log);
+  nh.param<bool>("/op_behavior_selector/output_log", _output_log, false);
 
   tf::StampedTransform transform;
   PlannerHNS::ROSHelpers::GetTransformFromTF("map", "world", transform);

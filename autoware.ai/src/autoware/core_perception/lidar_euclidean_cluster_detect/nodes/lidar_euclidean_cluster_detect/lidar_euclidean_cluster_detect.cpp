@@ -960,7 +960,7 @@ int main(int argc, char **argv)
   std::string cluster_centeroids_str;
   std::string points_ground_str;
 
-  private_nh.getParam("output_log", _output_log);
+  private_nh.param<bool>("output_log", _output_log, false);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");

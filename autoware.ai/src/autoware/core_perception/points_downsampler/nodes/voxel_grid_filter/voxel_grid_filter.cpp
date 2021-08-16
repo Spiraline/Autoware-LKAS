@@ -130,7 +130,7 @@ int main(int argc, char** argv)
   ros::NodeHandle private_nh("~");
 
   private_nh.getParam("points_topic", POINTS_TOPIC);
-  private_nh.getParam("output_log", _output_log);
+  private_nh.param<bool>("output_log", _output_log, false);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");

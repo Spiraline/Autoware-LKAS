@@ -1584,7 +1584,7 @@ int main(int argc, char** argv)
   private_nh.getParam("imu_topic", _imu_topic);
   private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
-  private_nh.getParam("output_log", _output_log);
+  private_nh.param<bool>("output_log", _output_log, false);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");
