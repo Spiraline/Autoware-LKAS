@@ -323,7 +323,8 @@ class lane_keeping_module:
     
     def __init__(self):
         rospy.init_node('lane_keeping_module')
-        self.image_pub = rospy.Publisher('vehicle_cmd_lgsvl', VehicleCmd, queue_size = 1)
+        # Should change to vehicle_cmd_lkas
+        self.image_pub = rospy.Publisher('vehicle_cmd_lkas', VehicleCmd, queue_size = 1)
         self.image_sub = rospy.Subscriber('/simulator/camera_node/image/compressed',CompressedImage,self.callback)
 
     def lane_keeping_params(self, slope_value):
@@ -346,7 +347,7 @@ class lane_keeping_module:
             binary_warped, sliding_window, warped, sv = advanced_lane_detection_pipeline(image_np)
             # cv2.imshow('cv_bw', (binary_warped*255).astype(np.uint8))
             # cv2.imshow('cv_w', warped)
-            cv2.imshow('cv_sliding_w', sliding_window)
+            # cv2.imshow('cv_sliding_w', sliding_window)
             
             cv2.waitKey(2)
 
