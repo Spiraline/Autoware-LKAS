@@ -14,6 +14,7 @@
   <arg name="sync" default="false" />
   <arg name="output_log_data" default="false" />
   <arg name="output_log" default="false" />
+  <arg name="gnss_backup" default="true" />
   <arg name="gnss_reinit_fitness" default="500.0" />
 
   <node pkg="lidar_localizer" type="ndt_matching" name="ndt_matching" output="log">
@@ -29,6 +30,7 @@
     <param name="use_local_transform" value="$(arg use_local_transform)" />
     <param name="output_log_data" value="$(arg output_log_data)" />
     <param name="output_log" value="$(arg output_log)" />
+    <param name="gnss_backup" value="$(arg gnss_backup)" />
     <param name="gnss_reinit_fitness" value="$(arg gnss_reinit_fitness)" />
     <remap from="/points_raw" to="/sync_drivers/points_raw" if="$(arg sync)" />
   </node>

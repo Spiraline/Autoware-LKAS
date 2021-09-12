@@ -917,6 +917,7 @@ public:
 
   double ndt_gnss_diff;
   double ndt_score;
+  bool use_lkas;
   
   // Added by HJW for traffic signal parameter
   double stopLineMargin;
@@ -1030,6 +1031,7 @@ public:
   double      closestWaypointDistance;
   double      ndt_gnss_diff;
   double      ndt_score;
+  bool        use_lkas;
   double      goalDistance;
   bool        bNewLocalPlan;
   //-------------------------------------------//

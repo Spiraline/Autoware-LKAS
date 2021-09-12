@@ -1,5 +1,6 @@
 <launch>
   <arg name="output_log" value="false" />
+  <arg name="use_lkas" value="false" />
 
   <!-- op_global_planning -->
   <include file="$(find op_global_planner)/launch/op_global_planner.launch">
@@ -143,5 +144,6 @@
     <arg name="stopLineFile"                    default="crossing_test/crossing_stop_line.yaml" /> -->
     <!-- <arg name="intersectionFile"                default="crossing_test/crossing_intersection.yaml" /> -->
     <arg name="output_log"                      default="$(arg output_log)" />
+    <arg name="use_lkas"                      default="$(arg use_lkas)" />
   </include>
 </launch>

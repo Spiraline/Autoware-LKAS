@@ -41,7 +41,8 @@ BehaviorGen::BehaviorGen()
   nh.getParam("/op_behavior_selector/distanceToPedestrianThreshold", m_distanceToPedestrianThreshold);
   nh.param("/op_behavior_selector/turnThreshold", m_turnThreshold, 20.0);
 
-  nh.getParam("/op_behavior_selector/output_log", _output_log);
+  nh.param("/op_behavior_selector/output_log", _output_log, false);
+  nh.param("/op_behavior_selector/use_lkas", _use_lkas, true);
 
   tf::StampedTransform transform;
   PlannerHNS::ROSHelpers::GetTransformFromTF("map", "world", transform);
@@ -714,6 +715,7 @@ void BehaviorGen::MainLoop()
 
       m_BehaviorGenerator.m_ndt_gnss_diff = m_ndt_gnss_diff;
       m_BehaviorGenerator.m_ndt_score = m_ndt_score;
+      m_BehaviorGenerator.m_use_lkas = _use_lkas;
       
       m_BehaviorGenerator.m_sprintSwitch = m_sprintSwitch;
       m_CurrentBehavior = m_BehaviorGenerator.DoOneStep(dt, m_CurrentPos, m_VehicleStatus, 1, m_CurrTrafficLight, m_TrajectoryBestCost, 0);

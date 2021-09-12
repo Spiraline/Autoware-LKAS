@@ -43,6 +43,7 @@
   <include file="$(find lidar_localizer)/launch/ndt_matching.launch">
     <arg name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
     <arg name="get_height" value="true" />
+    <arg name="gnss_backup" value="false" />
     <arg name="output_log" value="$(arg output_log)" />
   </include>
 

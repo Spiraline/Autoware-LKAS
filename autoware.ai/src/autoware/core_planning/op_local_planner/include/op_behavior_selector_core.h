@@ -126,6 +126,7 @@ protected: //Planning Related variables
   double m_obstacleWaitingTimeinIntersection;
 
   bool _output_log;
+  bool _use_lkas;
   struct timespec start_time, end_time;
 
   //ROS messages (topics)

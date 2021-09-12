@@ -57,6 +57,8 @@ public:
   double m_ndt_gnss_diff;
   double m_ndt_score;
 
+  bool m_use_lkas;
+
   int m_prevTrafficLightID;
   PlannerHNS::TrafficLightState m_prevTrafficLightSignal;
   double m_remainTrafficLightWaitingTime;

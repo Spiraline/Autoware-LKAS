@@ -11,6 +11,7 @@
   <arg name="stopLineFile" default="fake_stop_line.yaml" />
   <!-- <arg name="intersectionFile" default="crossing_test/crossing_intersection.yaml" /> -->
   <arg name="output_log" default="false" />
+  <arg name="use_lkas" default="false" />
       
   <node pkg="op_local_planner" type="op_behavior_selector" name="op_behavior_selector" output="screen">
     <rosparam command="load" file="$(find rubis_pkg)/cfg/$(arg trafficLightFile)"/>
@@ -24,6 +25,7 @@
     <param name="turnThreshold" value="$(arg turnThreshold)" />
 
     <param name="output_log" value="$(arg output_log)" />
+    <param name="use_lkas" value="$(arg use_lkas)" />
   </node>        
       
 </launch>

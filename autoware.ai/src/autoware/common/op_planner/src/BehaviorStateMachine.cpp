@@ -350,14 +350,14 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   // hjw added
-  if(pCParams->ndt_score > SCORE_THRESHOLD)
+  if(pCParams->ndt_score > SCORE_THRESHOLD && pCParams->use_lkas)
     return FindBehaviorState(LKAS_STATE);
 
   // if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
-  else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
-    return FindBehaviorState(GOAL_STATE);
-  // else if(pCParams->currentGoalID != pCParams->prevGoalID)
+  // else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
   //   return FindBehaviorState(GOAL_STATE);
+  else if(pCParams->currentGoalID != pCParams->prevGoalID)
+    return FindBehaviorState(GOAL_STATE);
   // else if(m_pParams->pedestrianAppearence){
   //   return FindBehaviorState(PEDESTRIAN_STATE);
   // }
@@ -392,9 +392,9 @@ BehaviorStateMachine* FollowStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
 
-  if(pCParams->ndt_gnss_diff > 5)
+  if(pCParams->ndt_gnss_diff > SCORE_THRESHOLD)
     return FindBehaviorState(LKAS_STATE);
-  else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
+  else if(pCParams->ndt_gnss_diff < SCORE_THRESHOLD && pCParams->goalDistance < 10)
     return FindBehaviorState(GOAL_STATE);
   // if(pCParams->currentGoalID != pCParams->prevGoalID)
   //   return FindBehaviorState(GOAL_STATE);

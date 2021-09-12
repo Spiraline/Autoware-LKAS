@@ -127,6 +127,7 @@ static int init_pos_set = 0;
 
 struct timespec start_time, end_time;
 static bool _output_log;
+static bool _gnss_backup;
 
 static pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> ndt;
 static cpu::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> anh_ndt;
@@ -571,7 +572,7 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
-  if(previous_score < SCORE_THRESHOLD)
+  if(previous_score < SCORE_THRESHOLD || !_gnss_backup)
     matching_fail_cnt = 0;
   else
     matching_fail_cnt++;
@@ -1585,7 +1586,8 @@ int main(int argc, char** argv)
   private_nh.getParam("imu_topic", _imu_topic);
   private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
-  private_nh.getParam("output_log", _output_log);
+  private_nh.param<bool>("output_log", _output_log, false);
+  private_nh.param<bool>("gnss_backup", _gnss_backup, true);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");
