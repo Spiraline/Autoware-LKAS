@@ -916,6 +916,7 @@ public:
   double LateralSkipDistance;
 
   double ndt_gnss_diff;
+  double ndt_score;
   
   // Added by HJW for traffic signal parameter
   double stopLineMargin;
@@ -1028,6 +1029,7 @@ public:
   int         prevGoalID;
   double      closestWaypointDistance;
   double      ndt_gnss_diff;
+  double      ndt_score;
   double      goalDistance;
   bool        bNewLocalPlan;
   //-------------------------------------------//

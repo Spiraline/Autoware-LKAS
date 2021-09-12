@@ -30,9 +30,9 @@
     <arg name="goal_ori_z"            value="0.05" />
     <arg name="goal_ori_w"            value="0.99" /> -->
     <!-- CubeTown -->
-    <arg name="use_static_goal"       value="false" />
-    <arg name="goal_pose_x"           value="56.3" />
-    <arg name="goal_pose_y"           value="2.5" />
+    <arg name="use_static_goal"       value="true" />
+    <arg name="goal_pose_x"           value="57.3" />
+    <arg name="goal_pose_y"           value="-25.2" />
     <arg name="goal_pose_z"           value="0.0" />
     <arg name="goal_ori_x"            value="0.0" />
     <arg name="goal_ori_y"            value="0.0" />
@@ -48,7 +48,7 @@
     <arg name="pathDensity"                     default="0.5" />      <!-- Path Density-->
     <arg name="rollOutDensity"                  default="4" />      <!-- Horizontal Density -->
     <arg name="rollOutsNumber"                  default="0"    />     <!-- Rollouts Number -->
-    <arg name="maxVelocity"                     default="10.0" />     <!-- Max Velocity -->
+    <arg name="maxVelocity"                     default="15.0" />     <!-- Max Velocity -->
     <arg name="maxAcceleration"                 default="10.0" />      <!-- Acceleration -->
     <arg name="maxDeceleration"                 default="-10.0" />    <!-- Deceleration -->
     <arg name="enableFollowing"                 default="false" />     <!-- Enable Following -->

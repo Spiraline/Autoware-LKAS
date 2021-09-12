@@ -1,5 +1,5 @@
 <launch>
-  <arg name="output_log" value="false" />
+  <arg name="output_log" value="true" />
 
   <!-- testbed -->
   <!-- <arg name="init_x" value="-8.57" />

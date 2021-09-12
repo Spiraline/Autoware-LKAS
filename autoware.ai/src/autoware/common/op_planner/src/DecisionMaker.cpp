@@ -201,6 +201,7 @@ void DecisionMaker::InitBehaviorStates()
    pValues->velocityOfNext = bestTrajectory.closest_obj_velocity;
 
    pValues->ndt_gnss_diff = m_ndt_gnss_diff;
+   pValues->ndt_score = m_ndt_score;
 
    if(bestTrajectory.index >=0 &&  bestTrajectory.index < (int)m_RollOuts.size())
      pValues->iCurrSafeTrajectory = bestTrajectory.index;

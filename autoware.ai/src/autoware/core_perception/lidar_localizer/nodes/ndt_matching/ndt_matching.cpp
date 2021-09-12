@@ -75,7 +75,8 @@
 
 #define PREDICT_POSE_THRESHOLD 0.5
 
-#define SCORE_THRESHOLD 10
+#define ACC_THRESHOLD 0.9
+#define SCORE_THRESHOLD 2
 #define POSE_DIFF_THRESHOLD 3
 
 #define Wa 0.4
@@ -1062,8 +1063,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       iteration = anh_ndt.getFinalNumIteration();
 
       getFitnessScore_start = std::chrono::system_clock::now();
-      // fitness_score = anh_ndt.getFitnessScore();
-      fitness_score = anh_ndt.getPNorm();
+      fitness_score = anh_ndt.getFitnessScore();
+      // fitness_score = anh_ndt.getPNorm();
       getFitnessScore_end = std::chrono::system_clock::now();
 
       trans_probability = anh_ndt.getTransformationProbability();
