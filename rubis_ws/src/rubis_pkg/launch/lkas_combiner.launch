@@ -1,0 +1,8 @@
+<launch>
+  <arg name="use_lkas" default="true"/>
+
+  <node pkg="rubis_pkg" type="lkas_combiner" name="lkas_combiner" output="screen">
+    <param name="use_lkas" value="$(arg use_lkas)"/>
+  </node>
+
+</launch>

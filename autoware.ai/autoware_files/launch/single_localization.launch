@@ -63,7 +63,7 @@
     resolution: 1.0,
     step_size: 0.5,
     trans_epsilon: 0.01,
-    max_iterations: 4}
+    max_iterations: 30}
   '"/>
 
   <!-- vel_pose_mux -->

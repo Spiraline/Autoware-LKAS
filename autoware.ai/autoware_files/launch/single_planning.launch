@@ -8,7 +8,7 @@
     <arg name="enableSmoothing"       value="false" /> <!-- 1 or 0 -->
     <arg name="enableLaneChange"      value="false" /> <!-- 1 or 0 -->
     <arg name="enableRvizInput"       value="true" /> <!-- 1 or 0 -->
-    <arg name="enableReplan"          value="false" /> <!-- 1 or 0 -->  
+    <arg name="enableReplan"          value="true" /> <!-- 1 or 0 -->  
     <arg name="velocitySource"        value="1" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info) "" -->
     <arg name="mapSource"             value="0" /> <!-- Autoware=0, Vector Map Folder=1, kml file=2 -->
     <arg name="mapFileName"           value="" /> <!-- incase of kml map source -->

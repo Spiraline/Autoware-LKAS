@@ -2,7 +2,7 @@
   <!-- pure_pursuit  -->
   <include file="$(find pure_pursuit)/launch/pure_pursuit.launch">    
     <!-- Core Parameter -->
-    <arg name="lookahead_ratio"               value="1.0"/>
+    <arg name="lookahead_ratio"               value="0.0"/>
     <arg name="minimum_lookahead_distance"    value="15.0"/>
     
     <arg name="const_velocity"                value="5.0"/>     
@@ -31,7 +31,9 @@
   <node pkg="rubis_pkg" type="lane_keeping_module.py" name="lane_keeping_module" output="screen">
   </node>
 
-  <node pkg="rubis_pkg" type="lkas_combiner" name="lkas_combiner" output="screen">
-  </node>
+  <include file="$(find rubis_pkg)/launch/lkas_combiner.launch">
+    <arg name="use_lkas" default="false" />
+  </include>
+
   
 </launch>

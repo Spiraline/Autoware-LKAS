@@ -39,6 +39,7 @@ class Exp(object):
 
 		self.u_forward = lgsvl.utils.transform_to_forward(self.origin)
 		self.u_right = lgsvl.utils.transform_to_right(self.origin)
+		self.u_up = lgsvl.utils.transform_to_up(self.origin)
 
 		# tracking info
 		self.collisions = []
@@ -62,46 +63,28 @@ class Exp(object):
 		ego.on_collision(ego_collision)
 		return
 
-	def create_npc_waypoint(self, npc_state):
-		# create waypoint (npc0)
-		w = []  # waypoint
-		w_length = self.cfg['waypoint']['length']
-		w_interval = self.cfg['waypoint']['interval']
-		idle_time = self.cfg['waypoint']['idle_time']
-
-		for i in range(w_length):
-			offset = (i + 1) * w_interval * self.u_forward
-			stop_every = self.cfg['waypoint']['stop_every']
-			stop_for = self.cfg['waypoint']['stop_for']
-			if i % stop_every >= (stop_every - stop_for):
-				speed = self.cfg['waypoint']['stop_speed']
-			else:
-				speed = self.cfg['waypoint']['cruise_speed']
-
-			wp = lgsvl.DriveWaypoint(
-				position=npc_state.transform.position + offset,
-				speed=speed,
-				angle=npc_state.transform.rotation,
-				idle=idle_time)
-			w.append(wp)
-		return w
-
 	def create_npc(self, sim):
-		print(self.cfg['npc'])
+		for car in self.cfg['npc']:
+			# npc
+			npc_state = lgsvl.AgentState()
+			npc_state.transform = \
+				Transform(self.origin.position, self.origin.rotation)
+			npc_state.transform.position += \
+				car['offset']['forward'] * self.u_forward
 
-		# npc
-		npc_state = lgsvl.AgentState()
-		npc_state.transform = \
-			Transform(self.origin.position, self.origin.rotation)
-		npc_state.transform.position += \
-			self.cfg['npc'][0]['offset']['forward'] * self.u_forward
-		
-		npc = sim.add_agent(
-			self.cfg['npc'][0]['type'],
-			lgsvl.AgentType.NPC, npc_state)
+			npc_state.transform.position += \
+				car['offset']['right'] * self.u_right
 
-		w = self.create_npc_waypoint(npc_state)
-		npc.follow(waypoints=w, loop=False)
+			if 'up' in car['offset']:
+				npc_state.transform.position += \
+				car['offset']['up'] * self.u_up
+
+			npc_state.transform.rotation.y = car['offset']['rotation']
+			
+			npc = sim.add_agent(
+				car['type'],
+				lgsvl.AgentType.NPC, npc_state)
+
 		return
 
 	def create_pedestrian(self, sim):
@@ -120,7 +103,7 @@ class Exp(object):
 
 	def setup_sim(self):
 		self.create_ego(self.sim)
-		# self.create_npc(self.sim)
+		self.create_npc(self.sim)
 		# self.create_pedestrian(self.sim)
 		return
 

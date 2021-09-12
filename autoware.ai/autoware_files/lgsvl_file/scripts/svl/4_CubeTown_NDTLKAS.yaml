@@ -28,27 +28,206 @@ ego:
   asset-id: 787db474-5220-496f-adcd-c8e6abce010d # ndt-lkas
 
 npc:
-  - npc0:
-    name: DongMin
+  -
+    name: Car
     type: Sedan
     offset:
       forward: 10
+      right: -5
+      rotation : 90
+  -
+    name: Car1
+    type: Sedan
+    offset:
+      forward: 18
+      right: -5
+      rotation : 90
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 25
+      right: -5
+      rotation : 90
+  -
+    name: Car
+    type: Sedan
+    offset:
+      forward: 10
+      right: -20
+      rotation : 90
+  -
+    name: Car1
+    type: Sedan
+    offset:
+      forward: 18
+      right: -20
+      rotation : 90
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 25
+      right: -20
+      rotation : 90
+  -
+    name: Car
+    type: Sedan
+    offset:
+      forward: 10
+      right: -15
+      rotation : 90
+  -
+    name: Car1
+    type: Sedan
+    offset:
+      forward: 18
+      right: -15
+      rotation : 90
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 25
+      right: -15
+      rotation : 90
+  -
+    name: Car
+    type: Sedan
+    offset:
+      forward: 10
+      right: -10
+      rotation : 90
+  -
+    name: Car1
+    type: Sedan
+    offset:
+      forward: 18
+      right: -10
+      rotation : 90
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 25
+      right: -10
+      rotation : 90
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 30
+      right: -5
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 34
+      right: -5
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 38
+      right: -7
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 65
+      right: -10
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 60
+      right: -15
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 60
+      right: -20
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 60
+      right: -25
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 50
       right: 0
-
-pedestrian:
-  - ped1:
-    name: BKPark
-    type: Bob
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 55
+      right: -5
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 45
+      right: 4
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
     offset:
       forward: 40
-      right: 0
-
-waypoint:
-  length: 100
-  interval: 1
-  cruise_speed: 6
-  idle_time: 0
-  stop_every: 10
-  stop_for: 2
-  stop_speed: 0.5
-  
+      right: 7
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 35
+      right: 7
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 30
+      right: 7
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 25
+      right: 7
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 20
+      right: 7
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 42
+      right: -9
+      rotation : 0
+  -
+    name: Car2
+    type: Sedan
+    offset:
+      forward: 45
+      right: -11
+      rotation : 0

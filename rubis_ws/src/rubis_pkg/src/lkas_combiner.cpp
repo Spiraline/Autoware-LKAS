@@ -24,6 +24,7 @@ namespace lkas_combiner
         sub_cmd_lkas = nh_.subscribe("/vehicle_cmd_lkas", 10, &LKASCombinerNode::cmd_lkas_cb, this);
         sub_ndt_stat = nh_.subscribe("/ndt_stat", 10, &LKASCombinerNode::ndt_stat_cb, this);
         pub = nh_.advertise<autoware_msgs::VehicleCmd>("/vehicle_cmd_lgsvl", 1);
+        nh_.param<bool>("/lkas_combiner/use_lkas", _use_lkas, true);
     }
 
     void LKASCombinerNode::run()
@@ -59,7 +60,7 @@ namespace lkas_combiner
         int iter = msg->iteration;
         // std::cout << "iter : " << iter << ", score : " << score << std::endl;
 
-        if(score > 30){
+        if(score > 30 && _use_lkas){
             usingNDT = false;
         }
         else{

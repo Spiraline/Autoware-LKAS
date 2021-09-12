@@ -46,6 +46,7 @@ private:
   // variables
   bool usingNDT, isLKASState;
   bool newDataReceived;
+  bool _use_lkas;
   autoware_msgs::VehicleCmd final_cmd_msg;
 
 };
