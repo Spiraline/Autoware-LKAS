@@ -435,7 +435,7 @@ void TrajectoryEval::MainLoop()
   nh.getParam("/op_trajectory_evaluator/intersection_list", intersection_xml);
   PlannerHNS::MappingHelpers::ConstructIntersection_RUBIS(intersection_list, intersection_xml);
 
-  nh.getParam("/op_trajectory_evaluator/output_log", _output_log);
+  nh.param<bool>("/op_trajectory_evaluator/output_log", _output_log, false);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");

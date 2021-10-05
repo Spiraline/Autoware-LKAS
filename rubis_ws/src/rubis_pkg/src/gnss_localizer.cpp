@@ -59,7 +59,7 @@ void Nmea2TFPoseNode::initForROS()
 
 void Nmea2TFPoseNode::run()
 {
-  nh_.getParam("/gnss_localizer/output_log", _output_log);
+  nh_.param<bool>("/gnss_localizer/output_log", _output_log, false);
 
   ros::Rate loop_rate(10);
 

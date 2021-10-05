@@ -423,7 +423,7 @@ void GlobalPlanner::MainLoop()
   timespec animation_timer;
   UtilityHNS::UtilityH::GetTickCount(animation_timer);
 
-  nh.getParam("/op_global_planner/output_log", _output_log);
+  nh.param<bool>("/op_global_planner/output_log", _output_log, false);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");
@@ -432,6 +432,8 @@ void GlobalPlanner::MainLoop()
     fp = fopen(print_file_path.c_str(), "w");
     fclose(fp);
   }
+
+  int planning_fail_cnt;
 
   while (ros::ok())
   {
@@ -496,41 +498,28 @@ void GlobalPlanner::MainLoop()
 
     if(m_GoalsPos.size() > 0)
     {
-      if(m_GeneratedTotalPaths.size() > 0 && m_GeneratedTotalPaths.at(0).size() > 3)
+      if(m_GeneratedTotalPaths.size() == 0) // initialize two paths
       {
-        if(m_params.bEnableReplanning)
-        {
-          PlannerHNS::RelativeInfo info;
-          bool ret = PlannerHNS::PlanningHelpers::GetRelativeInfoRange(m_GeneratedTotalPaths, m_CurrentPose, 0.75, info);
-          if(ret == true && info.iGlobalPath >= 0 &&  info.iGlobalPath < m_GeneratedTotalPaths.size() && info.iFront > 0 && info.iFront < m_GeneratedTotalPaths.at(info.iGlobalPath).size())
-          {
-            double remaining_distance =    m_GeneratedTotalPaths.at(info.iGlobalPath).at(m_GeneratedTotalPaths.at(info.iGlobalPath).size()-1).cost - (m_GeneratedTotalPaths.at(info.iGlobalPath).at(info.iFront).cost + info.to_front_distance);
-            if(remaining_distance <= REPLANNING_DISTANCE)
-            {
-              bMakeNewPlan = true;
-              if(m_GoalsPos.size() > 0)
-                m_iCurrentGoalIndex = (m_iCurrentGoalIndex + 1) % m_GoalsPos.size();
-              std::cout << "Current Goal Index = " << m_iCurrentGoalIndex << std::endl << std::endl;
-            }
+        // Try 50 Times to planning
+        if(planning_fail_cnt == 0){
+          planning_fail_cnt = 50;
+        }
+
+        PlannerHNS::WayPoint goalPoint = m_GoalsPos.at(m_iCurrentGoalIndex);
+
+        bool bNewPlan = GenerateGlobalPlan(m_CurrentPose, goalPoint, m_GeneratedTotalPaths);
+
+        if(bNewPlan){
+          VisualizeAndSend(m_GeneratedTotalPaths);
+        }
+        else{
+          planning_fail_cnt--;
+          if(planning_fail_cnt == 0){
+            m_GoalsPos.clear();
           }
         }
       }
-      else
-        bMakeNewPlan = true;
 
-      if(bMakeNewPlan || (m_params.bEnableDynamicMapUpdate && UtilityHNS::UtilityH::GetTimeDiffNow(m_ReplnningTimer) > REPLANNING_TIME))
-      {
-        UtilityHNS::UtilityH::GetTickCount(m_ReplnningTimer);
-        PlannerHNS::WayPoint goalPoint = m_GoalsPos.at(m_iCurrentGoalIndex);
-        bool bNewPlan = GenerateGlobalPlan(m_CurrentPose, goalPoint, m_GeneratedTotalPaths);
-
-
-        if(bNewPlan)
-        {
-          bMakeNewPlan = false;
-          VisualizeAndSend(m_GeneratedTotalPaths);
-        }
-      }
       VisualizeDestinations(m_GoalsPos, m_iCurrentGoalIndex);
     }
 
