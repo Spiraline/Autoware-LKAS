@@ -10,7 +10,7 @@
 
 using namespace UtilityHNS;
 
-#define PNORM_THRESHOLD 0.01
+#define PNORM_THRESHOLD 0.05
 
 namespace PlannerHNS
 {

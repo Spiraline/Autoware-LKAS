@@ -190,7 +190,7 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
       exec_end = std::chrono::system_clock::now();
       exec_time = std::chrono::duration_cast<std::chrono::microseconds>(exec_end - exec_start).count() / 1000.0;
 
-      if(exec_time > 35.0){
+      if(exec_time > 40.0){
         converged_ = true;
       }
     #else
