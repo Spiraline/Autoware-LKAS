@@ -1,5 +1,6 @@
 #include "ndt_cpu/NormalDistributionsTransform.h"
 #include "ndt_cpu/debug.h"
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <pcl/common/transforms.h>
@@ -9,6 +10,8 @@
 // #define DEBUG_ENABLE
 
 // #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
+
+#define TIME_WALL
 
 namespace cpu {
 
@@ -110,6 +113,12 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::setInputTar
 template <typename PointSourceType, typename PointTargetType>
 void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTransformation(const Eigen::Matrix<float, 4, 4> &guess)
 {
+  #ifdef TIME_WALL
+    std::chrono::time_point<std::chrono::system_clock> exec_start, exec_end;
+    double exec_time;
+    exec_start = std::chrono::system_clock::now();
+  #endif
+
   nr_iterations_ = 0;
   converged_ = false;
 
@@ -177,14 +186,28 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
 
     //Not update visualizer
 
-    if (nr_iterations_ > max_iterations_ || (nr_iterations_ && (std::fabs(delta_p_norm) < transformation_epsilon_))) {
+    #ifdef TIME_WALL
+      exec_end = std::chrono::system_clock::now();
+      exec_time = std::chrono::duration_cast<std::chrono::microseconds>(exec_end - exec_start).count() / 1000.0;
+
+      if(exec_time > 35.0){
+        converged_ = true;
+      }
+    #else
+      if(nr_iterations_ > max_iterations_){
+        break;
+      }
+    #endif
+
+    if (nr_iterations_ && (std::fabs(delta_p_norm) < transformation_epsilon_)) {
       converged_ = true;
     }
 
     double score = getFitnessScore();
 
     #ifdef DEBUG_ENABLE
-      fprintf(fp, "%lf ", delta_p_norm);
+      // fprintf(fp, "%lf ", exec_time);
+      fprintf(fp, "%lf %lf ", delta_p_norm, score);
     #endif
 
     nr_iterations_++;

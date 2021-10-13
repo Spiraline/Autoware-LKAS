@@ -179,6 +179,7 @@ static bool has_converged;
 static int iteration = 0;
 static double fitness_score = 0.0;
 static double trans_probability = 0.0;
+static double delta_p_norm = 0.0;
 
 // reference for comparing fitness_score, default value set to 500.0
 static double _gnss_reinit_fitness = 500.0;
@@ -1065,7 +1066,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
       getFitnessScore_start = std::chrono::system_clock::now();
       fitness_score = anh_ndt.getFitnessScore();
-      // fitness_score = anh_ndt.getPNorm();
+      delta_p_norm = anh_ndt.getPNorm();
       getFitnessScore_end = std::chrono::system_clock::now();
 
       trans_probability = anh_ndt.getTransformationProbability();
@@ -1425,6 +1426,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     ndt_stat_msg.velocity = current_velocity;
     ndt_stat_msg.acceleration = current_accel;
     ndt_stat_msg.use_predict_pose = 0;
+    ndt_stat_msg.p_norm = delta_p_norm;
 
     ndt_stat_pub.publish(ndt_stat_msg);
     /* Compute NDT_Reliability */
@@ -1464,6 +1466,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     std::cout << "Number of Filtered Scan Points: " << scan_points_num << " points." << std::endl;
     std::cout << "NDT has converged: " << has_converged << std::endl;
     std::cout << "Fitness Score: " << fitness_score << std::endl;
+    std::cout << "delta_p_norm: " << delta_p_norm << std::endl;
     std::cout << "Transformation Probability: " << trans_probability << std::endl;
     std::cout << "Execution Time: " << exe_time << " ms." << std::endl;
     std::cout << "Number of Iterations: " << iteration << std::endl;
