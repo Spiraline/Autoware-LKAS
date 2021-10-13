@@ -202,6 +202,7 @@ void DecisionMaker::InitBehaviorStates()
 
    pValues->ndt_gnss_diff = m_ndt_gnss_diff;
    pValues->ndt_score = m_ndt_score;
+   pValues->p_norm = m_p_norm;
    pValues->use_lkas = m_use_lkas;
 
    if(bestTrajectory.index >=0 &&  bestTrajectory.index < (int)m_RollOuts.size())

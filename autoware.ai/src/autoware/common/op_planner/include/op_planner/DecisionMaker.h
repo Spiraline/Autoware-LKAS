@@ -56,6 +56,7 @@ public:
 
   double m_ndt_gnss_diff;
   double m_ndt_score;
+  double m_p_norm;
 
   bool m_use_lkas;
 

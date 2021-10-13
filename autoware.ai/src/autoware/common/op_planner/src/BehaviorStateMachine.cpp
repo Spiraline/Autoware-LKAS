@@ -10,7 +10,7 @@
 
 using namespace UtilityHNS;
 
-#define SCORE_THRESHOLD 1
+#define PNORM_THRESHOLD 0.01
 
 namespace PlannerHNS
 {
@@ -350,7 +350,7 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   // hjw added
-  if(pCParams->ndt_score > SCORE_THRESHOLD && pCParams->use_lkas)
+  if(pCParams->p_norm > PNORM_THRESHOLD && pCParams->use_lkas)
     return FindBehaviorState(LKAS_STATE);
 
   // if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
@@ -392,9 +392,9 @@ BehaviorStateMachine* FollowStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
 
-  if(pCParams->ndt_gnss_diff > SCORE_THRESHOLD)
+  if(pCParams->ndt_gnss_diff > PNORM_THRESHOLD)
     return FindBehaviorState(LKAS_STATE);
-  else if(pCParams->ndt_gnss_diff < SCORE_THRESHOLD && pCParams->goalDistance < 10)
+  else if(pCParams->ndt_gnss_diff < PNORM_THRESHOLD && pCParams->goalDistance < 10)
     return FindBehaviorState(GOAL_STATE);
   // if(pCParams->currentGoalID != pCParams->prevGoalID)
   //   return FindBehaviorState(GOAL_STATE);
@@ -572,7 +572,7 @@ BehaviorStateMachine* LKASState::GetNextState()
 {
   LKASWaitingCount += 1;
   PreCalculatedConditions* pCParams = GetCalcParams();
-  if(pCParams->ndt_score < SCORE_THRESHOLD && LKASWaitingCount > 100 && pCParams->bNewLocalPlan){
+  if(pCParams->p_norm < PNORM_THRESHOLD && LKASWaitingCount > 100 && pCParams->bNewLocalPlan){
     pCParams->bNewLocalPlan = false;
     LKASWaitingCount = 1;
     return FindBehaviorState(FORWARD_STATE);

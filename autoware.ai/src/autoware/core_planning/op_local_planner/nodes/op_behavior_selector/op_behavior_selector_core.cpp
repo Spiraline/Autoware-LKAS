@@ -250,6 +250,7 @@ void BehaviorGen::callbackGetGNSSPose(const geometry_msgs::PoseStampedConstPtr& 
 void BehaviorGen::callbackGetNDTStat(const autoware_msgs::NDTStat& msg)
 {
   m_ndt_score = msg.score;
+  m_p_norm = msg.p_norm;
 }
 
 void BehaviorGen::callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg)
@@ -715,6 +716,7 @@ void BehaviorGen::MainLoop()
 
       m_BehaviorGenerator.m_ndt_gnss_diff = m_ndt_gnss_diff;
       m_BehaviorGenerator.m_ndt_score = m_ndt_score;
+      m_BehaviorGenerator.m_p_norm = m_p_norm;
       m_BehaviorGenerator.m_use_lkas = _use_lkas;
       
       m_BehaviorGenerator.m_sprintSwitch = m_sprintSwitch;

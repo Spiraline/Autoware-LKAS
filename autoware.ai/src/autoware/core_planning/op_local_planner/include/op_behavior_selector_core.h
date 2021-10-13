@@ -116,6 +116,7 @@ protected: //Planning Related variables
 
   double m_ndt_gnss_diff;
   double m_ndt_score;
+  double m_p_norm;
 
   //Added by PHY
   double m_distanceToPedestrianThreshold;
