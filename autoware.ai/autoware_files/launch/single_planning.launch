@@ -1,6 +1,6 @@
 <launch>
   <arg name="output_log" value="false" />
-  <arg name="use_lkas" value="false" />
+  <arg name="ndt_lkas" value="true" />
 
   <!-- op_global_planning -->
   <include file="$(find op_global_planner)/launch/op_global_planner.launch">
@@ -49,7 +49,7 @@
     <arg name="pathDensity"                     default="0.5" />      <!-- Path Density-->
     <arg name="rollOutDensity"                  default="4" />      <!-- Horizontal Density -->
     <arg name="rollOutsNumber"                  default="0"    />     <!-- Rollouts Number -->
-    <arg name="maxVelocity"                     default="15.0" />     <!-- Max Velocity -->
+    <arg name="maxVelocity"                     default="13.0" />     <!-- Max Velocity -->
     <arg name="maxAcceleration"                 default="10.0" />      <!-- Acceleration -->
     <arg name="maxDeceleration"                 default="-10.0" />    <!-- Deceleration -->
     <arg name="enableFollowing"                 default="false" />     <!-- Enable Following -->
@@ -144,6 +144,6 @@
     <arg name="stopLineFile"                    default="crossing_test/crossing_stop_line.yaml" /> -->
     <!-- <arg name="intersectionFile"                default="crossing_test/crossing_intersection.yaml" /> -->
     <arg name="output_log"                      default="$(arg output_log)" />
-    <arg name="use_lkas"                      default="$(arg use_lkas)" />
+    <arg name="use_lkas"                      default="$(arg ndt_lkas)" />
   </include>
 </launch>

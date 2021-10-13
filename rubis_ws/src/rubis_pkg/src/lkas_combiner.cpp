@@ -60,7 +60,7 @@ namespace lkas_combiner
         int iter = msg->iteration;
         // std::cout << "iter : " << iter << ", score : " << score << std::endl;
 
-        if(score > 30 && _use_lkas){
+        if(score > 1 && _use_lkas){
             usingNDT = false;
         }
         else{

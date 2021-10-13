@@ -1,9 +1,11 @@
 <launch>
+  <arg name="ndt_lkas" value="true" />
+
   <!-- pure_pursuit  -->
   <include file="$(find pure_pursuit)/launch/pure_pursuit.launch">    
     <!-- Core Parameter -->
     <arg name="lookahead_ratio"               value="0.0"/>
-    <arg name="minimum_lookahead_distance"    value="15.0"/>
+    <arg name="minimum_lookahead_distance"    value="5.0"/>
     
     <arg name="const_velocity"                value="5.0"/>     
     <arg name="const_lookahead_distance"      value="4.0"/>
@@ -32,7 +34,7 @@
   </node>
 
   <include file="$(find rubis_pkg)/launch/lkas_combiner.launch">
-    <arg name="use_lkas" default="false" />
+    <arg name="use_lkas" default="$(arg ndt_lkas)" />
   </include>
 
   
