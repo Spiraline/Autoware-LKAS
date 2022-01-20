@@ -7,16 +7,13 @@
   <arg name="sprintSpeed" default="13.5" />
   <arg name="obstacleWaitingTimeinIntersection" default="1.0" />
 
-  <arg name="trafficLightFile" default="fake_traffic_light.yaml" />
-  <arg name="stopLineFile" default="fake_stop_line.yaml" />
-  <!-- <arg name="intersectionFile" default="crossing_test/crossing_intersection.yaml" /> -->
+  <arg name="mapName" default="borregas.yaml" />
   <arg name="output_log" default="false" />
   <arg name="use_lkas" default="false" />
       
   <node pkg="op_local_planner" type="op_behavior_selector" name="op_behavior_selector" output="screen">
-    <rosparam command="load" file="$(find rubis_pkg)/cfg/$(arg trafficLightFile)"/>
-    <rosparam command="load" file="$(find rubis_pkg)/cfg/$(arg stopLineFile)"/>
-    <!-- <rosparam command="load" file="$(find rubis_pkg)/cfg/$(arg intersectionFile)"/> -->
+    <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/traffic/$(arg mapName)_trafficlight.yaml"/>
+    <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/traffic/$(arg mapName)_stopline.yaml"/>
     
     <param name="sprintSpeed" value="$(arg sprintSpeed)" />
     <param name="obstacleWaitingTimeinIntersection" value="$(arg obstacleWaitingTimeinIntersection)" />

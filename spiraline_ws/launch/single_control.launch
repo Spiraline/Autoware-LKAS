@@ -30,12 +30,12 @@
     <arg name="use_decision_maker" default="false" />
   </include>
 
-  <node pkg="rubis_pkg" type="lane_keeping_module.py" name="lane_keeping_module" output="screen">
+  <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
+    <param name="output_topic" value="twist_cmd_lkas"/>
   </node>
 
-  <include file="$(find rubis_pkg)/launch/lkas_combiner.launch">
+  <include file="$(find lkas)/launch/twist_combiner.launch">
     <arg name="use_lkas" default="$(arg ndt_lkas)" />
   </include>
-
   
 </launch>

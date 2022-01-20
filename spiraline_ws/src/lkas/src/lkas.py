@@ -263,7 +263,8 @@ def determine_curvature(ploty, left_fit, right_fit, leftx, lefty, rightx, righty
 
 class lane_keeping_module:
     def __init__(self, config_dict):
-        self.twist_pub = rospy.Publisher('twist_cmd', TwistStamped, queue_size = 10)
+        output_topic = rospy.get_param("/lkas/output_topic", "twist_cmd")
+        self.twist_pub = rospy.Publisher(output_topic, TwistStamped, queue_size = 10)
         self.filter_thr_dict = config_dict['filter_thr_dict']
         self.birdeye_warp_param = config_dict['birdeye_warp_param']
 

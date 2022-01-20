@@ -1,6 +1,7 @@
 <launch>
   <arg name="output_log" value="false" />
   <arg name="ndt_lkas" value="true" />
+  <arg name="mapName" value="borregas" />
 
   <!-- op_global_planning -->
   <include file="$(find op_global_planner)/launch/op_global_planner.launch">
@@ -20,15 +21,6 @@
     <arg name="goal_ori_x"            value="0.0" />
     <arg name="goal_ori_y"            value="0.0" />
     <arg name="goal_ori_z"            value="-0.11" />
-    <arg name="goal_ori_w"            value="0.99" /> -->
-    <!-- Testbed -->
-    <!-- <arg name="use_static_goal"       value="false" />
-    <arg name="goal_pose_x"           value="608.26" />
-    <arg name="goal_pose_y"           value="-1739.6" />
-    <arg name="goal_pose_z"           value="0.0" />
-    <arg name="goal_ori_x"            value="0.0" />
-    <arg name="goal_ori_y"            value="0.0" />
-    <arg name="goal_ori_z"            value="0.05" />
     <arg name="goal_ori_w"            value="0.99" /> -->
     <!-- CubeTown -->
     <arg name="use_static_goal"       value="true" />
@@ -127,9 +119,7 @@
     <arg name="VehicleImageDetectionRange" default="0.3" /> <!-- (Ratio) If vehicle's center point is located in this range, our car set speed as max velocity --> 
     <arg name="VehicleImageWidthThreshold" default="0.018" /> <!-- (Ratio) If vehilce's width ratio is lower than this, it will be not detected -->
     <arg name="SprintDecisionTime" default="9999999.0" /> <!-- Seconds -->
-
-    <!-- <arg name="intersectionFile"                default="crossing_test/crossing_intersection.yaml" /> -->
-
+    <arg name="mapName"                         default="$(arg mapName)" />
     <arg name="output_log"                      default="$(arg output_log)" />
   </include>
 
@@ -140,10 +130,8 @@
     <arg name="sprintSpeed"                    default="13.5" />
     <arg name="obstacleWaitingTimeinIntersection"  default="2.0" />
     <arg name="turnThreshold"                   default="30.0" />
-    <!-- <arg name="trafficLightFile"                default="crossing_test/crossing_traffic_light.yaml" />
-    <arg name="stopLineFile"                    default="crossing_test/crossing_stop_line.yaml" /> -->
-    <!-- <arg name="intersectionFile"                default="crossing_test/crossing_intersection.yaml" /> -->
+    <arg name="mapName"                         default="$(arg mapName)" />
     <arg name="output_log"                      default="$(arg output_log)" />
-    <arg name="use_lkas"                      default="$(arg ndt_lkas)" />
+    <arg name="use_lkas"                        default="$(arg ndt_lkas)" />
   </include>
 </launch>

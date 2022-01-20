@@ -20,11 +20,10 @@
   <arg name="VehicleImageDetectionRange" default="0.3" /> <!-- (Ratio) If vehicle's center point is located in this range, our car set speed as max velocity --> 
   <arg name="VehicleImageWidthThreshold" default="0.025" /> <!-- (Ratio) If vehilce's width ratio is lower than this, it will be not detected -->
   <arg name="SprintDecisionTime" default="5.0" /> <!-- Seconds -->
-
-  <arg name="intersectionFile" default="crossing_test/crossing_intersection.yaml" />
+  <arg name="mapName" default="borregas" />
       
   <node pkg="op_local_planner" type="op_trajectory_evaluator" name="op_trajectory_evaluator" output="screen">
-    <rosparam command="load" file="$(find rubis_pkg)/cfg/$(arg intersectionFile)"/>
+    <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/traffic/$(arg mapName)_intersection.yaml"/>
   
     <param name="enablePrediction"       value="$(arg enablePrediction)" />            
     <param name="horizontalSafetyDistance"   value="$(arg horizontalSafetyDistance)" />

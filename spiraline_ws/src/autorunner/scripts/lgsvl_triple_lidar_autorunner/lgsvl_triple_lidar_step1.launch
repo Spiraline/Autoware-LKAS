@@ -42,9 +42,4 @@
 
 	<include file="$(find rubis_pkg)/launch/camera_republisher.launch"/>
 	<include file="$(find rubis_pkg)/launch/gnss_republisher.launch"/>
-
-	<!-- Traffic Signal -->
-	<include file="$(find rubis_pkg)/launch/lgsvl_traffic_signal_test.launch">
-		<arg name="stopline_data" value="$(env HOME)/rubis_ws/src/rubis_pkg/cfg/testbed_stop_line.yaml"/>
-	</include>
 </launch>

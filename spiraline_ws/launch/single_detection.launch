@@ -1,33 +1,6 @@
 <launch>
   <!-- setting of this launch file -->
-  <arg name="car_detection" default="true" />
-  <arg name="pedestrian_detection" default="false" />
-  <arg name="is_use_gpu" default="true" />
-  <arg name="is_register_lidar2camera_tf" default="true" />
-  <arg name="is_publish_projection_matrix" default="true" />
-  <arg name="is_publish_camera_info" default="true" />
-  <arg name="camera_calib" default="$(env HOME)/spiraline_ws/cfg/LiDAR_camera_calibration.yaml"/>
   <arg name="output_log" value="false" />
-
-  <!-- calibration_publisher -->
-  <!-- <include file="$(find runtime_manager)/launch_files/calibration_publisher.launch">
-    <arg name="file" value="$(arg camera_calib)" />
-    <arg name="register_lidar2camera_tf" value="$(arg is_register_lidar2camera_tf)" />
-    <arg name="publish_extrinsic_mat" value="$(arg is_publish_projection_matrix)" />
-    <arg name="publish_camera_info" value="$(arg is_publish_camera_info)" />
-  </include> -->
-
-  <!-- vision_darknet_detect -->
-  <!-- <include file="$(find vision_darknet_detect)/launch/vision_yolo3_detect.launch">
-    <arg name="gpu_device_id" value="0"/>
-    <arg name="score_threshold" value="0.5"/>
-    <arg name="nms_threshold" value="0.45"/>
-    <arg name="network_definition_file" value="$(env HOME)/spiraline_ws/cfg/yolov3-320.cfg"/>
-    <arg name="pretrained_model_file" value="$(env HOME)/spiraline_ws/cfg/yolov3-320.weights"/>
-    <arg name="names_file" value="$(find vision_darknet_detect)/darknet/cfg/coco.names"/>
-    <arg name="camera_id" value="/"/>
-    <arg name="image_src" value="/image_raw"/>
-  </include> -->
 
   <!-- lidar_euclidean_cluster_detect-->
   <include file="$(find lidar_euclidean_cluster_detect)/launch/lidar_euclidean_cluster_detect.launch">
@@ -80,19 +53,5 @@
     <arg name="vectormap_frame" default="/map" />
     <arg name="output_log" value="$(arg output_log)" />
   </include>
-
-  <!-- range_fusion -->
-  <!-- <include file="$(find range_vision_fusion)/launch/range_vision_fusion.launch">
-    <arg name="detected_objects_range" default="/detection/object_tracker/objects_center"/>
-    <arg name="detected_objects_vision" default="/detection/image_detector/objects"/>
-    <arg name="camera_info_src" default="/camera_info"/>
-    <arg name="min_car_dimensions" default="[3,2,2]"/>
-    <arg name="min_person_dimensions" default="[1,2,1]"/>
-    <arg name="min_truck_dimensions" default="[4,2,2]"/>
-    <arg name="sync_topics" default="true"/>
-    <arg name="overlap_threshold" default="0"/>
-    <arg name="use_vector_map" default="false"/>
-    <arg name="namespace" default="/detection/fusion_tools"/>
-  </include> -->
 
 </launch>
