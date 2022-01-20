@@ -27,15 +27,16 @@
     <arg name="max_stop_count" default="40" /> <!-- 10 = 1 second -->  
     <!-- For twist_gate -->
     <arg name="loop_rate" default="30.0" />
-    <arg name="use_decision_maker" default="false" />
+    <arg name="use_decision_maker" default="False" />
   </include>
 
   <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
-    <param name="output_topic" value="twist_cmd_lkas"/>
+    <param name="output_topic" value="vehicle_cmd_lkas"/>
+    <param name="debug_window" value="False"/>
   </node>
 
   <include file="$(find lkas)/launch/twist_combiner.launch">
-    <arg name="use_lkas" default="$(arg ndt_lkas)" />
+    <arg name="use_lkas"        value="$(arg ndt_lkas)" />
   </include>
   
 </launch>

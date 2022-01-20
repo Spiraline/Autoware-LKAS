@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from doctest import debug_script
 import numpy as np
 import rospy
 import rospkg
@@ -8,6 +9,7 @@ import yaml
 
 from sensor_msgs.msg import CompressedImage
 from geometry_msgs.msg import TwistStamped
+from autoware_msgs.msg import VehicleCmd
 
 X_M_PER_PIX = 3.7/70
 Y_M_PER_PIX = 30/720 # meters per pixel in y dimension
@@ -238,7 +240,7 @@ def detect_lane_pixels(filtered_img):
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
-    print("# SLOPE VALUE:",angle_value)
+    # print("# SLOPE VALUE:",angle_value)
 
     return out_img, angle_value # out_image = sliding window image
     
@@ -264,13 +266,15 @@ def determine_curvature(ploty, left_fit, right_fit, leftx, lefty, rightx, righty
 class lane_keeping_module:
     def __init__(self, config_dict):
         output_topic = rospy.get_param("/lkas/output_topic", "twist_cmd")
-        self.twist_pub = rospy.Publisher(output_topic, TwistStamped, queue_size = 10)
+        debug_from_param = rospy.get_param("/lkas/debug_window", True)
+        self.twist_pub = rospy.Publisher(output_topic, VehicleCmd, queue_size = 10)
+        # self.twist_pub = rospy.Publisher(output_topic, TwistStamped, queue_size = 10)
         self.filter_thr_dict = config_dict['filter_thr_dict']
         self.birdeye_warp_param = config_dict['birdeye_warp_param']
 
         self.velocity = config_dict['velocity']
         self.steer_sensitivity = config_dict['steer_sensitivity']
-        self.debug_window = config_dict['debug_window']
+        self.debug_window = config_dict['debug_window'] and debug_from_param
 
         if self.debug_window:
             self.trackbar_img = np.zeros((1,400), np.uint8)
@@ -366,12 +370,15 @@ class lane_keeping_module:
         msg = TwistStamped()
         velocity, angle = self.calculate_velocity_and_angle(angle_value)
 
-        print('-------------------------------')
-        print('Angle : ', round(angle, 3))
+        if self.debug_window:
+            print('-------------------------------')
+            print('Angle : ', round(angle, 3))
 
         msg.twist.linear.x = velocity
         msg.twist.angular.z = angle
-        self.twist_pub.publish(msg)
+        vehicle_cmd_msg = VehicleCmd()
+        vehicle_cmd_msg.twist_cmd = msg
+        self.twist_pub.publish(vehicle_cmd_msg)
 
     def twist_publisher(self):
         rate = rospy.Rate(10) # 10hz
@@ -405,12 +412,15 @@ class lane_keeping_module:
             msg = TwistStamped()
             velocity, angle = self.calculate_velocity_and_angle(slope_value)
 
-            print('-------------------------------')
-            print('Angle : ', round(angle, 3))
+            if self.debug_window:
+                print('-------------------------------')
+                print('Angle : ', round(angle, 3))
 
             msg.twist.linear.x = velocity
             msg.twist.angular.z = angle
-            self.twist_pub.publish(msg)
+            vehicle_cmd_msg = VehicleCmd()
+            vehicle_cmd_msg.twist_cmd = msg
+            self.twist_pub.publish(vehicle_cmd_msg)
             rate.sleep()
         
         self.capture.release()
