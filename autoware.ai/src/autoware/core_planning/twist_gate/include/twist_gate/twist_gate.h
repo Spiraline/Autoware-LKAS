@@ -91,6 +91,7 @@ private:
   ros::Time state_time_;
   ros::Duration timeout_period_;
   double loop_rate_;
+  std::string twist_topic_;
 
   std::thread watchdog_timer_thread_;
   bool is_alive;

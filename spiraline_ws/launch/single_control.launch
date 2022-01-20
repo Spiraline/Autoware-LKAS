@@ -28,10 +28,11 @@
     <!-- For twist_gate -->
     <arg name="loop_rate" default="30.0" />
     <arg name="use_decision_maker" default="False" />
+    <arg name="twist_topic" default="/twist_cmd_merged" />
   </include>
 
   <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
-    <param name="output_topic" value="vehicle_cmd_lkas"/>
+    <param name="output_topic" value="twist_cmd_lkas"/>
     <param name="debug_window" value="False"/>
   </node>
 

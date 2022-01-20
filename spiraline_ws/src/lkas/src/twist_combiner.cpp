@@ -20,10 +20,10 @@ namespace twist_combiner
     void TwistCombinerNode::initForROS()
     {
         sub_state = nh_.subscribe("/current_state", 10, &TwistCombinerNode::current_state_cb, this);
-        sub_cmd_ndt = nh_.subscribe("/vehicle_cmd", 10, &TwistCombinerNode::cmd_ndt_cb, this);
-        sub_cmd_lkas = nh_.subscribe("/vehicle_cmd_lkas", 10, &TwistCombinerNode::cmd_lkas_cb, this);
+        sub_cmd_ndt = nh_.subscribe("/twist_cmd", 10, &TwistCombinerNode::cmd_ndt_cb, this);
+        sub_cmd_lkas = nh_.subscribe("/twist_cmd_lkas", 10, &TwistCombinerNode::cmd_lkas_cb, this);
         sub_ndt_stat = nh_.subscribe("/ndt_stat", 10, &TwistCombinerNode::ndt_stat_cb, this);
-        pub = nh_.advertise<autoware_msgs::VehicleCmd>("/vehicle_cmd_lgsvl", 1);
+        pub = nh_.advertise<geometry_msgs::TwistStamped>("/twist_cmd_merged", 1);
         nh_.param<bool>("/twist_combiner/use_lkas", _use_lkas, true);
     }
 
@@ -69,22 +69,22 @@ namespace twist_combiner
         }
     }
 
-    void TwistCombinerNode::cmd_ndt_cb(const autoware_msgs::VehicleCmd::ConstPtr& msg){
+    void TwistCombinerNode::cmd_ndt_cb(const geometry_msgs::TwistStamped::ConstPtr& msg){
         // printf("[NDT] published : %d, usingNDT : %d\n", newDataReceived, usingNDT);
 
         if(!isLKASState && usingNDT){
-            final_cmd_msg.twist_cmd.twist.linear.x = msg->twist_cmd.twist.linear.x;
-            final_cmd_msg.twist_cmd.twist.angular.z = msg->twist_cmd.twist.angular.z;
+            final_cmd_msg.twist.linear.x = msg->twist.linear.x;
+            final_cmd_msg.twist.angular.z = msg->twist.angular.z;
             newDataReceived = true;
         }
     }
 
-    void TwistCombinerNode::cmd_lkas_cb(const autoware_msgs::VehicleCmd::ConstPtr& msg){        
+    void TwistCombinerNode::cmd_lkas_cb(const geometry_msgs::TwistStamped::ConstPtr& msg){        
         // printf("[LKAS] published : %d, usingNDT : %d\n", newDataReceived, usingNDT);
 
         if(isLKASState || !usingNDT){
-            final_cmd_msg.twist_cmd.twist.linear.x = msg->twist_cmd.twist.linear.x;
-            final_cmd_msg.twist_cmd.twist.angular.z = msg->twist_cmd.twist.angular.z;
+            final_cmd_msg.twist.linear.x = msg->twist.linear.x;
+            final_cmd_msg.twist.angular.z = msg->twist.angular.z;
             newDataReceived = true;
         }
     }

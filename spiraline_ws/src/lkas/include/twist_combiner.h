@@ -1,7 +1,7 @@
 // ROS includes
 #include <ros/ros.h>
-#include <autoware_msgs/VehicleCmd.h>
 #include <autoware_msgs/NDTStat.h>
+#include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Int32.h>
 
 
@@ -34,8 +34,8 @@ private:
   // callbacks
   void current_state_cb(const std_msgs::Int32::ConstPtr &msg);
   void ndt_stat_cb(const autoware_msgs::NDTStat::ConstPtr &msg);
-  void cmd_ndt_cb(const autoware_msgs::VehicleCmd::ConstPtr &msg);
-  void cmd_lkas_cb(const autoware_msgs::VehicleCmd::ConstPtr &msg);
+  void cmd_ndt_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
+  void cmd_lkas_cb(const geometry_msgs::TwistStamped::ConstPtr &msg);
 
   // initializer
   void initForROS();
@@ -47,7 +47,7 @@ private:
   bool usingNDT, isLKASState;
   bool newDataReceived;
   bool _use_lkas;
-  autoware_msgs::VehicleCmd final_cmd_msg;
+  geometry_msgs::TwistStamped final_cmd_msg;
 
 };
 

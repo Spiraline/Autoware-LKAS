@@ -393,7 +393,7 @@ class lane_keeping_module:
 
 if __name__ == '__main__':
     try:
-        with open('config/config') as f:
+        with open(rospkg.RosPack().get_path('lkas') + '/cfg/svl.yaml') as f:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
     except:
         print('Should make config file in config folder!')
