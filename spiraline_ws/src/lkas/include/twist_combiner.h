@@ -5,14 +5,14 @@
 #include <std_msgs/Int32.h>
 
 
-namespace lkas_combiner
+namespace twist_combiner
 {
 
-class LKASCombinerNode
+class TwistCombinerNode
 {
 public:
-  LKASCombinerNode();
-  ~LKASCombinerNode();
+  TwistCombinerNode();
+  ~TwistCombinerNode();
 
   void run();
 
@@ -51,4 +51,4 @@ private:
 
 };
 
-}  // namespace lkas_combiner
+}  // namespace twist_combiner

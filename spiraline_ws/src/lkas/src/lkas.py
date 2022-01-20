@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
 import rospy
+import rospkg
 import cv2
 import math
 import yaml
@@ -329,7 +330,7 @@ class lane_keeping_module:
         
         return velocity, target_angle
 
-    def lgsvl_spinner(self):
+    def svl_spinner(self):
         self.image_sub = rospy.Subscriber('/simulator/camera_node/image/compressed', CompressedImage, self.image_callback)
         rospy.spin()
 
@@ -416,20 +417,18 @@ class lane_keeping_module:
 
 if __name__ == '__main__':
     try:
-        with open('config/config') as f:
+        with open(rospkg.RosPack().get_path('lkas') + '/cfg/svl.yaml') as f:
             config_dict = yaml.load(f, Loader=yaml.FullLoader)
     except:
         print('Should make config file in config folder!')
         exit(1)
 
-    # TODO : exception checker
+    rospy.init_node('lkas')
 
-    rospy.init_node('lane_keeping_module')
-
-    # Mode : webcam, lgsvl, video
+    # Mode : webcam, svl, video
     ic = lane_keeping_module(config_dict)
-    if config_dict['mode'] == 'lgsvl':
-        ic.lgsvl_spinner()
+    if config_dict['mode'] == 'svl':
+        ic.svl_spinner()
     else:
         ic.config_image_source(config_dict['mode'])
         ic.twist_publisher()

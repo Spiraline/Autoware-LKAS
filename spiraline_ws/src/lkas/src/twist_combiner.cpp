@@ -1,9 +1,9 @@
-#include "lkas_combiner.h"
+#include "twist_combiner.h"
 
-namespace lkas_combiner
+namespace twist_combiner
 {
     // Constructor
-    LKASCombinerNode::LKASCombinerNode()
+    TwistCombinerNode::TwistCombinerNode()
     : private_nh_("~")
     , usingNDT(false)
     , isLKASState(false)
@@ -13,21 +13,21 @@ namespace lkas_combiner
     }
 
     // Destructor
-    LKASCombinerNode::~LKASCombinerNode()
+    TwistCombinerNode::~TwistCombinerNode()
     {
     }
 
-    void LKASCombinerNode::initForROS()
+    void TwistCombinerNode::initForROS()
     {
-        sub_state = nh_.subscribe("/current_state", 10, &LKASCombinerNode::current_state_cb, this);
-        sub_cmd_ndt = nh_.subscribe("/vehicle_cmd", 10, &LKASCombinerNode::cmd_ndt_cb, this);
-        sub_cmd_lkas = nh_.subscribe("/vehicle_cmd_lkas", 10, &LKASCombinerNode::cmd_lkas_cb, this);
-        sub_ndt_stat = nh_.subscribe("/ndt_stat", 10, &LKASCombinerNode::ndt_stat_cb, this);
+        sub_state = nh_.subscribe("/current_state", 10, &TwistCombinerNode::current_state_cb, this);
+        sub_cmd_ndt = nh_.subscribe("/vehicle_cmd", 10, &TwistCombinerNode::cmd_ndt_cb, this);
+        sub_cmd_lkas = nh_.subscribe("/vehicle_cmd_lkas", 10, &TwistCombinerNode::cmd_lkas_cb, this);
+        sub_ndt_stat = nh_.subscribe("/ndt_stat", 10, &TwistCombinerNode::ndt_stat_cb, this);
         pub = nh_.advertise<autoware_msgs::VehicleCmd>("/vehicle_cmd_lgsvl", 1);
-        nh_.param<bool>("/lkas_combiner/use_lkas", _use_lkas, true);
+        nh_.param<bool>("/twist_combiner/use_lkas", _use_lkas, true);
     }
 
-    void LKASCombinerNode::run()
+    void TwistCombinerNode::run()
     {
         ros::Rate loop_rate(10);
 
@@ -45,7 +45,7 @@ namespace lkas_combiner
         }
     }
 
-    void LKASCombinerNode::current_state_cb(const std_msgs::Int32::ConstPtr &msg){
+    void TwistCombinerNode::current_state_cb(const std_msgs::Int32::ConstPtr &msg){
         // 19 stands for LKAS State
         if(msg->data == 19){
             isLKASState = true;
@@ -55,7 +55,7 @@ namespace lkas_combiner
         }
     }
 
-    void LKASCombinerNode::ndt_stat_cb(const autoware_msgs::NDTStat::ConstPtr& msg){
+    void TwistCombinerNode::ndt_stat_cb(const autoware_msgs::NDTStat::ConstPtr& msg){
         double p_norm = msg->p_norm;
         // double score = msg->score;
         int iter = msg->iteration;
@@ -69,7 +69,7 @@ namespace lkas_combiner
         }
     }
 
-    void LKASCombinerNode::cmd_ndt_cb(const autoware_msgs::VehicleCmd::ConstPtr& msg){
+    void TwistCombinerNode::cmd_ndt_cb(const autoware_msgs::VehicleCmd::ConstPtr& msg){
         // printf("[NDT] published : %d, usingNDT : %d\n", newDataReceived, usingNDT);
 
         if(!isLKASState && usingNDT){
@@ -79,7 +79,7 @@ namespace lkas_combiner
         }
     }
 
-    void LKASCombinerNode::cmd_lkas_cb(const autoware_msgs::VehicleCmd::ConstPtr& msg){        
+    void TwistCombinerNode::cmd_lkas_cb(const autoware_msgs::VehicleCmd::ConstPtr& msg){        
         // printf("[LKAS] published : %d, usingNDT : %d\n", newDataReceived, usingNDT);
 
         if(isLKASState || !usingNDT){

@@ -1,10 +1,10 @@
-#include "lkas_combiner.h"
+#include "twist_combiner.h"
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "lkas_combiner");
-  lkas_combiner::LKASCombinerNode lcn;
-  lcn.run();
+  twist_combiner::TwistCombinerNode tcn;
+  tcn.run();
 
   return 0;
 }

@@ -11,13 +11,11 @@ project(lkas)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   roscpp
-  jsk_recognition_msgs
   autoware_msgs
+  sensor_msgs
   geometry_msgs
-  nmea_msgs
   std_msgs
   tf
-  gnss
 )
 
 catkin_package(
@@ -39,15 +37,15 @@ include_directories(
 # ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(lkas_combiner
-  src/lkas_combiner_node.cpp
-  src/lkas_combiner.cpp
+add_executable(twist_combiner
+  src/twist_combiner_node.cpp
+  src/twist_combiner.cpp
 )
-add_dependencies(lkas_combiner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lkas_combiner
+add_dependencies(twist_combiner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(twist_combiner
   ${catkin_LIBRARIES}
 )
 
-catkin_install_python(PROGRAMS src/lane_keeping_module.py
+catkin_install_python(PROGRAMS src/lkas.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
