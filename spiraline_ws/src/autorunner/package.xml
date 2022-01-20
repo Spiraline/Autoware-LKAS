@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rubis_autorunner</name>
+  <name>autorunner</name>
   <version>0.0.0</version>
-  <description>The rubis_autorunner package</description>
+  <description>The autorunner package</description>
 
-  <maintainer email="jwhan@todo.todo">jwhan</maintainer>
+  <maintainer email="jwhan@rubis.snu.ac.kr">Jongwoo Han</maintainer>
 
   <license>TODO</license>
 

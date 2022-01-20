@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rubis_pkg)
+project(sensor_republisher)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -22,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES rubis_pkg
+#  LIBRARIES sensor_republisher
 #  CATKIN_DEPENDS other_catkin_pkg
 #  DEPENDS system_lib
 )
@@ -70,17 +70,4 @@ add_executable(gnss_localizer
 add_dependencies(gnss_localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gnss_localizer
   ${catkin_LIBRARIES}
-)
-
-add_executable(lkas_combiner
-  src/lkas_combiner_node.cpp
-  src/lkas_combiner.cpp
-)
-add_dependencies(lkas_combiner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lkas_combiner
-  ${catkin_LIBRARIES}
-)
-
-catkin_install_python(PROGRAMS src/lane_keeping_module.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
