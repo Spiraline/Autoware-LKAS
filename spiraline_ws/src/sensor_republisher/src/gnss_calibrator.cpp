@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "gnss_localizer.h"
+#include "gnss_calibrator.h"
 
-namespace gnss_localizer
+namespace gnss_calibrator
 {
 // Constructor
 Nmea2TFPoseNode::Nmea2TFPoseNode()
@@ -59,13 +59,13 @@ void Nmea2TFPoseNode::initForROS()
 
 void Nmea2TFPoseNode::run()
 {
-  nh_.param<bool>("/gnss_localizer/output_log", _output_log, false);
+  nh_.param<bool>("/gnss_calibrator/output_log", _output_log, false);
 
   ros::Rate loop_rate(10);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/gnss_localizer.csv");
+    print_file_path.append("/Documents/tmp/gnss_calibrator.csv");
     FILE *fp;
     fp = fopen(print_file_path.c_str(), "w");
     fclose(fp);
@@ -80,7 +80,7 @@ void Nmea2TFPoseNode::run()
     if(_output_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
       std::string print_file_path = std::getenv("HOME");
-      print_file_path.append("/Documents/tmp/gnss_localizer.csv");
+      print_file_path.append("/Documents/tmp/gnss_calibrator.csv");
       FILE *fp;
       fp = fopen(print_file_path.c_str(), "a");
       fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
@@ -365,4 +365,4 @@ std::vector<std::string> split(const std::string &string)
   return str_vec_ptr;
 }
 
-}  // namespace gnss_localizer
+}  // namespace gnss_calibrator

@@ -2,7 +2,7 @@
 <package format="2">
   <name>sensor_republisher</name>
   <version>0.0.0</version>
-  <description>Additional Package by HJW</description>
+  <description>Sensor republisher nodes</description>
   
   <maintainer email="jwhan@rubis.snu.ac.kr">Jongwoo Han</maintainer>
   <license>MIT</license>
@@ -10,14 +10,11 @@
   <export>
   </export>
 <build_depend>geometry_msgs</build_depend>
-<build_depend>autoware_msgs</build_depend>
 <build_depend>std_msgs</build_depend>
 <build_depend>jsk_recognition_msgs</build_depend>
 <build_export_depend>geometry_msgs</build_export_depend>
 <build_export_depend>std_msgs</build_export_depend>
-<build_export_depend>jsk_recognition_msgs</build_export_depend>
 <exec_depend>geometry_msgs</exec_depend>
 <exec_depend>nmea_msgs</exec_depend>
 <exec_depend>std_msgs</exec_depend>
-<exec_depend>jsk_recognition_msgs</exec_depend>
 </package>

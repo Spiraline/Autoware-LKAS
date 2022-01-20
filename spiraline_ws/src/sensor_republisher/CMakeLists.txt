@@ -11,8 +11,6 @@ project(sensor_republisher)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   roscpp
-  jsk_recognition_msgs
-  autoware_msgs
   geometry_msgs
   nmea_msgs
   std_msgs
@@ -63,11 +61,11 @@ target_link_libraries(gnss_republisher
   ${catkin_LIBRARIES}
 )
 
-add_executable(gnss_localizer
-  src/gnss_localizer_node.cpp
-  src/gnss_localizer.cpp
+add_executable(gnss_calibrator
+  src/gnss_calibrator_node.cpp
+  src/gnss_calibrator.cpp
 )
-add_dependencies(gnss_localizer ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(gnss_localizer
+add_dependencies(gnss_calibrator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gnss_calibrator
   ${catkin_LIBRARIES}
 )

@@ -16,7 +16,7 @@
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 
-namespace gnss_localizer
+namespace gnss_calibrator
 {
 struct Pose
 {
@@ -91,5 +91,5 @@ private:
 
 std::vector<std::string> split(const std::string &string);
 
-}  // namespace gnss_localizer
+}  // namespace gnss_calibrator
 #endif  // NMEA2TFPOSE_CORE_H
