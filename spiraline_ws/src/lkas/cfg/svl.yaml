@@ -1,6 +1,6 @@
 mode: svl
-velocity: 8
-steer_sensitivity: 0.1
+velocity: 5
+steer_sensitivity: 0.07
 debug_window: True
 birdeye_warp_param:
   top: 100
@@ -9,6 +9,8 @@ birdeye_warp_param:
   bottom_width: 180
   birdeye_width: 180
 filter_thr_dict:
-  saturation_thr: [120,160]
+  saturation_thr: [12,255]
   x_grad_thr: [0,255]
-  red_thr: [60,160]
+  red_thr: [0,255]
+  green_thr: [0,255]
+  blue_thr: [125,255]

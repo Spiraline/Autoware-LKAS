@@ -31,6 +31,8 @@ def color_gradient_filter(img, filter_thr_dict):
     s_thresh = filter_thr_dict['saturation_thr']
     sx_thresh = filter_thr_dict['x_grad_thr']
     r_thresh = filter_thr_dict['red_thr']
+    g_thresh = filter_thr_dict['green_thr']
+    b_thresh = filter_thr_dict['blue_thr']
     img = np.copy(img)
     
     R = img[:,:,0]
@@ -41,6 +43,12 @@ def color_gradient_filter(img, filter_thr_dict):
     rbinary = np.zeros_like(R)
     rbinary[(R >= r_thresh[0]) & (R <= r_thresh[1])] = 1
     # 
+
+    gbinary = np.zeros_like(G)
+    gbinary[(G >= g_thresh[0]) & (G <= g_thresh[1])] = 1
+    bbinary = np.zeros_like(B)
+    bbinary[(B >= b_thresh[0]) & (B <= b_thresh[1])] = 1
+
     # Convert to HLS color space and separate the s channel
     hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)#.astype(np.float)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -60,13 +68,9 @@ def color_gradient_filter(img, filter_thr_dict):
     # Threshold saturation channel
     s_binary = np.zeros_like(s_channel)
     s_binary[(s_channel >= s_thresh[0]) & (s_channel <= s_thresh[1])] = 1
-    # Stack each channel
-    color_binary = np.dstack(( np.zeros_like(sxbinary), sxbinary, s_binary))
     
     combined_binary = np.zeros_like(sxbinary)
-    # combined_binary[(s_binary == 1) | (sxbinary == 1)] = 1
-    combined_binary[(s_binary == 1) | (sxbinary == 1) & (rbinary == 1)] = 1
-    #combined_binary[(s_binary == 1) | (rbinary == 1)] = 1
+    combined_binary[(s_binary == 1) & (sxbinary == 1) & (rbinary == 1) & (gbinary == 1) & (bbinary == 1)] = 1
     
     return combined_binary
 
@@ -111,12 +115,12 @@ def calculate_sliding_window(filtered_img):
     window_width = 10
     # The part recognized from both edges is ignored
     x_margin = 3
-    consecutive_y_margin = 70
+    consecutive_y_margin = 100
     # The x of succesive sliding windows should not differ by more than this value
-    noise_threshold = 15
+    noise_threshold = 30
     # number of sliding window should larger than window_threshold
-    window_threshold = 8
-    # curve_threshold = 15
+    window_threshold = 6
+    slope_threshold = 20
 
     out_img = np.dstack((filtered_img, filtered_img, filtered_img))*255
     window_height = np.int(filtered_img.shape[0]/windows_num)
@@ -131,8 +135,8 @@ def calculate_sliding_window(filtered_img):
         window_top = np.int(window_height * (windows_num - window_idx - 1))
         window_bottom = np.int(window_height * (windows_num - window_idx))
 
-        leftx = find_firstfit(np.sum(filtered_img[window_top:window_bottom,:x_mid], axis=0), -1, window_height // 3)
-        rightx = find_firstfit(np.sum(filtered_img[window_top:window_bottom,x_mid:], axis=0), 1, window_height // 3)
+        leftx = find_firstfit(np.sum(filtered_img[window_top:window_bottom,:x_mid], axis=0), -1, window_height // 2)
+        rightx = find_firstfit(np.sum(filtered_img[window_top:window_bottom,x_mid:], axis=0), 1, window_height // 2)
         
         if leftx > x_margin and leftx < x_mid - x_margin:
             if not lw_arr:
@@ -140,7 +144,7 @@ def calculate_sliding_window(filtered_img):
                 cv2.rectangle(out_img,(leftx-window_width,window_bottom),(leftx,window_top),(0,255,0), 2)
             elif (window_idx - lw_arr[-1][1]) > consecutive_y_idx:
                 pass
-            elif abs(lw_arr[-1][0] - leftx) < noise_threshold * (window_idx - lw_arr[-1][1]):
+            elif abs(lw_arr[-1][0] - leftx) < noise_threshold:
                 lw_arr.append((leftx, window_idx))
                 cv2.rectangle(out_img,(leftx-window_width,window_bottom),(leftx,window_top),(0,255,0), 2)
         if rightx > x_margin and rightx < x_mid - x_margin:
@@ -149,7 +153,7 @@ def calculate_sliding_window(filtered_img):
                 cv2.rectangle(out_img,(rightx + x_mid,window_bottom),(rightx + x_mid + window_width,window_top),(0,255,0), 2)
             elif (window_idx - rw_arr[-1][1]) > consecutive_y_idx:
                 pass
-            elif abs(rw_arr[-1][0] - (rightx + x_mid)) < noise_threshold * (window_idx - rw_arr[-1][1]):
+            elif abs(rw_arr[-1][0] - (rightx + x_mid)) < noise_threshold:
                 rw_arr.append((rightx + x_mid, window_idx))
                 cv2.rectangle(out_img,(rightx + x_mid,window_bottom),(rightx + x_mid + window_width,window_top),(0,255,0), 2) 
 
@@ -168,12 +172,23 @@ def calculate_sliding_window(filtered_img):
                 left_slope_1 = 90 - left_slope_1
             elif left_slope_1 < 0:
                 left_slope_1 = -90 - left_slope_1
+            
+            if left_slope_1 < -slope_threshold:
+                isLeftValid = False
         except:
             isLeftValid = False
 
     if isRightValid:
         try:
             right_slope_1 = math.degrees(math.atan(np.polyfit([x for (x, y) in rw_arr], [y * window_height for (x, y) in rw_arr], 1)[0]))
+
+            if right_slope_1 > 0:
+                right_slope_1 = 90 - right_slope_1
+            elif right_slope_1 < 0:
+                right_slope_1 = -90 - right_slope_1
+            
+            if right_slope_1 > slope_threshold:
+                isRightValid = False
         except:
             isRightValid = False
 
@@ -229,10 +244,16 @@ class lane_keeping_module:
             cv2.moveWindow('TrackBar',          350*2,  350*0)
 
             # Create Trackbar
+            cv2.createTrackbar("[clr]x_grad_min", "TrackBar", self.filter_thr_dict['x_grad_thr'][0], 255, self.onChange)
+            cv2.createTrackbar("[clr]x_grad_max", "TrackBar", self.filter_thr_dict['x_grad_thr'][1], 255, self.onChange)
             cv2.createTrackbar("[clr]sat_min", "TrackBar", self.filter_thr_dict['saturation_thr'][0], 255, self.onChange)
             cv2.createTrackbar("[clr]sat_max", "TrackBar", self.filter_thr_dict['saturation_thr'][1], 255, self.onChange)
             cv2.createTrackbar("[clr]red_min", "TrackBar", self.filter_thr_dict['red_thr'][0], 255, self.onChange)
             cv2.createTrackbar("[clr]red_max", "TrackBar", self.filter_thr_dict['red_thr'][1], 255, self.onChange)
+            cv2.createTrackbar("[clr]green_min", "TrackBar", self.filter_thr_dict['green_thr'][0], 255, self.onChange)
+            cv2.createTrackbar("[clr]green_max", "TrackBar", self.filter_thr_dict['green_thr'][1], 255, self.onChange)
+            cv2.createTrackbar("[clr]blue_min", "TrackBar", self.filter_thr_dict['blue_thr'][0], 255, self.onChange)
+            cv2.createTrackbar("[clr]blue_max", "TrackBar", self.filter_thr_dict['blue_thr'][1], 255, self.onChange)
             cv2.createTrackbar("[be]top", "TrackBar", self.birdeye_warp_param['top'], 240, self.onChange)
             cv2.createTrackbar("[be]bottom", "TrackBar", self.birdeye_warp_param['bottom'], 240, self.onChange)
             cv2.createTrackbar("[be]top_width", "TrackBar", self.birdeye_warp_param['top_width'], 320, self.onChange)
@@ -352,10 +373,16 @@ class lane_keeping_module:
             _, original_image = self.capture.read()
 
             if self.debug_window:
+                self.filter_thr_dict['x_grad_thr'][0] = cv2.getTrackbarPos("[clr]x_grad_min", "TrackBar")
+                self.filter_thr_dict['x_grad_thr'][1] = cv2.getTrackbarPos("[clr]x_grad_max", "TrackBar")
                 self.filter_thr_dict['saturation_thr'][0] = cv2.getTrackbarPos("[clr]sat_min", "TrackBar")
                 self.filter_thr_dict['saturation_thr'][1] = cv2.getTrackbarPos("[clr]sat_max", "TrackBar")
                 self.filter_thr_dict['red_thr'][0] = cv2.getTrackbarPos("[clr]red_min", "TrackBar")
                 self.filter_thr_dict['red_thr'][1] = cv2.getTrackbarPos("[clr]red_max", "TrackBar")
+                self.filter_thr_dict['green_thr'][0] = cv2.getTrackbarPos("[clr]green_min", "TrackBar")
+                self.filter_thr_dict['green_thr'][1] = cv2.getTrackbarPos("[clr]green_max", "TrackBar")
+                self.filter_thr_dict['blue_thr'][0] = cv2.getTrackbarPos("[clr]blue_min", "TrackBar")
+                self.filter_thr_dict['blue_thr'][1] = cv2.getTrackbarPos("[clr]blue_max", "TrackBar")
                 self.birdeye_warp_param['top'] = cv2.getTrackbarPos("[be]top", "TrackBar")
                 self.birdeye_warp_param['bottom'] = cv2.getTrackbarPos("[be]bottom", "TrackBar")
                 self.birdeye_warp_param['top_width'] = cv2.getTrackbarPos("[be]top_width", "TrackBar")
