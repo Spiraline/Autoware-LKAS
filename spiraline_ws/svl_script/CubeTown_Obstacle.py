@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 import lgsvl
-from lgsvl.geometry import Transform
+from lgsvl.geometry import Transform, Vector
 import tqdm
 import os
 import random
 import yaml
-
 
 class Exp(object):
 	def __init__(self):
@@ -81,9 +80,10 @@ class Exp(object):
 
 			npc_state.transform.rotation.y = car['offset']['rotation']
 			
-			npc = sim.add_agent(
+			sim.add_agent(
 				car['type'],
-				lgsvl.AgentType.NPC, npc_state)
+				# lgsvl.AgentType.NPC, npc_state, color=Vector(200, 0, 255))
+				lgsvl.AgentType.NPC, npc_state, color=Vector(0, 0, 0))
 
 		return
 
