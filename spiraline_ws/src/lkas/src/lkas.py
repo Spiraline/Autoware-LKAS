@@ -192,20 +192,26 @@ def calculate_sliding_window(filtered_img):
         except:
             isRightValid = False
 
+    left_idx = 0
+    right_idx = 0
     if isLeftValid and isRightValid:
-        left_idx = 0
-        right_idx = 0
-        while lw_arr[left_idx][1] != rw_arr[right_idx][1]:
+        while left_idx < len(lw_arr) and right_idx < len(rw_arr) and lw_arr[left_idx][1] != rw_arr[right_idx][1]:
             if lw_arr[left_idx][1] > rw_arr[right_idx][1]:
                 right_idx += 1
             else:
                 left_idx += 1
-        first_left_x_margin = lw_arr[left_idx][0]
-        first_right_x_margin = filtered_img.shape[1] - rw_arr[right_idx][0]
+        if left_idx < len(lw_arr) and right_idx < len(rw_arr):
+            first_left_x_margin = lw_arr[left_idx][0]
+            first_right_x_margin = filtered_img.shape[1] - rw_arr[right_idx][0]
     elif isLeftValid:
         first_left_x_margin = lw_arr[0][0]
     elif isRightValid:
         first_right_x_margin = filtered_img.shape[1] - rw_arr[0][0]
+    
+    if left_idx == len(lw_arr):
+        isLeftValid = False
+    if right_idx == len(rw_arr):
+        isRightValid = False
 
     return out_img, left_slope_1, right_slope_1, \
         isLeftValid, isRightValid, first_left_x_margin, first_right_x_margin
