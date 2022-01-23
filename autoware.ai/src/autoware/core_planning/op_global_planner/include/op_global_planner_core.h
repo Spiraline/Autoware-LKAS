@@ -109,6 +109,9 @@ protected:
   bool m_bFirstStart;
 
   bool _output_log;
+  bool _multilap_flag;
+  double _multilap_replanning_distance;
+  int selectedGlobalPathIdx;
 
   struct timespec start_time, end_time;
 
@@ -155,7 +158,8 @@ private:
     PlannerHNS::RoadNetwork m_Map;
     bool  m_bKmlMap;
     PlannerHNS::PlannerH m_PlannerH;
-    std::vector<std::vector<PlannerHNS::WayPoint> > m_GeneratedTotalPaths;
+    // std::vector<std::vector<PlannerHNS::WayPoint> > m_GeneratedTotalPaths;
+    std::vector<std::vector<std::vector<PlannerHNS::WayPoint>>> m_GeneratedTotalPaths;
 
     bool GenerateGlobalPlan(PlannerHNS::WayPoint& startPoint, PlannerHNS::WayPoint& goalPoint, std::vector<std::vector<PlannerHNS::WayPoint> >& generatedTotalPaths);
     void VisualizeAndSend(const std::vector<std::vector<PlannerHNS::WayPoint> > generatedTotalPaths);

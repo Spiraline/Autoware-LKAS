@@ -424,6 +424,8 @@ void GlobalPlanner::MainLoop()
   UtilityHNS::UtilityH::GetTickCount(animation_timer);
 
   nh.param<bool>("/op_global_planner/output_log", _output_log, false);
+  nh.param<bool>("/op_global_planner/multilap_flag", _multilap_flag, false);
+  nh.param<double>("/op_global_planner/multilap_replanning_distance", _multilap_replanning_distance, 50.0);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");
@@ -496,6 +498,8 @@ void GlobalPlanner::MainLoop()
 
     ClearOldCostFromMap();
 
+    // HJW updated for multi-lap
+    // goal pose is appended at goal pose callback function
     if(m_GoalsPos.size() > 0)
     {
       if(m_GeneratedTotalPaths.size() == 0) // initialize two paths
@@ -504,13 +508,32 @@ void GlobalPlanner::MainLoop()
         if(planning_fail_cnt == 0){
           planning_fail_cnt = 50;
         }
-
+        std::vector<std::vector<PlannerHNS::WayPoint>> tmp_path_list;
+        std::vector<std::vector<PlannerHNS::WayPoint>> tmp_path_list_2;
         PlannerHNS::WayPoint goalPoint = m_GoalsPos.at(m_iCurrentGoalIndex);
 
-        bool bNewPlan = GenerateGlobalPlan(m_CurrentPose, goalPoint, m_GeneratedTotalPaths);
+        // Generate path from initial pose to goal pose (rviz axis) and save to tmp_path_list
+        bool bNewPlan = GenerateGlobalPlan(m_CurrentPose, goalPoint, tmp_path_list);
 
-        if(bNewPlan){
-          VisualizeAndSend(m_GeneratedTotalPaths);
+        if(bNewPlan)
+        {
+          m_GeneratedTotalPaths.push_back(tmp_path_list);
+
+          // Do multi-lap driving only current position and goal point is close
+          if(_multilap_flag){
+            if(hypot(m_CurrentPose.pos.x - goalPoint.pos.x, m_CurrentPose.pos.y - goalPoint.pos.y) < 30){
+              int wp_size = tmp_path_list.at(0).size();
+              PlannerHNS::WayPoint path2_start_wp = tmp_path_list.at(0).at(wp_size / 2 + 10);
+              PlannerHNS::WayPoint path2_end_wp = tmp_path_list.at(0).at(wp_size / 2 - 10);
+              bool bNewPlan_2 = GenerateGlobalPlan(path2_start_wp, path2_end_wp, tmp_path_list_2);
+
+              if(bNewPlan_2){
+                m_GeneratedTotalPaths.push_back(tmp_path_list_2);
+              }
+            }
+          }
+          selectedGlobalPathIdx = 0;
+          VisualizeAndSend(m_GeneratedTotalPaths.at(selectedGlobalPathIdx));
         }
         else{
           planning_fail_cnt--;
@@ -519,7 +542,19 @@ void GlobalPlanner::MainLoop()
           }
         }
       }
-
+      else if(m_GeneratedTotalPaths.size() > 1){
+        PlannerHNS::RelativeInfo info;
+        bool ret = PlannerHNS::PlanningHelpers::GetRelativeInfoRange(m_GeneratedTotalPaths.at(selectedGlobalPathIdx), m_CurrentPose, 0.75, info);
+        if(ret == true && info.iGlobalPath >= 0 &&  info.iGlobalPath < m_GeneratedTotalPaths.at(selectedGlobalPathIdx).size() && info.iFront > 0 && info.iFront < m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).size())
+        {
+          double remaining_distance = m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).at(m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).size()-1).cost - (m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).at(info.iFront).cost + info.to_front_distance);
+          if(remaining_distance <= _multilap_replanning_distance)
+          {
+            selectedGlobalPathIdx = 1 - selectedGlobalPathIdx;
+            VisualizeAndSend(m_GeneratedTotalPaths.at(selectedGlobalPathIdx));
+          }
+        }
+      }
       VisualizeDestinations(m_GoalsPos, m_iCurrentGoalIndex);
     }
 
