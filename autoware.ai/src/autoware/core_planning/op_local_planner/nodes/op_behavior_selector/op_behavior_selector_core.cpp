@@ -42,7 +42,6 @@ BehaviorGen::BehaviorGen()
   nh.param("/op_behavior_selector/turnThreshold", m_turnThreshold, 20.0);
 
   nh.param("/op_behavior_selector/output_log", _output_log, false);
-  nh.param("/op_behavior_selector/use_lkas", _use_lkas, true);
 
   tf::StampedTransform transform;
   PlannerHNS::ROSHelpers::GetTransformFromTF("map", "world", transform);
@@ -184,11 +183,13 @@ void BehaviorGen::UpdatePlanningParams(ros::NodeHandle& _nh)
   _nh.getParam("/op_common_params/mapFileName" , m_MapPath);
 
   _nh.getParam("/op_behavior_selector/evidence_tust_number", m_PlanningParams.nReliableCount);
-
-  //std::cout << "nReliableCount: " << m_PlanningParams.nReliableCount << std::endl;
   
   _nh.param("/op_behavior_selector/sprintSpeed", m_sprintSpeed, 13.5);
   _nh.param("/op_behavior_selector/obstacleWaitingTimeinIntersection", m_obstacleWaitingTimeinIntersection, 1.0);
+
+  nh.param("/op_behavior_selector/ndt_lkas_flag", m_PlanningParams.ndt_lkas_flag, false);
+  nh.param("/op_behavior_selector/pnorm_threshold", m_PlanningParams.pnorm_threshold, 0.05);
+  nh.param("/op_behavior_selector/score_threshold", m_PlanningParams.score_threshold, 3.0);
 
   m_BehaviorGenerator.Init(controlParams, m_PlanningParams, m_CarInfo, m_sprintSpeed);  
 
@@ -250,7 +251,7 @@ void BehaviorGen::callbackGetGNSSPose(const geometry_msgs::PoseStampedConstPtr& 
 void BehaviorGen::callbackGetNDTStat(const autoware_msgs::NDTStat& msg)
 {
   m_ndt_score = msg.score;
-  m_p_norm = msg.p_norm;
+  m_pnorm = msg.p_norm;
 }
 
 void BehaviorGen::callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg)
@@ -716,8 +717,7 @@ void BehaviorGen::MainLoop()
 
       m_BehaviorGenerator.m_ndt_gnss_diff = m_ndt_gnss_diff;
       m_BehaviorGenerator.m_ndt_score = m_ndt_score;
-      m_BehaviorGenerator.m_p_norm = m_p_norm;
-      m_BehaviorGenerator.m_use_lkas = _use_lkas;
+      m_BehaviorGenerator.m_pnorm = m_pnorm;
       
       m_BehaviorGenerator.m_sprintSwitch = m_sprintSwitch;
       m_CurrentBehavior = m_BehaviorGenerator.DoOneStep(dt, m_CurrentPos, m_VehicleStatus, 1, m_CurrTrafficLight, m_TrajectoryBestCost, 0);

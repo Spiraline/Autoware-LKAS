@@ -1,6 +1,6 @@
 <launch>
   <arg name="output_log" value="true" />
-  <arg name="ndt_lkas" value="true" />
+  <arg name="ndt_lkas_flag" value="true" />
 
   <!-- cubetown -->
   <arg name="init_x" value="57.1" />
@@ -32,7 +32,9 @@
     <arg name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
     <arg name="get_height" value="true" />
     <arg name="time_wall" value="40.0" />
-    <arg name="ndt_lkas" value="$(arg ndt_lkas)" />
+    <arg name="ndt_lkas_flag" value="$(arg ndt_lkas_flag)" />
+    <arg name="pnorm_threshold" value="0.05" />
+    <arg name="score_threshold" value="3.0" />
     <arg name="output_log" value="$(arg output_log)" />
   </include>
 

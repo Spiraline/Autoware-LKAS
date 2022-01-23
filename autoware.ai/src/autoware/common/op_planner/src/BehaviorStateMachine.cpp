@@ -10,9 +10,6 @@
 
 using namespace UtilityHNS;
 
-#define PNORM_THRESHOLD 0.05
-#define SCORE_THRESHOLD 3
-
 namespace PlannerHNS
 {
 
@@ -351,7 +348,7 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   // hjw added
-  if(pCParams->use_lkas && pCParams->p_norm > PNORM_THRESHOLD && pCParams->ndt_score > SCORE_THRESHOLD)
+  if(m_pParams->ndt_lkas_flag && pCParams->p_norm > m_pParams->pnorm_threshold && pCParams->ndt_score > m_pParams->score_threshold)
     return FindBehaviorState(LKAS_STATE);
 
   // if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
@@ -393,12 +390,10 @@ BehaviorStateMachine* FollowStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
 
-  if(pCParams->ndt_gnss_diff > PNORM_THRESHOLD)
+  if(m_pParams->ndt_lkas_flag && pCParams->p_norm > m_pParams->pnorm_threshold && pCParams->ndt_score > m_pParams->score_threshold)
     return FindBehaviorState(LKAS_STATE);
-  else if(pCParams->ndt_gnss_diff < PNORM_THRESHOLD && pCParams->goalDistance < 10)
+  else if(pCParams->currentGoalID != pCParams->prevGoalID)
     return FindBehaviorState(GOAL_STATE);
-  // if(pCParams->currentGoalID != pCParams->prevGoalID)
-  //   return FindBehaviorState(GOAL_STATE);
   else if(m_pParams->pedestrianAppearence)
     return FindBehaviorState(PEDESTRIAN_STATE);
   else if(m_pParams->enableTrafficLightBehavior
@@ -573,7 +568,7 @@ BehaviorStateMachine* LKASState::GetNextState()
 {
   LKASWaitingCount += 1;
   PreCalculatedConditions* pCParams = GetCalcParams();
-  if(pCParams->p_norm < PNORM_THRESHOLD && pCParams->ndt_score < SCORE_THRESHOLD && LKASWaitingCount > 10 && pCParams->bNewLocalPlan){
+  if(pCParams->p_norm < m_pParams->pnorm_threshold && pCParams->ndt_score < m_pParams->score_threshold && LKASWaitingCount > 10 && pCParams->bNewLocalPlan){
     pCParams->bNewLocalPlan = false;
     LKASWaitingCount = 1;
     return FindBehaviorState(FORWARD_STATE);

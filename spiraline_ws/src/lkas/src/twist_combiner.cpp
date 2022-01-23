@@ -24,7 +24,9 @@ namespace twist_combiner
         sub_cmd_lkas = nh_.subscribe("/twist_cmd_lkas", 10, &TwistCombinerNode::cmd_lkas_cb, this);
         sub_ndt_stat = nh_.subscribe("/ndt_stat", 10, &TwistCombinerNode::ndt_stat_cb, this);
         pub = nh_.advertise<geometry_msgs::TwistStamped>("/twist_cmd_merged", 1);
-        nh_.param<bool>("/twist_combiner/use_lkas", _use_lkas, true);
+        nh_.param<bool>("/twist_combiner/ndt_lkas_flag", _ndt_lkas_flag, true);
+        nh_.param<double>("/twist_combiner/pnorm_threshold", _pnorm_threshold, 0.05);
+        nh_.param<double>("/twist_combiner/score_threshold", _score_threshold, 3.0);
     }
 
     void TwistCombinerNode::run()
@@ -61,7 +63,7 @@ namespace twist_combiner
         int iter = msg->iteration;
         // std::cout << "iter : " << iter << ", score : " << score << std::endl;
 
-        if(p_norm > 0.05 && score > 3 && _use_lkas){
+        if(p_norm > _pnorm_threshold && score > _score_threshold && _ndt_lkas_flag){
             usingNDT = false;
         }
         else{

@@ -56,9 +56,10 @@ public:
 
   double m_ndt_gnss_diff;
   double m_ndt_score;
-  double m_p_norm;
-
-  bool m_use_lkas;
+  double m_pnorm;
+  double m_pnorm_threshold;
+  double m_score_threshold;
+  bool m_ndt_lkas_flag;
 
   int m_prevTrafficLightID;
   PlannerHNS::TrafficLightState m_prevTrafficLightSignal;

@@ -46,7 +46,8 @@ private:
   // variables
   bool usingNDT, isLKASState;
   bool newDataReceived;
-  bool _use_lkas;
+  bool _ndt_lkas_flag;
+  double _pnorm_threshold, _score_threshold;
   geometry_msgs::TwistStamped final_cmd_msg;
 
 };

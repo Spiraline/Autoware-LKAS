@@ -128,8 +128,10 @@ static int init_pos_set = 0;
 
 struct timespec start_time, end_time;
 static bool _output_log;
-static bool _ndt_lkas;
+static bool _ndt_lkas_flag;
 static double _time_wall = 40.0;
+static double _pnorm_threshold = 0.05;
+static double _score_threshold = 3.0;
 
 static pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> ndt;
 static cpu::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> anh_ndt;
@@ -503,7 +505,7 @@ static void map_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       new_anh_ndt.setMaximumIterations(max_iter);
       new_anh_ndt.setStepSize(step_size);
       new_anh_ndt.setTransformationEpsilon(trans_eps);
-      new_anh_ndt.setLKASFlag(_ndt_lkas);
+      new_anh_ndt.setLKASFlag(_ndt_lkas_flag);
       new_anh_ndt.setTimeWall(_time_wall);
 
       pcl::PointCloud<pcl::PointXYZ>::Ptr dummy_scan_ptr(new pcl::PointCloud<pcl::PointXYZ>());
@@ -577,7 +579,7 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
-  if(previous_pnorm < PNORM_THRESHOLD || previous_score < SCORE_THRESHOLD || !_ndt_lkas)
+  if(previous_pnorm < _pnorm_threshold || previous_score < _score_threshold || !_ndt_lkas_flag)
     matching_fail_cnt = 0;
   else
     matching_fail_cnt++;
@@ -940,7 +942,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   // Check inital matching is success or not
-  if(_is_init_match_finished == false && previous_pnorm < PNORM_THRESHOLD && previous_pnorm != 0.0 && previous_score < SCORE_THRESHOLD && previous_score != 0.0)
+  if(_is_init_match_finished == false && previous_pnorm < _pnorm_threshold && previous_pnorm != 0.0 && previous_score < _score_threshold && previous_score != 0.0)
     _is_init_match_finished = true;
 
   health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
@@ -1597,8 +1599,10 @@ int main(int argc, char** argv)
   private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
   private_nh.param<bool>("output_log", _output_log, false);
-  private_nh.param<bool>("ndt_lkas", _ndt_lkas, true);
+  private_nh.param<bool>("ndt_lkas_flag", _ndt_lkas_flag, true);
   private_nh.param<double>("time_wall", _time_wall, 40.0);
+  private_nh.param<double>("pnorm_threshold", _pnorm_threshold, 0.05);
+  private_nh.param<double>("score_threshold", _score_threshold, 3.0);
 
   if(_output_log){
     std::string print_file_path = std::getenv("HOME");

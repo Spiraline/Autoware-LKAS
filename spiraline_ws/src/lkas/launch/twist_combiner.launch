@@ -1,8 +1,12 @@
 <launch>
-  <arg name="use_lkas" default="true"/>
+  <arg name="ndt_lkas_flag" default="true"/>
+  <arg name="pnorm_threshold" default="0.05"/>
+  <arg name="score_threshold" default="3.0"/>
 
   <node pkg="lkas" type="twist_combiner" name="twist_combiner" output="screen">
-    <param name="use_lkas" value="$(arg use_lkas)"/>
+    <param name="ndt_lkas_flag" value="$(arg ndt_lkas_flag)"/>
+    <param name="pnorm_threshold" value="$(arg pnorm_threshold)"/>
+    <param name="score_threshold" value="$(arg score_threshold)"/>
   </node>
 
 </launch>

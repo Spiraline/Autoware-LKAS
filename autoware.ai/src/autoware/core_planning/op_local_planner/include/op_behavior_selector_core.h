@@ -116,7 +116,7 @@ protected: //Planning Related variables
 
   double m_ndt_gnss_diff;
   double m_ndt_score;
-  double m_p_norm;
+  double m_pnorm;
 
   //Added by PHY
   double m_distanceToPedestrianThreshold;
@@ -126,8 +126,10 @@ protected: //Planning Related variables
   bool m_sprintSwitch;
   double m_obstacleWaitingTimeinIntersection;
 
+  //Added by HJW
   bool _output_log;
-  bool _use_lkas;
+  bool m_ndt_lkas_flag;
+  double m_pnorm_threshold, m_score_threshold;
   struct timespec start_time, end_time;
 
   //ROS messages (topics)
