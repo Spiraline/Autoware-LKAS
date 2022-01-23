@@ -1,8 +1,11 @@
 <launch>
+  <!--  Dynamic Pure Pursuit Param -->
+  <rosparam command="load" file="$(env USER_HOME)/autoware.ai/autoware_files/lgsvl_file/parameter/lgsvl_pure_pursuit.yaml" />
+  
   <!-- pure_pursuit  -->
   <include file="$(find pure_pursuit)/launch/pure_pursuit.launch">    
     <!-- Core Parameter -->
-    <arg name="lookahead_ratio"               value="1.0"/>
+    <arg name="lookahead_ratio"               value="1.5"/>
     <arg name="minimum_lookahead_distance"    value="12.0"/>
     
     <arg name="const_velocity"                value="5.0"/>     
@@ -10,7 +13,6 @@
     <arg name="is_linear_interpolation"       value="True"/>
     <arg name="publishes_for_steering_robot"  value="True"/>
     <arg name="add_virtual_end_waypoints"     value="False"/>
-    <arg name="dynamic_params_path"           value="$(env HOME)/autoware.ai/autoware_files/lgsvl/parameter/lgsvl_triple_pure_pursuit.yaml" />
   </include>
 
   <!-- twist_filter -->

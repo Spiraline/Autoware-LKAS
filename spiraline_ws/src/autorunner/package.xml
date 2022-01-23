@@ -6,7 +6,7 @@
 
   <maintainer email="jwhan@rubis.snu.ac.kr">Jongwoo Han</maintainer>
 
-  <license>TODO</license>
+  <license>MIT</license>
 
 
   <buildtool_depend>catkin</buildtool_depend>

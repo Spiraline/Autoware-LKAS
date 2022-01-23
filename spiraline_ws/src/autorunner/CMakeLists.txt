@@ -30,14 +30,14 @@ add_library(ros_autorunner_lib
   src/ros_autorunner/ros_autorunner.cpp
 )
 
-add_executable(lgsvl_triple_lidar_autorunner
-  include/lgsvl_triple_lidar_autorunner/lgsvl_triple_lidar_autorunner.h
-  src/lgsvl_triple_lidar_autorunner/lgsvl_triple_lidar_autorunner_node.cpp
-  src/lgsvl_triple_lidar_autorunner/lgsvl_triple_lidar_autorunner.cpp
+add_executable(cubetown_autorunner
+  include/cubetown_autorunner/cubetown_autorunner.h
+  src/cubetown_autorunner/cubetown_autorunner_node.cpp
+  src/cubetown_autorunner/cubetown_autorunner.cpp
 )
 
-add_dependencies(lgsvl_triple_lidar_autorunner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(lgsvl_triple_lidar_autorunner
+add_dependencies(cubetown_autorunner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(cubetown_autorunner
   ${catkin_LIBRARIES}
   ros_autorunner_lib
 )
