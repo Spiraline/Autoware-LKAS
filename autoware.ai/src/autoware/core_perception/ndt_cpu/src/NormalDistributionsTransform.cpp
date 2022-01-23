@@ -11,8 +11,6 @@
 
 // #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
 
-#define TIME_WALL
-
 namespace cpu {
 
 template <typename PointSourceType, typename PointTargetType>
@@ -113,11 +111,12 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::setInputTar
 template <typename PointSourceType, typename PointTargetType>
 void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTransformation(const Eigen::Matrix<float, 4, 4> &guess)
 {
-  #ifdef TIME_WALL
-    std::chrono::time_point<std::chrono::system_clock> exec_start, exec_end;
-    double exec_time;
+  std::chrono::time_point<std::chrono::system_clock> exec_start, exec_end;
+  double exec_time;
+
+  if(ndt_lkas_flag_){
     exec_start = std::chrono::system_clock::now();
-  #endif
+  }
 
   nr_iterations_ = 0;
   converged_ = false;
@@ -184,20 +183,19 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
 
     p = p + delta_p;
 
-    //Not update visualizer
-
-    #ifdef TIME_WALL
+    if(ndt_lkas_flag_){
       exec_end = std::chrono::system_clock::now();
       exec_time = std::chrono::duration_cast<std::chrono::microseconds>(exec_end - exec_start).count() / 1000.0;
 
-      if(exec_time > 40.0){
+      if(exec_time > time_wall_){
         converged_ = true;
       }
-    #else
+    }
+    else{
       if(nr_iterations_ > max_iterations_){
         break;
       }
-    #endif
+    }
 
     if (nr_iterations_ && (std::fabs(delta_p_norm) < transformation_epsilon_)) {
       converged_ = true;
@@ -281,7 +279,17 @@ double Registration<PointSourceType, PointTargetType>::getPNorm()
   return p_norm_;
 }
 
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setLKASFlag(bool flag)
+{
+  ndt_lkas_flag_ = flag;
+}
 
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setTimeWall(double time_wall)
+{
+  time_wall_ = time_wall;
+}
 
 template <typename PointSourceType, typename PointTargetType>
 void NormalDistributionsTransform<PointSourceType, PointTargetType>::computePointDerivatives(Eigen::Vector3d &x, Eigen::Matrix<double, 3, 6> &point_gradient, Eigen::Matrix<double, 18, 6> &point_hessian, bool compute_hessian)
