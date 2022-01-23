@@ -1,4 +1,7 @@
 <launch>
+  <arg name="output_log" value="true" />
+  <arg name="ndt_lkas_flag" value="true" />
+
   <!-- cubetown -->
   <arg name="init_x" value="57.1" />
   <arg name="init_y" value="1.38" />
@@ -9,16 +12,22 @@
 
   <!-- vel/pose connect -->
   <arg name="topic_pose_stamped" default="/ndt_pose" />
-  <!-- <arg name="topic_twist_stamped" default="/estimate_twist" />  -->
-  <arg name="topic_twist_stamped" default="/odom_twist" />
-
+  <arg name="topic_twist_stamped" default="/estimate_twist" />
+  
   <!-- points downsampler -->
-  <include file="$(find points_downsampler)/launch/points_downsample.launch" />
+  <include file="$(find points_downsampler)/launch/points_downsample.launch">
+    <arg name="output_log" value="$(arg output_log)" />
+  </include>
 
-  <!-- ndt_matching --><!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
+  <!-- ndt_matching -->
   <include file="$(find lidar_localizer)/launch/ndt_matching.launch">
-    <arg name="method_type" value="0" /> 
-    <arg name="get_height" value="true" /> 
+    <arg name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
+    <arg name="get_height" value="true" />
+    <arg name="time_wall" value="40.0" />
+    <arg name="ndt_lkas_flag" value="$(arg ndt_lkas_flag)" />
+    <arg name="pnorm_threshold" value="0.05" />
+    <arg name="score_threshold" value="3.0" />
+    <arg name="output_log" value="$(arg output_log)" />
   </include>
 
   <!-- ndt config -->
@@ -29,15 +38,15 @@
     x: $(arg init_x),
     y: $(arg init_y),
     z: $(arg init_z),
-    roll: $(arg init_roll), 
+    roll: $(arg init_roll),
     pitch: $(arg init_pitch),
     yaw: $(arg init_yaw),
     use_predict_pose: 1,
     error_threshold: 0.01,
-    resolution: 3.0,
+    resolution: 1.0,
     step_size: 0.5,
     trans_epsilon: 0.01,
-    max_iterations: 1}
+    max_iterations: 30}
   '"/>
 
   <!-- vel_pose_mux -->

@@ -3,9 +3,6 @@
   <arg name="lidar_output_topic" default="/points_raw"/>
   <arg name="image_input_topic" default="/image_raw_origin"/>
 
-  <!-- ROS-Bridge node for Simulator connection -->
-  <node name="websocket_bridge" pkg="rosbridge_server" type="rosbridge_websocket" output="screen" clear_params="true" required="true" />
-
   <!-- Re-publishing simulator/camera_node/image/compressed topic to /image_raw as expected by Autoware -->
   <node name="republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=/simulator/camera_node/image raw out:=/image_raw_origin"  />
 
@@ -23,7 +20,7 @@
   <!-- <node pkg="tf" type="static_transform_publisher" name="lidar_to_camera" args="0.029 -0.574 -1.820 4.712 0.009 -1.883 velodyne camera 10" /> -->
   <node pkg="tf" type="static_transform_publisher" name="lidar_to_camera" args="0 0 0 0 0 0 velodyne camera 10" />
 
-  <!-- gnss localizer -->
+  <!-- gnss calibrator -->
   <arg name="plane" default="0"/>
   <node pkg="sensor_republisher" type="gnss_calibrator" name="gnss_calibrator" output="screen">
     <param name="plane" value="$(arg plane)"/>
