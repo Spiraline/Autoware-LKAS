@@ -11,6 +11,7 @@
 using namespace UtilityHNS;
 
 #define PNORM_THRESHOLD 0.05
+#define SCORE_THRESHOLD 3
 
 namespace PlannerHNS
 {
@@ -350,7 +351,7 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   // hjw added
-  if(pCParams->p_norm > PNORM_THRESHOLD && pCParams->use_lkas)
+  if(pCParams->use_lkas && pCParams->p_norm > PNORM_THRESHOLD && pCParams->ndt_score > SCORE_THRESHOLD)
     return FindBehaviorState(LKAS_STATE);
 
   // if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
@@ -572,7 +573,7 @@ BehaviorStateMachine* LKASState::GetNextState()
 {
   LKASWaitingCount += 1;
   PreCalculatedConditions* pCParams = GetCalcParams();
-  if(pCParams->p_norm < PNORM_THRESHOLD && LKASWaitingCount > 100 && pCParams->bNewLocalPlan){
+  if(pCParams->p_norm < PNORM_THRESHOLD && pCParams->ndt_score < SCORE_THRESHOLD && LKASWaitingCount > 10 && pCParams->bNewLocalPlan){
     pCParams->bNewLocalPlan = false;
     LKASWaitingCount = 1;
     return FindBehaviorState(FORWARD_STATE);

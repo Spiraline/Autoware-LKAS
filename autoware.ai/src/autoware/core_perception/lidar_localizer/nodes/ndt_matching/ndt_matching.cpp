@@ -75,8 +75,8 @@
 
 #define PREDICT_POSE_THRESHOLD 0.5
 
-#define ACC_THRESHOLD 0.9
 #define PNORM_THRESHOLD 0.05
+#define SCORE_THRESHOLD 3
 #define POSE_DIFF_THRESHOLD 3
 
 #define Wa 0.4
@@ -116,6 +116,7 @@ static double offset_imu_odom_x, offset_imu_odom_y, offset_imu_odom_z, offset_im
 // For GPS backup method
 static pose current_gnss_pose;
 static double previous_pnorm = 0.0;
+static double previous_score = 0.0;
 
 // Can't load if typed "pcl::PointCloud<pcl::PointXYZRGB> map, add;"
 static pcl::PointCloud<pcl::PointXYZ> map, add;
@@ -573,19 +574,21 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
-  if(previous_pnorm < PNORM_THRESHOLD || !_gnss_backup)
+  if(previous_pnorm < PNORM_THRESHOLD || previous_score < SCORE_THRESHOLD || !_gnss_backup)
     matching_fail_cnt = 0;
   else
     matching_fail_cnt++;
 
   if(previous_pnorm == 0.0){
     previous_pnorm = 0.0;
+    previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
   else if(matching_fail_cnt > 0){
     matching_fail_cnt = 0.0;
     previous_pnorm = 0.0;
+    previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
     current_velocity = 0.0;
@@ -934,7 +937,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   // Check inital matching is success or not
-  if(_is_init_match_finished == false && previous_pnorm < PNORM_THRESHOLD && previous_pnorm != 0.0)
+  if(_is_init_match_finished == false && previous_pnorm < PNORM_THRESHOLD && previous_pnorm != 0.0 && previous_score < SCORE_THRESHOLD && previous_score != 0.0)
     _is_init_match_finished = true;
 
   health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
@@ -1417,6 +1420,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     estimated_vel_pub.publish(estimate_vel_msg);
 
     previous_pnorm = delta_p_norm;
+    previous_score = fitness_score;
 
     // Set values for /ndt_stat
     ndt_stat_msg.header.stamp = current_scan_time;

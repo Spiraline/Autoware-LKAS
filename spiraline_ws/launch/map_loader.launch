@@ -1,8 +1,7 @@
 <launch>
 	<!-- Vector Map Loader -->
 	<node pkg="map_file" type="vector_map_loader" name="vector_map_loader" args="
-	    $(env HOME)/spiraline_ws/vector_map/CubeTown/dtlane.csv 
-	    $(env HOME)/spiraline_ws/vector_map/CubeTown/idx.csv 
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/dtlane.csv
 	    $(env HOME)/spiraline_ws/vector_map/CubeTown/lane.csv 
 	    $(env HOME)/spiraline_ws/vector_map/CubeTown/node.csv 
 	    $(env HOME)/spiraline_ws/vector_map/CubeTown/point.csv"/>

@@ -57,11 +57,11 @@ namespace twist_combiner
 
     void TwistCombinerNode::ndt_stat_cb(const autoware_msgs::NDTStat::ConstPtr& msg){
         double p_norm = msg->p_norm;
-        // double score = msg->score;
+        double score = msg->score;
         int iter = msg->iteration;
         // std::cout << "iter : " << iter << ", score : " << score << std::endl;
 
-        if(p_norm > 0.01 && _use_lkas){
+        if(p_norm > 0.05 && score > 3 && _use_lkas){
             usingNDT = false;
         }
         else{
