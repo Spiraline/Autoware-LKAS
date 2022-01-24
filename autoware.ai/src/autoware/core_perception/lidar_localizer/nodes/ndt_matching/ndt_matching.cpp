@@ -129,6 +129,7 @@ static int init_pos_set = 0;
 // HJW Added
 struct timespec start_time, end_time;
 static bool _res_t_log;
+static bool _accuracy_log;
 static std::string res_t_filename;
 static bool _ndt_lkas_flag;
 static double _time_wall = 40.0;
@@ -1598,7 +1599,9 @@ int main(int argc, char** argv)
   private_nh.getParam("imu_topic", _imu_topic);
   private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
+  // HJW Added
   private_nh.param<bool>("res_t_log", _res_t_log, false);
+  private_nh.param<bool>("accuracy_log", _accuracy_log, false);
   if(_res_t_log)
   {
     std::string res_t_directory = std::getenv("HOME");

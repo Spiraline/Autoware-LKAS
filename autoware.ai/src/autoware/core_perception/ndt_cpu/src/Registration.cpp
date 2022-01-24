@@ -73,6 +73,12 @@ void Registration<PointSourceType, PointTargetType>::setLKASFlag(bool flag)
 }
 
 template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setAccuracyFlag(bool flag)
+{
+  accuracy_flag_ = flag;
+}
+
+template <typename PointSourceType, typename PointTargetType>
 void Registration<PointSourceType, PointTargetType>::setTimeWall(double time_wall)
 {
   time_wall_ = time_wall;

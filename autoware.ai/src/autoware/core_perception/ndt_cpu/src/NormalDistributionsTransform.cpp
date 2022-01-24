@@ -4,10 +4,9 @@
 #include <cmath>
 #include <iostream>
 #include <pcl/common/transforms.h>
+#include <boost/filesystem.hpp>
 
 #define V2_ 1
-
-// #define DEBUG_ENABLE
 
 // #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
 
@@ -118,6 +117,16 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
     exec_start = std::chrono::system_clock::now();
   }
 
+  std::string acc_directory, acc_filename;
+  FILE* acc_fp;
+  if(accuracy_flag_){
+    acc_directory = std::getenv("HOME");
+    acc_directory = acc_directory.append("/spiraline_ws/log/accuracy");
+    boost::filesystem::create_directories(boost::filesystem::path(acc_directory));
+    acc_filename = acc_directory + "/acc.csv";
+    FILE * acc_fp = fopen(acc_filename.c_str(), "a");
+  }
+
   nr_iterations_ = 0;
   converged_ = false;
 
@@ -152,10 +161,6 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
   score = computeDerivatives(score_gradient, hessian, trans_cloud_, p);
 
   int points_number = source_cloud_->points.size();
-
-  #ifdef DEBUG_ENABLE
-    FILE * fp = fopen("/home/jwhan/Documents/ndt_matching_test.txt", "a");
-  #endif
 
   while (!converged_) {
     previous_transformation_ = transformation_;
@@ -203,20 +208,21 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
 
     double score = getFitnessScore();
 
-    #ifdef DEBUG_ENABLE
-      // fprintf(fp, "%lf ", exec_time);
-      fprintf(fp, "%lf %lf ", delta_p_norm, score);
-    #endif
+    if(accuracy_flag_)
+    {
+      fprintf(acc_fp, "%lf,", delta_p_norm);
+    }
 
     nr_iterations_++;
   }
 
   p_norm_ = std::fabs(delta_p_norm);
 
-  #ifdef DEBUG_ENABLE
-    fprintf(fp, "\n");
-    fclose(fp);
-  #endif
+  if(accuracy_flag_)
+  {
+    fprintf(acc_fp, "\n");
+    fclose(acc_fp);
+  }
 
   if (source_cloud_->points.size() > 0) {
     trans_probability_ = score / static_cast<double>(source_cloud_->points.size());
@@ -289,6 +295,12 @@ template <typename PointSourceType, typename PointTargetType>
 void Registration<PointSourceType, PointTargetType>::setTimeWall(double time_wall)
 {
   time_wall_ = time_wall;
+}
+
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setAccuracyFlag(bool flag)
+{
+  accuracy_flag_ = flag;
 }
 
 template <typename PointSourceType, typename PointTargetType>

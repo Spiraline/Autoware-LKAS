@@ -55,6 +55,7 @@ protected:
   using Registration<PointSourceType, PointTargetType>::target_cloud_;
   using Registration<PointSourceType, PointTargetType>::p_norm_;
   using Registration<PointSourceType, PointTargetType>::ndt_lkas_flag_;
+  using Registration<PointSourceType, PointTargetType>::accuracy_flag_;
   using Registration<PointSourceType, PointTargetType>::time_wall_;
 
 private:
