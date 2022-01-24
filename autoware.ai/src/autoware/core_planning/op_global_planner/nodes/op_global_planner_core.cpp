@@ -427,12 +427,12 @@ void GlobalPlanner::MainLoop()
   nh.param<bool>("/op_global_planner/multilap_flag", _multilap_flag, false);
   nh.param<double>("/op_global_planner/multilap_replanning_distance", _multilap_replanning_distance, 50.0);
 
-  if(_res_t_log){
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/op_global_planner.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "w");
-    fclose(fp);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
   }
 
   int planning_fail_cnt;
@@ -560,11 +560,9 @@ void GlobalPlanner::MainLoop()
 
     if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
-      std::string print_file_path = std::getenv("HOME");
-      print_file_path.append("/Documents/tmp/op_global_planner.csv");
       FILE *fp;
-      fp = fopen(print_file_path.c_str(), "a");
-      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fp = fopen(res_t_filename.c_str(), "a");
+      fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
       fclose(fp);
     }
 

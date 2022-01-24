@@ -7,7 +7,7 @@ import math
 import yaml
 
 import ctypes
-from os import getenv, getpid
+from os import getenv, getpid, makedirs
 
 from enum import Enum, auto
 from sensor_msgs.msg import CompressedImage
@@ -236,6 +236,11 @@ class lane_keeping_module:
         output_topic = rospy.get_param("/lkas/output_topic", "twist_cmd")
         debug_from_param = rospy.get_param("/lkas/debug_window", True)
         self.res_t_log = rospy.get_param("/lkas/res_t_log", False)
+        if self.res_t_log:
+            res_t_directory = getenv("HOME") + "/spiraline_ws/log/res_t"
+            makedirs(res_t_directory, exists_ok=True)
+            self.res_t_file = res_t_directory + "/lkas.csv"
+
         self.twist_pub = rospy.Publisher(output_topic, TwistStamped, queue_size = 10)
         self.filter_thr_dict = config_dict['filter_thr_dict']
         self.birdeye_warp_param = config_dict['birdeye_warp_param']
@@ -394,9 +399,7 @@ class lane_keeping_module:
 
         if self.res_t_log:
             clock_gettime(CLOCK_MONOTONIC_RAW, ctypes.pointer(end_time))
-            print_file_path = getenv("HOME") + "/spiraline_ws/log/res_t_LKAS.csv"
-
-            with open(print_file_path , "a") as f:
+            with open(self.res_t_file, "a") as f:
                 f.write(f"{start_time.tv_sec + start_time.tv_nsec * 1e-9}, {end_time.tv_sec + end_time.tv_nsec * 1e-9}, {getpid()}\n")
 
     def twist_publisher(self):

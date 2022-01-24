@@ -15,6 +15,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
+#include <boost/filesystem.hpp>
 
 namespace gnss_calibrator
 {
@@ -68,9 +69,9 @@ private:
   tf::TransformListener listener_;
   tf::StampedTransform transform_;
 
-  bool _res_t_log;
-
   struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
 
   // callbacks
   void callbackFromNmeaSentence(const nmea_msgs::Sentence::ConstPtr &msg);

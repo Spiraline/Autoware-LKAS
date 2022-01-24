@@ -1536,7 +1536,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     clock_gettime(CLOCK_MONOTONIC, &end_time);
     FILE *fp;
     fp = fopen(res_t_filename.c_str(), "a");
-    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
     fclose(fp);
   }
 }

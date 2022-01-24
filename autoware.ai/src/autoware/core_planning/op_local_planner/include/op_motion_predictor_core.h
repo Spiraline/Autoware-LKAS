@@ -45,6 +45,7 @@
 #include <autoware_msgs/DetectedObjectArray.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <tf/transform_listener.h>
+#include <boost/filesystem.hpp>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/BehaviorPrediction.h"
@@ -102,6 +103,7 @@ protected:
 
   struct timespec start_time, end_time;
   bool _res_t_log;
+  std::string res_t_filename;
 
   // Object Msg List
   std::vector<autoware_msgs::DetectedObjectArray> object_msg_list_;  

@@ -45,6 +45,7 @@
 #include "libwaypoint_follower/libwaypoint_follower.h"
 #include "autoware_can_msgs/CANInfo.h"
 #include <visualization_msgs/MarkerArray.h>
+#include <boost/filesystem.hpp>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/MappingHelpers.h"
@@ -108,12 +109,13 @@ protected:
 
   bool m_bFirstStart;
 
-  bool _res_t_log;
   bool _multilap_flag;
   double _multilap_replanning_distance;
   int selectedGlobalPathIdx;
 
   struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
 
   ros::NodeHandle nh;
 

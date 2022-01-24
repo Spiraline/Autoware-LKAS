@@ -54,6 +54,7 @@
 
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
+#include <boost/filesystem.hpp>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/DecisionMaker.h"
@@ -127,10 +128,11 @@ protected: //Planning Related variables
   double m_obstacleWaitingTimeinIntersection;
 
   //Added by HJW
+  struct timespec start_time, end_time;
   bool _res_t_log;
+  std::string res_t_filename;
   bool m_ndt_lkas_flag;
   double m_pnorm_threshold, m_score_threshold;
-  struct timespec start_time, end_time;
 
   //ROS messages (topics)
   ros::NodeHandle nh;

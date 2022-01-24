@@ -1,4 +1,5 @@
 <launch>
+  <arg name="res_t_log" value="true" />
   <arg name="lidar_input_topic" default="/points_raw_origin"/>
   <arg name="lidar_output_topic" default="/points_raw"/>
   <arg name="image_input_topic" default="/image_raw_origin"/>
@@ -24,6 +25,7 @@
   <arg name="plane" default="0"/>
   <node pkg="sensor_republisher" type="gnss_calibrator" name="gnss_calibrator" output="screen">
     <param name="plane" value="$(arg plane)"/>
+    <param name="res_t_log" value="$(arg res_t_log)"/>
   </node>
 
   <!-- ray_ground_filter -->
@@ -41,7 +43,7 @@
     <arg name="reclass_distance_threshold" value="0.01" />  <!-- Distance between points at which re classification will occur (default 0.2 meters)-->
     <arg name="no_ground_point_topic" value="/points_no_ground" />
     <arg name="ground_point_topic" value="/points_ground" />
-    <arg name="res_t_log" value="false" />
+    <arg name="res_t_log" value="$(arg res_t_log)" />
   </include>
 
 </launch>
