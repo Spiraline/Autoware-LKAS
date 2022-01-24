@@ -91,7 +91,7 @@ std_msgs::Header _velodyne_header;
 
 std::string _output_frame;
 
-static bool _output_log;
+static bool _res_t_log;
 struct timespec start_time, end_time;
 
 static bool _velodyne_transform_available;
@@ -847,7 +847,7 @@ void removePointsUpTo(const pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr,
 
 void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 {
-  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+  if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   if (!_using_sensor_cloud)
   {
@@ -924,7 +924,7 @@ void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
     _using_sensor_cloud = false;
   }
 
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
@@ -960,9 +960,9 @@ int main(int argc, char **argv)
   std::string cluster_centeroids_str;
   std::string points_ground_str;
 
-  private_nh.param<bool>("output_log", _output_log, false);
+  private_nh.param<bool>("res_t_log", _res_t_log, false);
 
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
     FILE *fp;

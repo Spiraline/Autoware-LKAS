@@ -59,11 +59,11 @@ void Nmea2TFPoseNode::initForROS()
 
 void Nmea2TFPoseNode::run()
 {
-  nh_.param<bool>("/gnss_calibrator/output_log", _output_log, false);
+  nh_.param<bool>("/gnss_calibrator/res_t_log", _res_t_log, false);
 
   ros::Rate loop_rate(10);
 
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/gnss_calibrator.csv");
     FILE *fp;
@@ -73,11 +73,11 @@ void Nmea2TFPoseNode::run()
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     ros::spinOnce();
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
       std::string print_file_path = std::getenv("HOME");
       print_file_path.append("/Documents/tmp/gnss_calibrator.csv");

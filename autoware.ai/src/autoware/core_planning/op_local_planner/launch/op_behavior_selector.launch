@@ -12,7 +12,7 @@
   <arg name="score_threshold" default="3.0"/>
 
   <arg name="mapName" default="borregas.yaml" />
-  <arg name="output_log" default="false" />
+  <arg name="res_t_log" default="false" />
       
   <node pkg="op_local_planner" type="op_behavior_selector" name="op_behavior_selector" output="screen">
     <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/traffic/$(arg mapName)_trafficlight.yaml"/>
@@ -28,7 +28,7 @@
     <param name="pnorm_threshold" value="$(arg pnorm_threshold)"/>
     <param name="score_threshold" value="$(arg score_threshold)"/>
 
-    <param name="output_log" value="$(arg output_log)" />
+    <param name="res_t_log" value="$(arg res_t_log)" />
   </node>        
       
 </launch>

@@ -36,7 +36,7 @@ ImmUkfPda::ImmUkfPda()
   private_nh_.param<double>("merge_distance_threshold", merge_distance_threshold_, 0.5);
   private_nh_.param<bool>("use_sukf", use_sukf_, false);
 
-  private_nh_.param<bool>("output_log", _output_log, false);
+  private_nh_.param<bool>("res_t_log", _res_t_log, false);
 
   // for vectormap assisted tracking
   private_nh_.param<bool>("use_vectormap", use_vectormap_, false);
@@ -60,7 +60,7 @@ ImmUkfPda::ImmUkfPda()
 
 void ImmUkfPda::run()
 {
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/imm_ukf_pda.csv");
@@ -83,7 +83,7 @@ void ImmUkfPda::run()
 
 void ImmUkfPda::callback(const autoware_msgs::DetectedObjectArray& input)
 {
-  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+  if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   input_header_ = input.header;
 
@@ -112,7 +112,7 @@ void ImmUkfPda::callback(const autoware_msgs::DetectedObjectArray& input)
     dumpResultText(detected_objects_output);
   }
 
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/imm_ukf_pda.csv");

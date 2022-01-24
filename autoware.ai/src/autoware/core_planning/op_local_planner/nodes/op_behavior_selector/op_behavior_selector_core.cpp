@@ -41,7 +41,7 @@ BehaviorGen::BehaviorGen()
   nh.getParam("/op_behavior_selector/distanceToPedestrianThreshold", m_distanceToPedestrianThreshold);
   nh.param("/op_behavior_selector/turnThreshold", m_turnThreshold, 20.0);
 
-  nh.param("/op_behavior_selector/output_log", _output_log, false);
+  nh.param("/op_behavior_selector/res_t_log", _res_t_log, false);
 
   tf::StampedTransform transform;
   PlannerHNS::ROSHelpers::GetTransformFromTF("map", "world", transform);
@@ -606,7 +606,7 @@ void BehaviorGen::MainLoop()
 {
   ros::Rate loop_rate(100);
 
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/op_behavior_selector.csv");
     FILE *fp;
@@ -624,7 +624,7 @@ void BehaviorGen::MainLoop()
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     ros::spinOnce();
 
@@ -766,7 +766,7 @@ void BehaviorGen::MainLoop()
     else
       sub_GlobalPlannerPaths = nh.subscribe("/lane_waypoints_array",   1,    &BehaviorGen::callbackGetGlobalPlannerPath,   this);
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
       std::string print_file_path = std::getenv("HOME");
       print_file_path.append("/Documents/tmp/op_behavior_selector.csv");

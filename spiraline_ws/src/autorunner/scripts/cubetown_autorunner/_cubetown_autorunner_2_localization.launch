@@ -1,5 +1,5 @@
 <launch>
-  <arg name="output_log" value="true" />
+  <arg name="res_t_log" value="true" />
   <arg name="ndt_lkas_flag" value="true" />
 
   <!-- cubetown -->
@@ -16,7 +16,7 @@
   
   <!-- points downsampler -->
   <include file="$(find points_downsampler)/launch/points_downsample.launch">
-    <arg name="output_log" value="$(arg output_log)" />
+    <arg name="res_t_log" value="$(arg res_t_log)" />
   </include>
 
   <!-- ndt_matching -->
@@ -27,7 +27,7 @@
     <arg name="ndt_lkas_flag" value="$(arg ndt_lkas_flag)" />
     <arg name="pnorm_threshold" value="0.05" />
     <arg name="score_threshold" value="3.0" />
-    <arg name="output_log" value="$(arg output_log)" />
+    <arg name="res_t_log" value="$(arg res_t_log)" />
   </include>
 
   <!-- ndt config -->

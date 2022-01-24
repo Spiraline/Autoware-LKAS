@@ -423,11 +423,11 @@ void GlobalPlanner::MainLoop()
   timespec animation_timer;
   UtilityHNS::UtilityH::GetTickCount(animation_timer);
 
-  nh.param<bool>("/op_global_planner/output_log", _output_log, false);
+  nh.param<bool>("/op_global_planner/res_t_log", _res_t_log, false);
   nh.param<bool>("/op_global_planner/multilap_flag", _multilap_flag, false);
   nh.param<double>("/op_global_planner/multilap_replanning_distance", _multilap_replanning_distance, 50.0);
 
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/op_global_planner.csv");
     FILE *fp;
@@ -439,7 +439,7 @@ void GlobalPlanner::MainLoop()
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     ros::spinOnce();
     bool bMakeNewPlan = false;
@@ -558,7 +558,7 @@ void GlobalPlanner::MainLoop()
       VisualizeDestinations(m_GoalsPos, m_iCurrentGoalIndex);
     }
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
       std::string print_file_path = std::getenv("HOME");
       print_file_path.append("/Documents/tmp/op_global_planner.csv");

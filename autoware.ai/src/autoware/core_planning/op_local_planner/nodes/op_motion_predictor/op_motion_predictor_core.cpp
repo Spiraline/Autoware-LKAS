@@ -49,7 +49,7 @@ MotionPrediction::MotionPrediction()
   sub_StepSignal = nh.subscribe("/pred_step_signal",     1, &MotionPrediction::callbackGetStepForwardSignals,     this);
   // sub_tracked_objects  = nh.subscribe("/tracked_objects",       1,    &MotionPrediction::callbackGetTrackedObjects,     this);
 
-  _nh.param<bool>("/op_motion_predictor/output_log", _output_log, false);
+  _nh.param<bool>("/op_motion_predictor/res_t_log", _res_t_log, false);
   
   // Setup tf
   std::string tf_str_list_str;
@@ -531,7 +531,7 @@ void MotionPrediction::VisualizePrediction()
 
 void MotionPrediction::MainLoop()
 {
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/op_motion_predictor.csv");
     FILE *fp;
@@ -543,7 +543,7 @@ void MotionPrediction::MainLoop()
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
     ros::spinOnce();
 
     if(m_MapType == PlannerHNS::MAP_KML_FILE && !bMap)
@@ -605,7 +605,7 @@ void MotionPrediction::MainLoop()
 //      pub_predicted_objects_trajectories.publish(m_PredictedResultsResults);
 //    }
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
       std::string print_file_path = std::getenv("HOME");
       print_file_path.append("/Documents/tmp/op_motion_predictor.csv");

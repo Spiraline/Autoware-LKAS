@@ -127,7 +127,7 @@ static int _use_gnss = 1;
 static int init_pos_set = 0;
 
 struct timespec start_time, end_time;
-static bool _output_log;
+static bool _res_t_log;
 static bool _ndt_lkas_flag;
 static double _time_wall = 40.0;
 static double _pnorm_threshold = 0.05;
@@ -939,7 +939,7 @@ static void imu_callback(const sensor_msgs::Imu::Ptr& input)
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
-  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+  if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   // Check inital matching is success or not
   if(_is_init_match_finished == false && previous_pnorm < _pnorm_threshold && previous_pnorm != 0.0 && previous_score < _score_threshold && previous_score != 0.0)
@@ -1530,7 +1530,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     previous_estimated_vel_kmph.data = estimated_vel_kmph.data;
   }
 
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/ndt_matching.csv");
@@ -1598,13 +1598,13 @@ int main(int argc, char** argv)
   private_nh.getParam("imu_topic", _imu_topic);
   private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
-  private_nh.param<bool>("output_log", _output_log, false);
+  private_nh.param<bool>("res_t_log", _res_t_log, false);
   private_nh.param<bool>("ndt_lkas_flag", _ndt_lkas_flag, true);
   private_nh.param<double>("time_wall", _time_wall, 40.0);
   private_nh.param<double>("pnorm_threshold", _pnorm_threshold, 0.05);
   private_nh.param<double>("score_threshold", _score_threshold, 3.0);
 
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/ndt_matching.csv");
     FILE *fp;

@@ -435,9 +435,9 @@ void TrajectoryEval::MainLoop()
   nh.getParam("/op_trajectory_evaluator/intersection_list", intersection_xml);
   PlannerHNS::MappingHelpers::ConstructIntersection_RUBIS(intersection_list, intersection_xml);
 
-  nh.param<bool>("/op_trajectory_evaluator/output_log", _output_log, false);
+  nh.param<bool>("/op_trajectory_evaluator/res_t_log", _res_t_log, false);
 
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/op_trajectory_evaluator.csv");
     FILE *fp;
@@ -447,7 +447,7 @@ void TrajectoryEval::MainLoop()
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
     UpdateMyParams();
     UpdateTf();
 
@@ -540,7 +540,7 @@ void TrajectoryEval::MainLoop()
     else
       sub_GlobalPlannerPaths = nh.subscribe("/lane_waypoints_array",   1,    &TrajectoryEval::callbackGetGlobalPlannerPath,   this);
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
       std::string print_file_path = std::getenv("HOME");
       print_file_path.append("/Documents/tmp/op_trajectory_evaluator.csv");

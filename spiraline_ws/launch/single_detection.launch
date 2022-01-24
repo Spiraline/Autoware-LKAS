@@ -1,6 +1,6 @@
 <launch>
   <!-- setting of this launch file -->
-  <arg name="output_log" value="false" />
+  <arg name="res_t_log" value="false" />
 
   <!-- lidar_euclidean_cluster_detect-->
   <include file="$(find lidar_euclidean_cluster_detect)/launch/lidar_euclidean_cluster_detect.launch">
@@ -29,7 +29,7 @@
     <arg name="clustering_ranges" value="[15,30,45,60]"/><!-- Distances to segment pointcloud -->
     <arg name="clustering_distances"
          value="[0.5,1.1,1.6,2.1,2.6]"/><!-- Euclidean Clustering threshold distance for each segment -->
-    <arg name="output_log" value="$(arg output_log)" />
+    <arg name="res_t_log" value="$(arg res_t_log)" />
   </include>
 
   <!-- imm_ukf_pda_track -->
@@ -51,7 +51,7 @@
     <arg name="lane_direction_chi_threshold" default="2.71" />
     <arg name="nearest_lane_distance_threshold" default="1.0" />
     <arg name="vectormap_frame" default="/map" />
-    <arg name="output_log" value="$(arg output_log)" />
+    <arg name="res_t_log" value="$(arg res_t_log)" />
   </include>
 
 </launch>

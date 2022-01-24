@@ -108,7 +108,7 @@ protected:
 
   bool m_bFirstStart;
 
-  bool _output_log;
+  bool _res_t_log;
   bool _multilap_flag;
   double _multilap_replanning_distance;
   int selectedGlobalPathIdx;

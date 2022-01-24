@@ -41,7 +41,7 @@
     <arg name="reclass_distance_threshold" value="0.01" />  <!-- Distance between points at which re classification will occur (default 0.2 meters)-->
     <arg name="no_ground_point_topic" value="/points_no_ground" />
     <arg name="ground_point_topic" value="/points_ground" />
-    <arg name="output_log" value="false" />
+    <arg name="res_t_log" value="false" />
   </include>
 
 </launch>

@@ -127,7 +127,7 @@ protected: //Planning Related variables
   double m_obstacleWaitingTimeinIntersection;
 
   //Added by HJW
-  bool _output_log;
+  bool _res_t_log;
   bool m_ndt_lkas_flag;
   double m_pnorm_threshold, m_score_threshold;
   struct timespec start_time, end_time;

@@ -28,7 +28,7 @@
 
   <arg name="use_gpu" default="false" />
 
-  <arg name="output_log" default="false" />
+  <arg name="res_t_log" default="false" />
 
   <arg name="use_multiple_thres" default="false"/>
   <arg name="clustering_ranges" default="[15,30,45,60]"/><!-- Distances to segment pointcloud -->
@@ -36,7 +36,7 @@
        default="[0.5,1.1,1.6,2.1,2.6]"/><!-- Euclidean Clustering threshold distance for each segment -->
 
   <node pkg="lidar_euclidean_cluster_detect" type="lidar_euclidean_cluster_detect" name="lidar_euclidean_cluster_detect_$(arg label)" output="screen">
-    <param name="output_log" value="$(arg output_log)" />
+    <param name="res_t_log" value="$(arg res_t_log)" />
     <param name="points_node"
            value="$(arg points_node)"/> <!-- Can be used to select which pointcloud node will be used as input for the clustering -->
     <param name="remove_ground" value="$(arg remove_ground)"/>

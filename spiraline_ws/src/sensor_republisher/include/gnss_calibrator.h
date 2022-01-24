@@ -68,7 +68,7 @@ private:
   tf::TransformListener listener_;
   tf::StampedTransform transform_;
 
-  bool _output_log;
+  bool _res_t_log;
 
   struct timespec start_time, end_time;
 

@@ -1,6 +1,6 @@
 <launch>
   <!-- Trajectory Evaluation Specific Parameters -->
-  <arg name="output_log" default="false" />
+  <arg name="res_t_log" default="false" />
   
   <arg name="enablePrediction"       default="false" />                
   <arg name="horizontalSafetyDistance"   default="1.2" />
@@ -45,7 +45,7 @@
     <param name="VehicleImageWidthThreshold" value="$(arg VehicleImageWidthThreshold)" />
     <param name="SprintDecisionTime" value="$(arg SprintDecisionTime)" />
 
-    <param name="output_log" value="$(arg output_log)" />
+    <param name="res_t_log" value="$(arg res_t_log)" />
   </node>        
       
 </launch>

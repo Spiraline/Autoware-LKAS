@@ -43,7 +43,7 @@ static std::chrono::time_point<std::chrono::system_clock> filter_start, filter_e
 
 struct timespec start_time, end_time;
 
-static bool _output_log = false;
+static bool _res_t_log = false;
 static std::ofstream ofs;
 static std::string filename;
 
@@ -58,7 +58,7 @@ static void config_callback(const autoware_config_msgs::ConfigVoxelGridFilter::C
 
 static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
-  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+  if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   pcl::PointCloud<pcl::PointXYZI> scan;
   pcl::fromROSMsg(*input, scan);
@@ -111,7 +111,7 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   points_downsampler_info_msg.exe_time = std::chrono::duration_cast<std::chrono::microseconds>(filter_end - filter_start).count() / 1000.0;
   points_downsampler_info_pub.publish(points_downsampler_info_msg);
 
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/voxel_grid_filter.csv");
@@ -130,9 +130,9 @@ int main(int argc, char** argv)
   ros::NodeHandle private_nh("~");
 
   private_nh.getParam("points_topic", POINTS_TOPIC);
-  private_nh.param<bool>("output_log", _output_log, false);
+  private_nh.param<bool>("res_t_log", _res_t_log, false);
 
-  if(_output_log){
+  if(_res_t_log){
     std::string print_file_path = std::getenv("HOME");
     print_file_path.append("/Documents/tmp/voxel_grid_filter.csv");
     FILE *fp;

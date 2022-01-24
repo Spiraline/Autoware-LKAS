@@ -43,7 +43,7 @@
 class ImmUkfPda
 {
 private:
-  bool _output_log;
+  bool _res_t_log;
 
   struct timespec start_time, end_time;
 
