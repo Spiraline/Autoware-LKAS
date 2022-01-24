@@ -1,0 +1,36 @@
+# Sensing
+gnss_calibrator:
+  res_t_log: false
+
+ray_ground_filter:
+  max_clipping_height: 5.0
+  min_clipping_height: -0.5
+  min_point_distance: 2.9
+  res_t_log: false
+
+voxel_grid_filter:
+  measurement_range: 200
+  res_t_log: false
+
+# Localization
+ndt_matching:
+  get_height: true
+  time_wall: 40
+  ndt_lkas_flag: false
+  pnorm_threshold: 0.05
+  score_threshold: 3.0
+  res_t_log: false
+
+# Detection
+
+
+# Planning
+op_global_planner:
+  task_scheduling_flag: 0
+  task_profiling_flag: 1
+  task_response_time_filename: "~/Documents/profiling/response_time/op_global_planner.csv"
+  rate: 25 #25
+  task_minimum_inter_release_time: 100_000_000
+  task_execution_time: 45_000_000
+  task_relative_deadline: 100_000_000
+  multilap_flag: 1

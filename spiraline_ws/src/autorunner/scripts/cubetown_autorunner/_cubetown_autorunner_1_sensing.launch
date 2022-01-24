@@ -39,6 +39,7 @@
   <arg name="plane" default="0"/>
   <node pkg="sensor_republisher" type="gnss_calibrator" name="gnss_calibrator" output="screen">
     <param name="plane" value="$(arg plane)"/>
+    <param name="output_log" value="$(arg output_log)"/>
   </node>
 
   <!-- ray_ground_filter -->

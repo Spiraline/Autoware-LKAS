@@ -34,6 +34,7 @@
   <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
     <param name="output_topic" value="twist_cmd_lkas"/>
     <param name="debug_window" value="False"/>
+    <param name="res_t_log"    value="False"/>
   </node>
 
   <include file="$(find lkas)/launch/twist_combiner.launch">

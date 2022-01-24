@@ -5,13 +5,28 @@ import rospkg
 import cv2
 import math
 import yaml
-from enum import Enum, auto
 
+import ctypes
+from os import getenv, getpid
+
+from enum import Enum, auto
 from sensor_msgs.msg import CompressedImage
 from geometry_msgs.msg import TwistStamped
 
 X_M_PER_PIX = 3.7/70
 Y_M_PER_PIX = 30/720 # meters per pixel in y dimension
+
+CLOCK_MONOTONIC_RAW = 4 # see <linux/time.h>
+
+class timespec(ctypes.Structure):
+    _fields_ = [
+        ('tv_sec', ctypes.c_long),
+        ('tv_nsec', ctypes.c_long)
+    ]
+
+librt = ctypes.CDLL('librt.so.1', use_errno=True)
+clock_gettime = librt.clock_gettime
+clock_gettime.argtypes = [ctypes.c_int, ctypes.POINTER(timespec)]
 
 class turnState(Enum):
     FORWARD = auto()
@@ -220,7 +235,7 @@ class lane_keeping_module:
     def __init__(self, config_dict):
         output_topic = rospy.get_param("/lkas/output_topic", "twist_cmd")
         debug_from_param = rospy.get_param("/lkas/debug_window", True)
-        # self.twist_pub = rospy.Publisher(output_topic, VehicleCmd, queue_size = 10)
+        self.res_t_log = rospy.get_param("/lkas/res_t_log", False)
         self.twist_pub = rospy.Publisher(output_topic, TwistStamped, queue_size = 10)
         self.filter_thr_dict = config_dict['filter_thr_dict']
         self.birdeye_warp_param = config_dict['birdeye_warp_param']
@@ -334,6 +349,10 @@ class lane_keeping_module:
         rospy.spin()
 
     def image_callback(self, data):
+        if self.res_t_log:
+            start_time = timespec(); end_time = timespec()
+            clock_gettime(CLOCK_MONOTONIC_RAW, ctypes.pointer(start_time))
+
         np_arr = np.fromstring(data.data, np.uint8)
         image_np = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
@@ -372,6 +391,13 @@ class lane_keeping_module:
         msg.twist.linear.x = velocity
         msg.twist.angular.z = angle
         self.twist_pub.publish(msg)
+
+        if self.res_t_log:
+            clock_gettime(CLOCK_MONOTONIC_RAW, ctypes.pointer(end_time))
+            print_file_path = getenv("HOME") + "/spiraline_ws/log/res_t_LKAS.csv"
+
+            with open(print_file_path , "a") as f:
+                f.write(f"{start_time.tv_sec + start_time.tv_nsec * 1e-9}, {end_time.tv_sec + end_time.tv_nsec * 1e-9}, {getpid()}\n")
 
     def twist_publisher(self):
         rate = rospy.Rate(10) # 10hz
