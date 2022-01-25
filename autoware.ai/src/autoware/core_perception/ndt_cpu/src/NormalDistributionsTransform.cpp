@@ -124,7 +124,7 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
     acc_directory = acc_directory.append("/spiraline_ws/log/ndt");
     boost::filesystem::create_directories(boost::filesystem::path(acc_directory));
     acc_filename = acc_directory + "/accuracy.csv";
-    FILE * acc_fp = fopen(acc_filename.c_str(), "a");
+    acc_fp = fopen(acc_filename.c_str(), "a");
   }
 
   nr_iterations_ = 0;

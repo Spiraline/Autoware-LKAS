@@ -510,6 +510,7 @@ static void map_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       new_anh_ndt.setTransformationEpsilon(trans_eps);
       new_anh_ndt.setLKASFlag(_ndt_lkas_flag);
       new_anh_ndt.setTimeWall(_time_wall);
+      new_anh_ndt.setAccuracyFlag(_accuracy_log);
 
       pcl::PointCloud<pcl::PointXYZ>::Ptr dummy_scan_ptr(new pcl::PointCloud<pcl::PointXYZ>());
       pcl::PointXYZ dummy_point;
