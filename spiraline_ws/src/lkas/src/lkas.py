@@ -238,7 +238,7 @@ class lane_keeping_module:
         self.res_t_log = rospy.get_param("/lkas/res_t_log", False)
         if self.res_t_log:
             res_t_directory = getenv("HOME") + "/spiraline_ws/log/res_t"
-            makedirs(res_t_directory, exists_ok=True)
+            makedirs(res_t_directory, exist_ok=True)
             self.res_t_file = res_t_directory + "/lkas.csv"
 
         self.twist_pub = rospy.Publisher(output_topic, TwistStamped, queue_size = 10)
