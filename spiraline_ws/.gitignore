@@ -1,5 +1,7 @@
 *.weights
+*.png
 
 build
 devel
 log
+res
