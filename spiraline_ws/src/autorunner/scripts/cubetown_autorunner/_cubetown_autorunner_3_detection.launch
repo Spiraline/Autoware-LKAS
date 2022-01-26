@@ -3,7 +3,7 @@
   <!-- lidar_euclidean_cluster_detect-->
   <node pkg="lidar_euclidean_cluster_detect" type="lidar_euclidean_cluster_detect" name="lidar_euclidean_cluster_detect" output="screen">
     <param name="points_node"   value="/points_raw"/>
-    <param name="remove_ground" value="true)"/>
+    <param name="remove_ground" value="true"/>
     <param name="downsample_cloud" value="false"/>
     <param name="leaf_size" value="0.1"/>
     <param name="use_diffnormals" value="false"/>
@@ -28,8 +28,8 @@
 
   <!-- imm_ukf_pda_track -->
   <node pkg="imm_ukf_pda_track" type="imm_ukf_pda" name="imm_ukf_pda" output="screen">
-    <param name="tracker_input_topic" value="/detection/lidar_detector/objects" />
-    <param name="tracker_output_topic" value="/detection/object_tracker/objects" />
+    <param name="tracker_input_topic" value="/detection/lidar_detector/objects_center" />
+    <param name="tracker_output_topic" value="/detection/object_tracker/objects_center" />
     <param name="gating_threshold" value="9.22" />
     <param name="gate_probability" value="0.99" />
     <param name="detection_probability" value="0.9" />

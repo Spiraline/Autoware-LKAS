@@ -72,35 +72,11 @@
     <param name="object_tf_list" value="[velodyne]" />
   </node>
 
-  <!-- <node pkg="detected_objects_visualizer" type="visualize_detected_objects" name="predicted_objects_visualizer"
-        output="screen">
+  <node pkg="detected_objects_visualizer" type="visualize_detected_objects" name="predicted_objects_visualizer" output="screen">
     <param name="objects_src_topic" value="/predicted_objects"/>
-    <param name="label" value="total" />
-  </node> -->
+  </node>
 
   <!-- op_trajectory_evaluator -->
-  <include file="$(find op_local_planner)/launch/op_trajectory_evaluator.launch">
-    <arg name="enablePrediction"                default="false" />                
-    <arg name="horizontalSafetyDistance"        default="1.2" />
-    <arg name="verticalSafetyDistance"          default="0.8" />
-    <arg name="weightPriority"                  default="0" />
-    <arg name="weightTransition"                default="3" />
-    <arg name="weightLong"                      default="4" />
-    <arg name="weightLat"                       default="10" />
-    <arg name="LateralSkipDistance"             default="5.0" />
-    
-    <arg name="ImageWidth" default="1920" />
-    <arg name="ImageHeight" default="1080" />
-    <arg name="PedestrianRightThreshold" default="4.0" />
-    <arg name="PedestrianLeftThreshold" default="4.0" />
-    <arg name="PedestrianImageDetectionRange" default="0.75" /> <!-- (Ratio If pedestrian's center point is located in this range, our car will be stopped -->               
-    <arg name="VehicleImageDetectionRange" default="0.3" /> <!-- (Ratio) If vehicle's center point is located in this range, our car set speed as max velocity --> 
-    <arg name="VehicleImageWidthThreshold" default="0.018" /> <!-- (Ratio) If vehilce's width ratio is lower than this, it will be not detected -->
-    <arg name="SprintDecisionTime" default="9999999.0" /> <!-- Seconds -->
-    <arg name="mapName"                         default="$(arg mapName)" />
-    <arg name="res_t_log"                      default="$(arg res_t_log)" />
-  </include>
-
   <node pkg="op_local_planner" type="op_trajectory_evaluator" name="op_trajectory_evaluator" output="screen">
     <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/traffic/$(arg mapName)_intersection.yaml"/>
   

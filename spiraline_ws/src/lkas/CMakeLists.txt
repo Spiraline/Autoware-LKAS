@@ -49,3 +49,7 @@ target_link_libraries(twist_combiner
 catkin_install_python(PROGRAMS src/lkas.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+catkin_install_python(PROGRAMS src/ndt_config_publisher.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

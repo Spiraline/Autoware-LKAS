@@ -22,9 +22,15 @@ ndt_matching:
   res_t_log: false
   accuracy_log: false
 
-# TODO : is it possible?
-config_ndt:
+ndt_config:
   init_pos_gnss: 0
+  init_x: 57.1
+  init_y: 1.38
+  init_z: 0.48
+  init_roll: 0.0
+  init_pitch: 0.0
+  init_yaw: 1.57
+  use_predict_pose: 1
   resolution: 1.0
   step_size: 0.5
   trans_epsilon: 0.01

@@ -1,28 +1,5 @@
 <launch>
-  <!-- cubetown -->
-  <arg name="init_x" value="57.1" />
-  <arg name="init_y" value="1.38" />
-  <arg name="init_z" value="0.48" />
-  <arg name="init_roll" value="0.0" />
-  <arg name="init_pitch" value="0.0" />
-  <arg name="init_yaw" value="1.57" />
-
-  <!-- vel/pose connect -->
-  <arg name="topic_pose_stamped" default="/ndt_pose" />
-  <arg name="topic_twist_stamped" default="/estimate_twist" />
-
   <!-- ndt_matching -->
-  <include file="$(find lidar_localizer)/launch/ndt_matching.launch">
-    <arg name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
-    <arg name="get_height" value="true" />
-    <arg name="time_wall" value="40.0" />
-    <arg name="ndt_lkas_flag" value="$(arg ndt_lkas_flag)" />
-    <arg name="pnorm_threshold" value="0.05" />
-    <arg name="score_threshold" value="3.0" />
-    <arg name="res_t_log" value="$(arg res_t_log)" />
-    <arg name="accuracy_log" value="false" />
-  </include>
-
   <node pkg="lidar_localizer" type="ndt_matching" name="ndt_matching" output="log">
     <param name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
     <param name="use_gnss" value="true" />
@@ -38,28 +15,14 @@
   </node>
 
   <!-- ndt config -->
-  <node pkg="rostopic" type="rostopic" name="config_ndt"
-  args="pub /config/ndt autoware_config_msgs/ConfigNDT
-  '{header: {seq: 8, stamp: {secs: 0, nsecs: 0}, frame_id: ''},
-    init_pos_gnss: 0,
-    x: $(arg init_x),
-    y: $(arg init_y),
-    z: $(arg init_z),
-    roll: $(arg init_roll),
-    pitch: $(arg init_pitch),
-    yaw: $(arg init_yaw),
-    use_predict_pose: 1,
-    error_threshold: 0.01,
-    resolution: 1.0,
-    step_size: 0.5,
-    trans_epsilon: 0.01,
-    max_iterations: 30}
-  '"/>
+  <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
+    <param name="error_threshold" value="0.01" />
+  </node>
 
   <!-- vel_pose_mux -->
   <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">
-    <arg name="topic_pose_stamped" value="$(arg topic_pose_stamped)" />
-    <arg name="topic_twist_stamped" value="$(arg topic_twist_stamped)" />
+    <arg name="topic_pose_stamped" value="/ndt_pose" />
+    <arg name="topic_twist_stamped" value="/estimate_twist" />
   </include>
 
 </launch>
