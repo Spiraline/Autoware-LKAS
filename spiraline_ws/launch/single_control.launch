@@ -1,4 +1,5 @@
 <launch>
+  <arg name="res_t_log" value="false" />
   <arg name="ndt_lkas_flag" value="true" />
 
   <!-- pure_pursuit  -->
@@ -13,6 +14,7 @@
     <arg name="publishes_for_steering_robot"  value="True"/>
     <arg name="add_virtual_end_waypoints"     value="False"/>
     <arg name="dynamic_params_path"           value="$(env HOME)/spiraline_ws/cfg/dynamic_pure_pursuit.yaml" />
+    <arg name="res_t_log"                     value="$(arg res_t_log)" />
   </include>
 
   <!-- twist_filter -->
@@ -29,12 +31,13 @@
     <arg name="loop_rate" default="30.0" />
     <arg name="use_decision_maker" default="False" />
     <arg name="twist_topic" default="/twist_cmd_merged" />
+    <arg name="res_t_log"   default="$(arg res_t_log)" />
   </include>
 
   <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
     <param name="output_topic" value="twist_cmd_lkas"/>
     <param name="debug_window" value="False"/>
-    <param name="res_t_log"    value="False"/>
+    <param name="res_t_log"    value="$(arg res_t_log)"/>
   </node>
 
   <include file="$(find lkas)/launch/twist_combiner.launch">

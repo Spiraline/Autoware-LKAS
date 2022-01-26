@@ -13,8 +13,9 @@
     <arg name="velocitySource"        value="1" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info) "" -->
     <arg name="mapSource"             value="0" /> <!-- Autoware=0, Vector Map Folder=1, kml file=2 -->
     <arg name="mapFileName"           value="" /> <!-- incase of kml map source -->
-    <arg name="multilap_flag"           value="false" />
+    <arg name="multilap_flag"         value="false" />
     <arg name="multilap_replanning_distance"  value="50.0" />
+    <arg name="res_t_log"             value="$(arg res_t_log)" />
     <!-- Borregas Avenue -->
     <!-- <arg name="use_static_goal"       value="true" />
     <arg name="goal_pose_x"           value="50.51" />
@@ -82,6 +83,7 @@
     <arg name="samplingOutMargin"               default="8" />        <!-- Roll In Margin -->
     <arg name="samplingSpeedFactor"             default="0.25" />    
     <arg name="enableHeadingSmoothing"          default="false" />
+    <arg name="res_t_log"                       default="$(arg res_t_log)" />
   </include>
 
   <!-- op_motion_predictor -->
