@@ -30,14 +30,15 @@ ax.set_xlabel('Loop Count')
 
 lc_list = sorted(list(acc_dict.keys()))
 
-plt.plot(acc_dict[lc_list[1]][0], color='black', linestyle='-', label='Case 1')
+
+plt.plot(acc_dict[lc_list[2]][0], color='black', linestyle='-', label='Case 1')
 plt.plot(acc_dict[lc_list[-1]][0], color='black', linestyle='-.', label='Case 2')
 if len(lc_list) > 4:
     plt.plot(acc_dict[lc_list[len(lc_list)//2]][0], color='black', linestyle=':',  label='Case 3')
 
 plt.legend()
 
-plt.show()
+# plt.show()
 makedirs(getenv("HOME") + "/spiraline_ws/res", exist_ok=True)
 fig.savefig(getenv("HOME") + "/spiraline_ws/res/fig1b_acc.png")
 # fig.savefig("fig1b_acc.eps", format="eps")
