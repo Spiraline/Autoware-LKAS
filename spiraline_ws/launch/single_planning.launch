@@ -1,5 +1,5 @@
 <launch>
-  <arg name="res_t_log" value="false" />
+  <arg name="res_t_log" value="true" />
   <arg name="ndt_lkas_flag" value="true" />
   <arg name="mapName" value="borregas" />
 

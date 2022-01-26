@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 from os import getenv, makedirs
 from os.path import exists
 
-
-
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='')
   parser.add_argument('--ndt', '-n', type=str, required=True, help='original NDT log file name')
