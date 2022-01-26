@@ -7,7 +7,7 @@ ray_ground_filter:
 
 voxel_grid_filter:
   measurement_range: 200
-  res_t_log: false
+  res_t_log: true
 
 gnss_calibrator:
   res_t_log: false
@@ -54,11 +54,20 @@ op_common_params:
   wheelBaseLength: 2.7
   turningRadius: 5.2
   maxSteerAngle: 0.2
+  steeringDelay: 1.2
 
 op_global_planner:
   use_static_goal: true
   multilap_flag: 1
   res_t_log: false
+  use_static_goal: true
+  goal_pose_x: 56.3
+  goal_pose_y: -18.0
+  goal_pose_z: 0.0
+  goal_ori_x: 0.0
+  goal_ori_y: 0.0
+  goal_ori_z: 0.7
+  goal_ori_w: 0.7
 
 op_trajectory_generator:
   res_t_log: false
@@ -68,8 +77,6 @@ op_motion_predictor:
   res_t_log: false
 
 op_trajectory_evaluator:
-  horizontalSafetyDistance: 1.2
-  verticalSafetyDistance: 0.8
   res_t_log: false
 
 op_behavior_selector:
@@ -77,16 +84,6 @@ op_behavior_selector:
   pnorm_threshold: 0.05
   score_threshold: 3.0
   res_t_log: false
-
-# LKAS
-lkas:
-  debug_window: false
-  res_t_log: false
-
-twist_combiner:
-  ndt_lkas_flag: false
-  pnorm_threshold: 0.05
-  score_threshold: 3.0
 
 # Control
 pure_pursuit:
@@ -99,3 +96,13 @@ twist_filter:
 
 twist_gate:
   res_t_log: false
+
+# Safety-Backup
+lkas:
+  debug_window: false
+  res_t_log: false
+
+twist_combiner:
+  ndt_lkas_flag: false
+  pnorm_threshold: 0.05
+  score_threshold: 3.0

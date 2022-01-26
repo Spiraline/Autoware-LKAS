@@ -13,6 +13,8 @@ if __name__ == '__main__':
 
   for file in sorted(listdir(csv_log_dir)):
     node_name = file.split('.')[0]
+    if node_name == "ndt_matching":
+      continue
     wcet = 0
     with open(csv_log_dir + file, 'r') as f:
       rr = csv.reader(f)

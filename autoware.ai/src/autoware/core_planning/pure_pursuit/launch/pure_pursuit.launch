@@ -7,7 +7,7 @@
   <arg name="const_velocity" default="5.0"/>
   <arg name="lookahead_ratio" default="2.0"/>
   <arg name="minimum_lookahead_distance" default="6.0"/>
-  <arg name="dynamic_params_flag" default="True" />
+  <arg name="dynamic_params_flag" default="false" />
   <arg name="dynamic_params_path" default="$(env HOME)/spiraline_ws/cfg/dynamic_pure_pursuit.yaml" />
   <arg name="res_t_log" default="false" />
   <rosparam command="load" file="$(arg dynamic_params_path)" />
