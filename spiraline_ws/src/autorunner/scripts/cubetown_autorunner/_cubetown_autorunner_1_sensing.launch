@@ -1,6 +1,4 @@
 <launch>
-  <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/autoware_config.yaml" />
-
   <arg name="lidar_input_topic" default="/points_raw_origin"/>
   <arg name="lidar_republished_topic" default="/points_raw"/>
   <arg name="image_input_topic" default="/image_raw_origin"/>
