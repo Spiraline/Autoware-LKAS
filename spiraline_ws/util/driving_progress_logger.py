@@ -1,6 +1,6 @@
 import rospy
 import argparse
-from autoware_msgs.msg import LaneArray, NDTStat
+from autoware_msgs.msg import LaneArray, NDTStat, VehicleCmd
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import MarkerArray
 import math
@@ -79,6 +79,9 @@ if __name__ == "__main__":
 
     ndt_log_dir = getenv("HOME") + "/spiraline_ws/log/ndt"
     makedirs(ndt_log_dir, exist_ok=True)
+
+    # Wait until car starts
+    rospy.wait_for_message('/vehicle_cmd', VehicleCmd, timeout=None)
 
     with open(ndt_log_dir + "/" + args.output_file, "w") as f:
         wr = csv.writer(f)

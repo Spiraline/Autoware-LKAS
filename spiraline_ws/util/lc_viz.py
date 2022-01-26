@@ -8,8 +8,8 @@ plt.rcParams['axes.grid'] = False
 csv_path = getenv("HOME") + "/spiraline_ws/log/ndt/lc.csv"
 
 if not exists(csv_path):
-    print('csv not exists!')
-    exit(1)
+  print('csv not exists!')
+  exit(1)
   
 lc_dict = {}
 
