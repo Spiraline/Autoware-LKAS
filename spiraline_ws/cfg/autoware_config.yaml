@@ -1,7 +1,4 @@
 # Sensing
-gnss_calibrator:
-  res_t_log: false
-
 ray_ground_filter:
   max_clipping_height: 5.0
   min_clipping_height: -0.5
@@ -12,25 +9,93 @@ voxel_grid_filter:
   measurement_range: 200
   res_t_log: false
 
+gnss_calibrator:
+  res_t_log: false
+
 # Localization
 ndt_matching:
   get_height: true
+  ndt_lkas_flag: false
   time_wall: 40
+  pnorm_threshold: 0.05
+  score_threshold: 3.0
+  res_t_log: false
+  accuracy_log: false
+
+# TODO : is it possible?
+config_ndt:
+  init_pos_gnss: 0
+  resolution: 1.0
+  step_size: 0.5
+  trans_epsilon: 0.01
+  max_iterations: 30
+
+# Detection
+lidar_euclidean_cluster_detect:
+  clip_min_height: -3.0
+  clip_max_height: 4.0
+  cluster_size_min: 1
+  cluster_size_max: 100000
+  res_t_log: false
+
+imm_ukf_pda_track:
+  res_t_log: false
+
+# Planning
+op_common_params:
+  pathDensity: 0.5
+  rollOutDensity: 4
+  rollOutsNumber: 0
+  maxVelocity: 13.0
+  maxAcceleration: 10.0
+  maxDeceleration: -10.0
+  width: 1.85
+  length: 4.2
+  wheelBaseLength: 2.7
+  turningRadius: 5.2
+  maxSteerAngle: 0.2
+
+op_global_planner:
+  use_static_goal: true
+  multilap_flag: 1
+  res_t_log: false
+
+op_trajectory_generator:
+  res_t_log: false
+
+op_motion_predictor:
+  prediction_distance: 25.0
+  res_t_log: false
+
+op_trajectory_evaluator:
+  horizontalSafetyDistance: 1.2
+  verticalSafetyDistance: 0.8
+  res_t_log: false
+
+op_behavior_selector:
   ndt_lkas_flag: false
   pnorm_threshold: 0.05
   score_threshold: 3.0
   res_t_log: false
 
-# Detection
+# LKAS
+lkas:
+  debug_window: false
+  res_t_log: false
 
+twist_combiner:
+  ndt_lkas_flag: false
+  pnorm_threshold: 0.05
+  score_threshold: 3.0
 
-# Planning
-op_global_planner:
-  task_scheduling_flag: 0
-  task_profiling_flag: 1
-  task_response_time_filename: "~/Documents/profiling/response_time/op_global_planner.csv"
-  rate: 25 #25
-  task_minimum_inter_release_time: 100_000_000
-  task_execution_time: 45_000_000
-  task_relative_deadline: 100_000_000
-  multilap_flag: 1
+# Control
+pure_pursuit:
+  lookahead_ratio: 0.0
+  minimum_lookahead_distance: 5.0
+  res_t_log: false
+
+twist_filter:
+  res_t_log: false
+
+twist_gate:
+  res_t_log: false
