@@ -240,6 +240,8 @@ class lane_keeping_module:
             res_t_directory = getenv("HOME") + "/spiraline_ws/log/res_t"
             makedirs(res_t_directory, exist_ok=True)
             self.res_t_file = res_t_directory + "/lkas.csv"
+            with open(self.res_t_file, "a") as _:
+                pass
 
         self.twist_pub = rospy.Publisher(output_topic, TwistStamped, queue_size = 10)
         self.filter_thr_dict = config_dict['filter_thr_dict']

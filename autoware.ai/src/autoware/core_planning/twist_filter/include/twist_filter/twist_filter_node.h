@@ -25,6 +25,7 @@
 #include <autoware_msgs/ControlCommandStamped.h>
 #include <autoware_config_msgs/ConfigTwistFilter.h>
 #include <std_msgs/Bool.h>
+#include <boost/filesystem.hpp>
 
 namespace twist_filter_node
 {
@@ -32,6 +33,10 @@ class TwistFilterNode
 {
 public:
   TwistFilterNode();
+
+  // Added by HJW
+  bool _res_t_log;
+  std::string res_t_filename;
 
 private:
   ros::NodeHandle nh_, private_nh_;

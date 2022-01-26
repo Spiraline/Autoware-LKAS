@@ -73,6 +73,8 @@ void TrajectoryGen::UpdatePlanningParams(ros::NodeHandle& _nh)
     res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
     boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
     res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
   }
 
   _nh.getParam("/op_common_params/enableSwerving", m_PlanningParams.enableSwerving);

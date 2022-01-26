@@ -9,6 +9,7 @@
   <arg name="minimum_lookahead_distance" default="6.0"/>
   <arg name="dynamic_params_flag" default="True" />
   <arg name="dynamic_params_path" default="$(env HOME)/spiraline_ws/cfg/dynamic_pure_pursuit.yaml" />
+  <arg name="res_t_log" default="false" />
   <rosparam command="load" file="$(arg dynamic_params_path)" />
 
   <!-- 0 = waypoints, 1 = provided constant velocity -->
@@ -25,5 +26,7 @@
     <param name="minimum_lookahead_distance" value="$(arg minimum_lookahead_distance)"/>
     <param name="velocity_source" value="$(arg velocity_source)"/>
     <param name="dynamic_params_flag" value="$(arg dynamic_params_flag)" />
+
+    <param name="res_t_log" value="$(arg res_t_log)" />
   </node>
 </launch>

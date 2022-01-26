@@ -16,6 +16,8 @@
   <arg name="use_decision_maker" default="false" />
   <arg name="twist_topic" default="/twist_cmd_merged" />
 
+  <arg name="res_t_log" default="false" />
+
   <!-- rosrun waypoint_follower twist_filter -->
   <node pkg="twist_filter" type="twist_filter" name="twist_filter" output="screen">
     <param name="lateral_accel_limit" value="$(arg lateral_accel_limit)" />
@@ -24,11 +26,13 @@
     <param name="lowpass_gain_angular_z" value="$(arg lowpass_gain_angular_z)" />
     <param name="lowpass_gain_steering_angle" value="$(arg lowpass_gain_steering_angle)" />
     <param name="max_stop_count" value="$(arg max_stop_count)" />
+    <param name="res_t_log" value="$(arg res_t_log)" />
   </node>
 
   <node pkg="twist_gate" type="twist_gate" name="twist_gate" output="log">
     <param name="loop_rate" value="$(arg loop_rate)" />
     <param name="use_decision_maker" value="$(arg use_decision_maker)" />
     <param name="twist_topic" value="$(arg twist_topic)" />
+    <param name="res_t_log" value="$(arg res_t_log)" />
   </node>
 </launch>

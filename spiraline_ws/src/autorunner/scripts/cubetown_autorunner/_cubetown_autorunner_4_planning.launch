@@ -126,7 +126,7 @@
     <arg name="obstacleWaitingTimeinIntersection"  default="2.0" />
     <arg name="turnThreshold"                   default="30.0" />
     <arg name="mapName"                         default="$(arg mapName)" />
-    <arg name="res_t_log"                      default="$(arg res_t_log)" />
+    <arg name="res_t_log"                       default="$(arg res_t_log)" />
     <arg name="ndt_lkas_flag"                   default="$(arg ndt_lkas_flag)" />
     <arg name="pnorm_threshold"                 default="0.05" />
     <arg name="score_threshold"                 default="3.0" />

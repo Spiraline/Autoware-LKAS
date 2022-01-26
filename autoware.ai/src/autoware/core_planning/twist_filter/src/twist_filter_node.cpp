@@ -47,6 +47,18 @@ TwistFilterNode::TwistFilterNode() : nh_(), private_nh_("~"), health_checker_(nh
   nh_.param("twist_filter/lowpass_gain_angular_z", twist_filter_config.lowpass_gain_angular_z, 0.0);
   nh_.param("twist_filter/lowpass_gain_steering_angle", twist_filter_config.lowpass_gain_steering_angle, 0.0);
   nh_.param("twist_filter/max_stop_count", max_stop_count_, 30);
+
+  nh_.param<bool>("twist_filter/res_t_log", _res_t_log, false);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+    fclose(fp);
+  }
+
   twist_filter_ptr_ = std::make_shared<twist_filter::TwistFilter>(twist_filter_config);
   emergency_stop_ = false;
   current_stop_count_ = 0;
