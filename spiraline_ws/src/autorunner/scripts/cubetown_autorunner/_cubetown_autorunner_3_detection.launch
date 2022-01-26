@@ -24,7 +24,7 @@
     <arg name="wayarea_gridmap_layer" value="wayarea" />
     <arg name="output_frame" value="velodyne" />
     <arg name="remove_points_upto" value="0.0" />
-    <arg name="use_gpu" value="true" />    
+    <arg name="use_gpu" value="false" />    
     <arg name="use_multiple_thres" value="false"/>
     <arg name="clustering_ranges" value="[15,30,45,60]"/><!-- Distances to segment pointcloud -->
     <arg name="clustering_distances"

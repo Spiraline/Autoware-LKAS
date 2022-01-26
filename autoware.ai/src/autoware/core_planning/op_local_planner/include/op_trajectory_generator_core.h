@@ -26,6 +26,7 @@
 #include <nav_msgs/Odometry.h>
 #include <autoware_msgs/LaneArray.h>
 #include <autoware_can_msgs/CANInfo.h>
+#include <boost/filesystem.hpp>
 
 #include "op_planner/PlannerH.h"
 #include "op_planner/PlannerCommonDef.h"
@@ -54,12 +55,16 @@ protected:
   std::vector<std::vector<std::vector<PlannerHNS::WayPoint> > > m_RollOuts;
   bool bWayGlobalPath;
   struct timespec m_PlanningTimer;
-    std::vector<std::string>    m_LogData;
-    PlannerHNS::PlanningParams m_PlanningParams;
-    PlannerHNS::CAR_BASIC_INFO m_CarInfo;
+  std::vector<std::string>    m_LogData;
+  PlannerHNS::PlanningParams m_PlanningParams;
+  PlannerHNS::CAR_BASIC_INFO m_CarInfo;
 
+  // HJW Added
+  struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
 
-    //ROS messages (topics)
+  //ROS messages (topics)
   ros::NodeHandle nh;
 
   //define publishers

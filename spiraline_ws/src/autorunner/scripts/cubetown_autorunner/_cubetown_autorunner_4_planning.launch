@@ -14,7 +14,8 @@
     <arg name="mapSource"             value="0" /> <!-- Autoware=0, Vector Map Folder=1, kml file=2 -->
     <arg name="mapFileName"           value="" /> <!-- incase of kml map source -->
     <arg name="multilap_flag"           value="false" />
-    <arg name="multilap_replanning_distance"  value="50.0" />
+    <arg name="multilap_replanning_distance"  value="30.0" />
+    <arg name="res_t_log"             value="$(arg res_t_log)" />
     <!-- CubeTown -->
     <arg name="use_static_goal"       value="true" />
     <arg name="goal_pose_x"           value="56.3" />
@@ -43,7 +44,7 @@
     <arg name="minDistanceToAvoid"              default="20.0" />     <!-- Avoiding Distance --> <!-- should be smaller than minFollowingDistance and larger than maxDistanceToAvoid -->
     <arg name="maxDistanceToAvoid"              default="0.1"  />     <!-- Avoidnace Limit--> <!-- should be smaller than minDistanceToAvoid -->
     <arg name="enableStopSignBehavior"          default="false" />    <!-- Enable Stop Sign Stop-->
-    <arg name="enableTrafficLightBehavior"      default="true" />     <!-- Enable Traffic Light -->
+    <arg name="enableTrafficLightBehavior"      default="false" />     <!-- Enable Traffic Light -->
     <arg name="enableLaneChange"                default="false" />    <!-- Enable Lane Change -->
     <arg name="horizontalSafetyDistance"        default="1"  />       <!-- Lateral Safety --> 
     <arg name="verticalSafetyDistance"          default="2"  />       <!-- Longitudinal Safet y-->
@@ -73,6 +74,7 @@
     <arg name="samplingOutMargin"               default="8" />        <!-- Roll In Margin -->
     <arg name="samplingSpeedFactor"             default="0.25" />    
     <arg name="enableHeadingSmoothing"          default="false" />
+    <arg name="res_t_log"                       default="$(arg res_t_log)" />
   </include>
 
   <!-- op_motion_predictor -->
