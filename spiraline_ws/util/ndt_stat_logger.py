@@ -13,7 +13,7 @@ if __name__ == "__main__":
     with open(lc_file, 'w') as f:
         f.write('loop_count,res_t\n')
 
-    rospy.init_node('ndt_stat_test')
+    rospy.init_node('ndt_stat_logger')
     rospy.Subscriber('/ndt_stat', NDTStat, ndt_stat_cb, lc_file)
 
     rospy.spin()

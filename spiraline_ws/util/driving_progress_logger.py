@@ -1,11 +1,12 @@
 import rospy
-from autoware_msgs.msg import Lane, LaneArray
+import argparse
+from autoware_msgs.msg import LaneArray, NDTStat
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import MarkerArray
 import math
-import os
 import time
 import csv
+from os import getenv, makedirs
 
 def euler_from_quaternion(x, y, z, w):
         """
@@ -56,7 +57,15 @@ def find_closest_point(map_wp_list, wp, yaw_deg):
     return min_wp, min_distance
 
 if __name__ == "__main__":
-    rospy.init_node('center_offset_calculator', anonymous=False)
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--output_file', '-o', type=str, required=True, help='output log file name')
+    args = parser.parse_args()
+
+    if args.output_file.split('.')[-1] != 'csv':
+        print('Output file should be csv file!')
+        exit(1)
+
+    rospy.init_node('driving_progress_logger')
 
     map_wp_list = []
 
@@ -68,13 +77,16 @@ if __name__ == "__main__":
     for wp in lane_msg.lanes[0].waypoints:
         map_wp_list.append([wp.pose.pose.position.x, wp.pose.pose.position.y])
 
-    print_file_path = os.getenv("HOME") + "/Documents/tmp/center_offset.csv"
+    ndt_log_dir = getenv("HOME") + "/spiraline_ws/log/ndt"
+    makedirs(ndt_log_dir, exist_ok=True)
 
-    with open(print_file_path, "w") as f:
+    with open(ndt_log_dir + "/" + args.output_file, "w") as f:
         wr = csv.writer(f)
+        wr.writerow(['ts', 'state', 'center_offset', 'res_t'])
         while not rospy.is_shutdown():
             gnss_msg = rospy.wait_for_message('/gnss_pose', PoseStamped, timeout=None)
             state_msg = rospy.wait_for_message('/behavior_state', MarkerArray, timeout=None)
+            ndt_msg = rospy.wait_for_message('/ndt_stat', NDTStat, timeout=None)
             gnss_x = round(gnss_msg.pose.position.x, 3)
             gnss_y = round(gnss_msg.pose.position.y, 3)
             ori_x = gnss_msg.pose.orientation.x
@@ -87,5 +99,9 @@ if __name__ == "__main__":
             
             min_wp, min_dis = find_closest_point(map_wp_list, [gnss_x, gnss_y], yaw_deg)
 
-            wr.writerow([time.clock_gettime(time.CLOCK_MONOTONIC), str(min_dis), str(state_msg.markers[0].text)])
-            
+            if state_msg.markers[0].text == '(0)LKAS':
+                state_text = 'Backup'
+            else:
+                state_text = 'Normal'
+
+            wr.writerow([time.clock_gettime(time.CLOCK_MONOTONIC), state_text, str(min_dis), str(ndt_msg.exe_time)])
