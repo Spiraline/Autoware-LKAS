@@ -1,4 +1,9 @@
 <launch>
+  <!-- ndt config -->
+  <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
+    <param name="error_threshold" value="0.01" />
+  </node>
+
   <!-- ndt_matching -->
   <node pkg="lidar_localizer" type="ndt_matching" name="ndt_matching" output="log">
     <param name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
@@ -12,11 +17,6 @@
     <param name="use_local_transform" value="false" />
     <param name="output_log_data" value="false" />
     <param name="gnss_reinit_fitness" value="500" />
-  </node>
-
-  <!-- ndt config -->
-  <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
-    <param name="error_threshold" value="0.01" />
   </node>
 
   <!-- vel_pose_mux -->
