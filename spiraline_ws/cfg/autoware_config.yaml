@@ -23,7 +23,6 @@ ndt_matching:
   accuracy_log: false
 
 ndt_config:
-  init_pos_gnss: 1
   init_x: 57.1
   init_y: 1.38
   init_z: 0.48

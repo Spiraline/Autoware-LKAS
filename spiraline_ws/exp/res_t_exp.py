@@ -1,33 +1,22 @@
-from os import fork, kill, getenv
+from os import kill, getenv
 from signal import SIGTERM
-import roslaunch, rospkg
 from time import sleep
 import subprocess
-
-def launch_script(pkg, node, args=""):
-    pid = fork()
-
-    if pid == 0:
-        launch_file = roslaunch.core.Node(
-            package=pkg,
-            node_type=node,
-            args=args,
-            output='screen')
-        launch = roslaunch.scriptapi.ROSLaunch()
-        launch.start()
-        process = launch.launch(launch_file)
-        process.stop()
-        exit(0)
-    return pid
+import argparse
 
 def clean(pid_list):
     for pid in pid_list:
         kill(pid, SIGTERM)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--map', '-m', type=str, default='CubeTown_Obstacle')
+    parser.add_argument('--rviz', '-r', action='store_true')
+    args = parser.parse_args()
+
     spiraline_ws = getenv("HOME") + "/spiraline_ws"
     pid_list = []
-    
+
     ### rosbridge
     try:
         rosbridge = subprocess.Popen([
@@ -48,7 +37,7 @@ if __name__ == "__main__":
     try:
         svl_script_process = subprocess.Popen([
             'python3',
-            spiraline_ws + '/svl_script/CubeTown_Obstacle.py'
+            spiraline_ws + '/svl_script/' + args.map +'.py'
             ])
         pid_list.append(svl_script_process.pid)
         print('[System] SVL script open!')
@@ -75,9 +64,26 @@ if __name__ == "__main__":
         print('[System] autorunner fail!')
         clean(pid_list)
         exit(1)
+
+    ### Rviz
+    if args.rviz:
+        try:
+            rviz = subprocess.Popen([
+                'rviz',
+                '-d',
+                spiraline_ws + '/cfg/rviz_config.rviz'
+                ])
+            pid_list.append(rviz.pid)
+            print('[System] Rviz starts!')
+            sleep(2)
+        except Exception as e:
+            print(e)
+            print('[System] Rviz fail!')
+            clean(pid_list)
+            exit(1)
     
     # Wait for driving
-    sleep(1000)
+    sleep(100)
 
     clean(pid_list)
 

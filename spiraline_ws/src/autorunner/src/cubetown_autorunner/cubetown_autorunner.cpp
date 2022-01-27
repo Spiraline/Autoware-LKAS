@@ -1,14 +1,15 @@
 #include "cubetown_autorunner/cubetown_autorunner.h"
 
 void CubetownAutorunner::Run(){
+    localization_success_cnt = 0;
     register_subscribers();             // Register subscribers that shoud check can go next or not
     ros_autorunner_.init(nh_, sub_v_);   // Initialize the ROS-Autorunner
     ros::Rate rate(1);                  // Rate can be changed
-    while(ros::ok()){               
+    while(ros::ok()){
         ros_autorunner_.Run();           // Run Autorunner
         ros::spinOnce();
         rate.sleep();
-    }    
+    }
 }
 
 void CubetownAutorunner::register_subscribers(){
@@ -16,7 +17,7 @@ void CubetownAutorunner::register_subscribers(){
 
     // Set the check function(subscriber)
     sub_v_[STEP(1)] = nh_.subscribe("/points_raw", 1, &CubetownAutorunner::points_raw_cb, this);   
-    sub_v_[STEP(2)] = nh_.subscribe("/ndt_stat", 1, &CubetownAutorunner::ndt_stat_cb, this);   
+    sub_v_[STEP(2)] = nh_.subscribe("/ndt_stat", 1, &CubetownAutorunner::ndt_stat_cb, this);
     sub_v_[STEP(3)] = nh_.subscribe("/detection/object_tracker/objects_center", 1, &CubetownAutorunner::detection_cb, this);   
     sub_v_[STEP(4)] = nh_.subscribe("/behavior_state", 1, &CubetownAutorunner::behavior_state_cb, this);   
 }
@@ -30,7 +31,14 @@ void CubetownAutorunner::register_subscribers(){
  }
 
  void CubetownAutorunner::ndt_stat_cb(const autoware_msgs::NDTStat& msg){
-    if(msg.score < 3.0 && !ros_autorunner_.step_info_list_[STEP(3)].is_prepared){
+    if(msg.score < 1.0){
+        localization_success_cnt += 1;
+    }
+    else{
+        localization_success_cnt = 0;
+    }
+
+    if(localization_success_cnt > 30 && !ros_autorunner_.step_info_list_[STEP(3)].is_prepared){
         ROS_WARN("[STEP 2] Localization is success");
     	sleep(SLEEP_PERIOD);
         ros_autorunner_.step_info_list_[STEP(3)].is_prepared = true;

@@ -23,6 +23,7 @@ private:
 
 public:
     Sub_v               sub_v_;
+    int                 localization_success_cnt;
 public:
     CubetownAutorunner() {}
     CubetownAutorunner(ros::NodeHandle nh) : nh_(nh){}
