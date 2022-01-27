@@ -27,34 +27,14 @@ def clean(pid_list):
 if __name__ == "__main__":
     spiraline_ws = getenv("HOME") + "/spiraline_ws"
     pid_list = []
-    # roscore
+    
+    ### rosbridge
     try:
-        roscore_process = subprocess.Popen(['roscore'])
-        pid_list.append(roscore_process.pid)
-        print('[System] Roscore executes!')
-        sleep(2)
-    except Exception as e:
-        print(e)
-        print('[System] Roscore fail!')
-        clean(pid_list)
-        exit(1)
-
-    # rosbridge
-    try:
-        rosbridge = launch_script('rosbridge_server', 'rosbridge_websocket')
-        pid_list.append(rosbridge)
-        print('[System] rosbridge starts!')
-        sleep(20)
-    except Exception as e:
-        print(e)
-        print('[System] rosbridge fail!')
-        clean(pid_list)
-        exit(1)
-
-    # rosbridge
-    try:
-        package_path = rospkg.RosPack().get_path('rosbridge_server')
-        rosbridge = subprocess.Popen(['roslaunch', package_path + '/launch/rosbridge_websocket.launch'])
+        rosbridge = subprocess.Popen([
+            'roslaunch',
+            'rosbridge_server',
+            'rosbridge_websocket.launch'
+            ])
         pid_list.append(rosbridge.pid)
         print('[System] rosbridge starts!')
         sleep(2)
@@ -64,29 +44,40 @@ if __name__ == "__main__":
         clean(pid_list)
         exit(1)
 
-    # # Open SVL script
-    # try:
-    #     svl_script_process = subprocess.Popen(['python3', spiraline_ws + '/svl_script/CubeTown_Obstacle.py'], shell=False)
-    #     pid_list.append(svl_script_process.pid)
-    #     print('[System] SVL script open!')
-    #     sleep(2)
-    # except Exception as e:
-    #     print(e)
-    #     print('[System] SVL script fail!')
-    #     clean(pid_list)
-    #     exit(1)
+    ### Open SVL script
+    try:
+        svl_script_process = subprocess.Popen([
+            'python3',
+            spiraline_ws + '/svl_script/CubeTown_Obstacle.py'
+            ])
+        pid_list.append(svl_script_process.pid)
+        print('[System] SVL script open!')
+        sleep(2)
+    except Exception as e:
+        print(e)
+        print('[System] SVL script fail!')
+        clean(pid_list)
+        exit(1)
     
-    # # autorunner
-    # try:
-    #     autorunner = launch_script('autorunner', 'cubetown_autorunner', "_exp:=autoware")
-    #     pid_list.append(autorunner)
-    #     print('[System] autorunner starts!')
-    #     sleep(10)
-    # except Exception as e:
-    #     print(e)
-    #     print('[System] autorunner fail!')
-    #     clean(pid_list)
-    #     exit(1)
+    ### autorunner
+    try:
+        autorunner = subprocess.Popen([
+            'roslaunch',
+            'autorunner',
+            'cubetown_autorunner.launch',
+            '_exp:=autoware'
+            ])
+        pid_list.append(autorunner.pid)
+        print('[System] autorunner starts!')
+        sleep(2)
+    except Exception as e:
+        print(e)
+        print('[System] autorunner fail!')
+        clean(pid_list)
+        exit(1)
+    
+    # Wait for driving
+    sleep(1000)
 
     clean(pid_list)
 
