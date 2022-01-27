@@ -92,8 +92,8 @@ op_behavior_selector:
 
 # Control
 pure_pursuit:
-  lookahead_ratio: 0.0
-  minimum_lookahead_distance: 12.0
+  lookahead_ratio: 1.4
+  minimum_lookahead_distance: 7.0
   res_t_log: false
 
 twist_filter:

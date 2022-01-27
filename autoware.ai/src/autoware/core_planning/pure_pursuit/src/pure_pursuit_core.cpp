@@ -84,14 +84,17 @@ void PurePursuitNode::initForROS()
     FILE *fp = fopen(res_t_filename.c_str(), "w");
     fclose(fp);
   }
-  
+
   if(dynamic_param_flag_){
     XmlRpc::XmlRpcValue xml_list;
+    
     if(!nh_.getParam("/pure_pursuit/dynamic_params", xml_list)){
       ROS_ERROR("[pure_pursuit] Cannot load dynamic params");
       exit(1);
     }
-    std::cout<<"Parameter is loaded / "<<xml_list.size()<<std::endl;
+
+    std::cout<<"Parameter is loaded / Number of list : "<<xml_list.size()<<std::endl;
+
     for(int i=0; i<xml_list.size(); i++){
       XmlRpc::XmlRpcValue xml_param = xml_list[i];
       
@@ -103,9 +106,7 @@ void PurePursuitNode::initForROS()
       param.lookahead_distance = (double)(xml_param[3]);
       dynamic_params.push_back(param);
     }
-
   }
-
 
   // setup subscriber
   sub1_ = nh_.subscribe("final_waypoints", 10,
