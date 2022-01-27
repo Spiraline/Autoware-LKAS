@@ -3,6 +3,7 @@
   <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
     <param name="init_pos_gnss" value="0" />
     <param name="error_threshold" value="0.01" />
+    <param name="use_predict_pose" value="1" />
   </node>
 
   <!-- ndt_matching -->

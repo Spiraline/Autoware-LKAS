@@ -8,6 +8,8 @@
 
 #define V2_ 1
 
+#define SCORE_THRESHOLD 1
+
 // #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
 
 namespace cpu {
@@ -202,11 +204,11 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
       }
     }
 
-    if (nr_iterations_ && (std::fabs(delta_p_norm) < transformation_epsilon_)) {
+    double score = getFitnessScore();
+
+    if (nr_iterations_ && (std::fabs(delta_p_norm) < transformation_epsilon_) && score < SCORE_THRESHOLD) {
       converged_ = true;
     }
-
-    double score = getFitnessScore();
 
     if(accuracy_flag_)
     {

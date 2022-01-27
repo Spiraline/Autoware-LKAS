@@ -583,6 +583,11 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
+  if(!_is_init_match_finished){
+    current_pose = current_gnss_pose;
+    previous_pose = current_gnss_pose;
+  }
+
   if(previous_pnorm < _pnorm_threshold || previous_score < _score_threshold || !_ndt_lkas_flag)
     matching_fail_cnt = 0;
   else

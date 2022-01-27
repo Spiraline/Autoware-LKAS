@@ -39,7 +39,7 @@ if __name__ == "__main__":
     config_pub.publish(config_msg)
 
     localization_success_cnt = 0
-    while localization_success_cnt < 5:
+    while localization_success_cnt < 20:
         try:
             ndt_stat_msg_1 = rospy.wait_for_message('/ndt_stat', NDTStat, timeout=1)
             if ndt_stat_msg_1.score < 1.0:

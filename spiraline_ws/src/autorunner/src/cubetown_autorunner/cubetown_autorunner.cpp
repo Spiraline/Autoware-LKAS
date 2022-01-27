@@ -38,7 +38,7 @@ void CubetownAutorunner::register_subscribers(){
         localization_success_cnt = 0;
     }
 
-    if(localization_success_cnt > 30 && !ros_autorunner_.step_info_list_[STEP(3)].is_prepared){
+    if(localization_success_cnt > 20 && !ros_autorunner_.step_info_list_[STEP(3)].is_prepared){
         ROS_WARN("[STEP 2] Localization is success");
     	sleep(SLEEP_PERIOD);
         ros_autorunner_.step_info_list_[STEP(3)].is_prepared = true;

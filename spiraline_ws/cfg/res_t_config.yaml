@@ -3,14 +3,14 @@ ray_ground_filter:
   max_clipping_height: 5.0
   min_clipping_height: -0.5
   min_point_distance: 2.9
-  res_t_log: false
+  res_t_log: true
 
 voxel_grid_filter:
   measurement_range: 200
   res_t_log: true
 
 gnss_calibrator:
-  res_t_log: false
+  res_t_log: true
 
 # Localization
 ndt_matching:
@@ -19,7 +19,7 @@ ndt_matching:
   time_wall: 40
   pnorm_threshold: 0.05
   score_threshold: 3.0
-  res_t_log: false
+  res_t_log: true
   accuracy_log: false
 
 ndt_config:
@@ -29,10 +29,9 @@ ndt_config:
   init_roll: 0.0
   init_pitch: 0.0
   init_yaw: 1.57
-  use_predict_pose: 1
   resolution: 1.0
-  step_size: 0.5
-  trans_epsilon: 0.01
+  step_size: 0.2
+  trans_epsilon: 0.05
   max_iterations: 30
 
 # Detection
@@ -41,10 +40,10 @@ lidar_euclidean_cluster_detect:
   clip_max_height: 4.0
   cluster_size_min: 1
   cluster_size_max: 100000
-  res_t_log: false
+  res_t_log: true
 
 imm_ukf_pda_track:
-  res_t_log: false
+  res_t_log: true
 
 # Planning
 op_common_params:
@@ -64,7 +63,7 @@ op_common_params:
 op_global_planner:
   use_static_goal: true
   multilap_flag: 1
-  res_t_log: false
+  res_t_log: true
   use_static_goal: true
   goal_pose_x: 56.3
   goal_pose_y: -18.0
@@ -75,37 +74,35 @@ op_global_planner:
   goal_ori_w: 0.7
 
 op_trajectory_generator:
-  res_t_log: false
+  res_t_log: true
 
 op_motion_predictor:
   prediction_distance: 25.0
-  res_t_log: false
+  res_t_log: true
 
 op_trajectory_evaluator:
-  res_t_log: false
+  res_t_log: true
 
 op_behavior_selector:
   ndt_lkas_flag: false
   pnorm_threshold: 0.05
   score_threshold: 3.0
-  res_t_log: false
+  res_t_log: true
 
 # Control
 pure_pursuit:
-  lookahead_ratio: 1.4
-  minimum_lookahead_distance: 7.0
-  res_t_log: false
+  res_t_log: true
 
 twist_filter:
-  res_t_log: false
+  res_t_log: true
 
 twist_gate:
-  res_t_log: false
+  res_t_log: true
 
 # Safety-Backup
 lkas:
   debug_window: false
-  res_t_log: false
+  res_t_log: true
 
 twist_combiner:
   ndt_lkas_flag: false

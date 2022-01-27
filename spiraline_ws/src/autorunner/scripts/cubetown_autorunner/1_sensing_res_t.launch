@@ -1,0 +1,63 @@
+<launch>
+  <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/res_t_config.yaml" />
+
+  <arg name="lidar_input_topic" default="/points_raw_origin"/>
+  <arg name="lidar_republished_topic" default="/points_raw"/>
+  <arg name="image_input_topic" default="/image_raw_origin"/>
+
+  <node pkg="map_file" type="vector_map_loader" name="vector_map_loader" args="
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/dtlane.csv
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/lane.csv 
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/node.csv 
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/point.csv"/>
+
+	<!-- Point Map Loader -->
+	<include file="$(find map_file)/launch/points_map_loader.launch">
+		<arg name="scene_num" value="noupdate" />
+		<arg name="path_pcd" value="$(env HOME)/spiraline_ws/points_map/CubeTown.pcd"/>
+	</include>
+
+	<!-- Map TF Publisher -->	
+	<node pkg="tf" type="static_transform_publisher" name="world_to_map" args="0 0 0 0 0 0 /world /map 10" />
+
+  <!-- Re-publishing simulator/camera_node/image/compressed topic to /image_raw as expected by Autoware -->
+  <node name="republish" type="republish" pkg="image_transport" output="screen" args="compressed in:=/simulator/camera_node/image raw out:=/image_raw_origin"  />
+
+  <node pkg="sensor_republisher" type="lidar_republisher" name="lidar_republisher" output="screen">
+    <param name="/input_topic" value="$(arg lidar_input_topic)" />
+    <param name="/output_topic" value="$(arg lidar_republished_topic)" />
+  </node>
+
+  <node pkg="sensor_republisher" type="camera_republisher" name="camera_republisher" output="screen">
+    <param name="/input_topic" value="$(arg image_input_topic)" />
+  </node>
+
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_velodyne" args="1.2 0 2.0 0 0 0 base_link velodyne 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="lidar_to_camera" args="0 0 0 0 0 0 velodyne camera 10" />
+
+  <!-- voxel grid filter -->
+  <node pkg="points_downsampler" name="voxel_grid_filter" type="voxel_grid_filter">
+    <param name="points_topic" value="$(arg lidar_republished_topic)" />
+  </node>
+
+  <!-- ray_ground_filter -->
+  <node pkg="points_preprocessor" type="ray_ground_filter" name="ray_ground_filter" output="screen">
+    <param name="input_point_topic" value="$(arg lidar_republished_topic)" />
+    <param name="base_frame" value="base_link" />
+    <param name="radial_divider_angle" value="1.85" />
+    <param name="concentric_divider_distance" value="0.0" />
+    <param name="local_max_slope" value="8" />
+    <param name="general_max_slope" value="5" />
+    <param name="min_height_threshold" value="0.5" />
+    <param name="reclass_distance_threshold" value="0.2" />
+    <param name="no_ground_point_topic" value="/points_no_ground" />
+    <param name="ground_point_topic" value="/points_ground" />
+  </node>
+
+  <!-- gnss calibrator -->
+  <node pkg="sensor_republisher" type="gnss_calibrator" name="gnss_calibrator" output="screen">
+    <param name="plane" value="0"/>
+  </node>
+
+</launch>
+
