@@ -10,9 +10,10 @@ def clean(pid_list):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--map', '-m', type=str, default='CubeTownBase')
+    parser.add_argument('--map', '-m', type=str, default='CubeTown_Obstacle')
     parser.add_argument('--rviz', '-r', action='store_true')
     parser.add_argument('--time', '-t', type=int, default=100)
+    parser.add_argument('--exp', '-e', type=str, default='ndt_wcet')
     args = parser.parse_args()
 
     spiraline_ws = getenv("HOME") + "/spiraline_ws"
@@ -48,6 +49,23 @@ if __name__ == "__main__":
         print('[System] SVL script fail!')
         clean(pid_list)
         exit(1)
+
+    ### drive_progress_logger
+    try:
+        drive_progress_logger = subprocess.Popen([
+            'python3',
+            spiraline_ws + '/util/drive_progress_logger.py',
+            '-o',
+            'ndt.csv'
+            ])
+        pid_list.append(drive_progress_logger.pid)
+        print('[System] Drive Progress Logger starts!')
+        sleep(2)
+    except Exception as e:
+        print(e)
+        print('[System] Drive Progress Logger fail!')
+        clean(pid_list)
+        exit(1)
     
     ### autorunner
     try:
@@ -55,7 +73,7 @@ if __name__ == "__main__":
             'roslaunch',
             'autorunner',
             'cubetown_autorunner.launch',
-            '_exp:=res_t'
+            '_exp:=' + args.exp
             ])
         pid_list.append(autorunner.pid)
         print('[System] autorunner starts!')
@@ -89,9 +107,3 @@ if __name__ == "__main__":
     clean(pid_list)
 
     print("[System] Exp terminated successfully")
-
-    ### Visualize
-    system('python3 ' + spiraline_ws + '/util/WCET_viz.py')
-
-    print("[System] Save result into file!")
-    
