@@ -1,0 +1,110 @@
+# Sensing
+ray_ground_filter:
+  max_clipping_height: 5.0
+  min_clipping_height: -0.5
+  min_point_distance: 2.9
+  res_t_log: false
+
+voxel_grid_filter:
+  measurement_range: 200
+  res_t_log: false
+
+gnss_calibrator:
+  res_t_log: false
+
+# Localization
+ndt_matching:
+  get_height: true
+  ndt_lkas_flag: false
+  time_wall: 40
+  pnorm_threshold: 0.05
+  score_threshold: 3.0
+  res_t_log: false
+  accuracy_log: false
+
+ndt_config:
+  init_x: 57.1
+  init_y: 1.38
+  init_z: 0.48
+  init_roll: 0.0
+  init_pitch: 0.0
+  init_yaw: 1.57
+  resolution: 1.0
+  step_size: 0.2
+  trans_epsilon: 0.05
+  max_iterations: 30
+
+# Detection
+lidar_euclidean_cluster_detect:
+  clip_min_height: -3.0
+  clip_max_height: 4.0
+  cluster_size_min: 1
+  cluster_size_max: 100000
+  res_t_log: false
+
+imm_ukf_pda_track:
+  res_t_log: false
+
+# Planning
+op_common_params:
+  pathDensity: 0.5
+  rollOutDensity: 4
+  rollOutsNumber: 0
+  maxVelocity: 13.0
+  maxAcceleration: 10.0
+  maxDeceleration: -10.0
+  width: 1.85
+  length: 4.2
+  wheelBaseLength: 2.7
+  turningRadius: 5.2
+  maxSteerAngle: 0.2
+  steeringDelay: 1.2
+
+op_global_planner:
+  use_static_goal: true
+  multilap_flag: 0
+  res_t_log: false
+  use_static_goal: true
+  goal_pose_x: 56.3
+  goal_pose_y: -18.0
+  goal_pose_z: 0.0
+  goal_ori_x: 0.0
+  goal_ori_y: 0.0
+  goal_ori_z: 0.7
+  goal_ori_w: 0.7
+
+op_trajectory_generator:
+  res_t_log: false
+
+op_motion_predictor:
+  prediction_distance: 25.0
+  res_t_log: false
+
+op_trajectory_evaluator:
+  res_t_log: false
+
+op_behavior_selector:
+  ndt_lkas_flag: false
+  pnorm_threshold: 0.05
+  score_threshold: 3.0
+  res_t_log: false
+
+# Control
+pure_pursuit:
+  res_t_log: false
+
+twist_filter:
+  res_t_log: false
+
+twist_gate:
+  res_t_log: false
+
+# Safety-Backup
+lkas:
+  debug_window: false
+  res_t_log: false
+
+twist_combiner:
+  ndt_lkas_flag: false
+  pnorm_threshold: 0.05
+  score_threshold: 3.0

@@ -1,5 +1,5 @@
 <launch>
-  <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/default_config.yaml" />
+  <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/other_wcet_config.yaml" />
 
   <arg name="lidar_input_topic" default="/points_raw_origin"/>
   <arg name="lidar_republished_topic" default="/points_raw"/>
