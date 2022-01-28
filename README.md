@@ -1,12 +1,13 @@
-# hjw-Autoware
-My Little Autoware
+# Autoware with LKAS
+Autoware with LKAS
+
+## Publication
 
 
 ## Environment
 
 - Ubuntu 18.04
 - ROS Melodic
-- CUDA 10.x
 - OpenCV 4.x
 
 ## How to install ROS melodic
@@ -89,18 +90,7 @@ AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Releas
 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
 
-<!-- Since Autoware recommend to use directory name 'autoware.ai', you should make soft link with autoware.ai to this repository
-```
-cd
-ln -s ${WORKSPACE_DIR}/RUBIS-SelfDriving ~/autoware.ai
-```
-
-And it is recommned to add below sourcing command in your `~/.bashrc` file.
-```
-source ~/autoware.ai/install/setup.bash
-``` -->
-
-## How to build package in rubis_ws
+## How to build package in spiraline_ws
 * Install some dependency
 ```
 sudo apt-get install ros-melodic-ackermann-msgs ros-melodic-serial ros-melodic-veldoyne ros-melodic-velodyne-driver -y
@@ -108,34 +98,21 @@ sudo apt-get install ros-melodic-ackermann-msgs ros-melodic-serial ros-melodic-v
 
 * Initialize ROS workspace
 ```
-cd ${WORKSPACE_DIR}/rubis_ws/src
+cd ${WORKSPACE_DIR}/spiraline_ws/src
 catkin_init_workspace
 ```
 
-* Build rubis_ws packages
+* Build spiraline_ws packages
 ```
-cd ${WORKSPACE_DIR}/rubis_ws
+cd ${WORKSPACE_DIR}/spiraline_ws
 catkin_make
-ln -s ${WORKSPACE_DIR}/rubis_ws ~/rubis_ws
-source ~/rubis_ws/devel/setup.bash
+ln -s ${WORKSPACE_DIR}/spiraline_ws ~/spiraline_ws
+source ~/spiraline_ws/devel/setup.bash
 
 ```
 
 ## Create symoblic links
 ```
 ln -s ${WORKSPACE_DIR}/autoware.ai ~/autoware.ai
-ln -s ${WORKSPACE_DIR}/rubis_ws ~/rubis_ws
-```
-
-## How to launch LGSVL scrips
-* Setup environments
-```
-cd ${WORKSPACE_DIR}/autoware.ai/autoware_files/lgsvl_file/scripts
-pip3 install --user .
-```
-
-* Launch LGSVL scripts
-```
-sudo chomod 755 {TARGET_SCRIPTS}
-./{TARGET_SCRIPTS}
+ln -s ${WORKSPACE_DIR}/spiraline_ws ~/spiraline_ws
 ```
