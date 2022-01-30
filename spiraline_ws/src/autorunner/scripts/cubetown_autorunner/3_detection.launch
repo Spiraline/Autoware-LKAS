@@ -21,10 +21,10 @@
     <param name="clustering_distances" value="[0.5,1.1,1.6,2.1,2.6]"/><!-- Euclidean Clustering threshold distance for each segment -->
   </node>
 
-  <!-- <node pkg="detected_objects_visualizer" type="visualize_detected_objects" name="cluster_detect_visualization"
+  <node pkg="detected_objects_visualizer" type="visualize_detected_objects" name="cluster_detect_visualization"
         output="screen" ns="/detection/lidar_detector">
-    <param name="objects_src_topic" value="/objects"/>
-  </node> -->
+    <param name="objects_src_topic" value="/objects_center"/>
+  </node>
 
   <!-- imm_ukf_pda_track -->
   <node pkg="imm_ukf_pda_track" type="imm_ukf_pda" name="imm_ukf_pda" output="screen">

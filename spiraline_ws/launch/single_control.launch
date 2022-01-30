@@ -3,18 +3,20 @@
   <arg name="ndt_lkas_flag" value="true" />
 
   <!-- pure_pursuit  -->
-  <include file="$(find pure_pursuit)/launch/pure_pursuit.launch">    
-    <!-- Core Parameter -->
-    <arg name="lookahead_ratio"               value="0.0"/>
-    <arg name="minimum_lookahead_distance"    value="5.0"/>
-    
-    <arg name="const_velocity"                value="5.0"/>     
-    <arg name="const_lookahead_distance"      value="4.0"/>
-    <arg name="is_linear_interpolation"       value="True"/>
-    <arg name="publishes_for_steering_robot"  value="True"/>
-    <arg name="add_virtual_end_waypoints"     value="False"/>
-    <arg name="res_t_log"                     value="$(arg res_t_log)" />
-  </include>
+  <arg name="dynamic_params" default="[[0.0, 5.0, 2.0, 5.0], [5.0, 9.0, 1.4, 7.0], [9.0, 10.0, 2.0, 18.0], [10.0, 13.5, 1.0, 20.0]]" />
+  <node pkg="pure_pursuit" type="pure_pursuit" name="pure_pursuit" output="screen">
+    <param name="lookahead_ratio" value="1.4"/>
+    <param name="minimum_lookahead_distance" value="7.0"/>
+    <param name="is_linear_interpolation" value="true"/>
+    <param name="publishes_for_steering_robot" value="true"/>
+    <param name="add_virtual_end_waypoints" value="false"/>
+    <param name="const_lookahead_distance" value="4.0"/>
+    <param name="const_velocity" value="5.0"/>
+    <param name="velocity_source" value="0"/> <!-- 0 = waypoints, 1 = provided constant velocity -->
+    <param name="dynamic_params_flag" value="true" />
+    <param name="res_t_log"         value="$(arg res_t_log)" />
+    <rosparam param="dynamic_params" subst_value="True">$(arg dynamic_params)</rosparam>
+  </node>
 
   <!-- twist_filter -->
   <include file="$(find twist_filter)/launch/twist_filter.launch">    

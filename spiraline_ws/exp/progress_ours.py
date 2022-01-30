@@ -10,7 +10,7 @@ def clean(pid_list):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--map', '-m', type=str, default='CubeTown_Obstacle')
+    parser.add_argument('--map', '-m', action='store_true')
     parser.add_argument('--rviz', '-r', action='store_true')
     parser.add_argument('--time', '-t', type=int, default=100)
     parser.add_argument('--exp', '-e', type=str, default='ndt_ours')
@@ -36,19 +36,20 @@ if __name__ == "__main__":
         exit(1)
 
     ### Open SVL script
-    try:
-        svl_script_process = subprocess.Popen([
-            'python3',
-            spiraline_ws + '/svl_script/' + args.map +'.py'
-            ])
-        pid_list.append(svl_script_process.pid)
-        print('[System] SVL script open!')
-        sleep(2)
-    except Exception as e:
-        print(e)
-        print('[System] SVL script fail!')
-        clean(pid_list)
-        exit(1)
+    if args.map:
+        try:
+            svl_script_process = subprocess.Popen([
+                'python3',
+                spiraline_ws + '/svl_script/' + args.map +'.py'
+                ])
+            pid_list.append(svl_script_process.pid)
+            print('[System] SVL script open!')
+            sleep(2)
+        except Exception as e:
+            print(e)
+            print('[System] SVL script fail!')
+            clean(pid_list)
+            exit(1)
 
     ### drive_progress_logger
     try:

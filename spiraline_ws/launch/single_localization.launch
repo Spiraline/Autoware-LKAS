@@ -2,22 +2,6 @@
   <arg name="res_t_log" value="true" />
   <arg name="ndt_lkas_flag" value="true" />
 
-  <!-- cubetown -->
-  <arg name="init_x" value="57.1" />
-  <arg name="init_y" value="1.38" />
-  <arg name="init_z" value="0.48" />
-  <arg name="init_roll" value="0.0" />
-  <arg name="init_pitch" value="0.0" />
-  <arg name="init_yaw" value="1.57" />
-
-  <!-- sanfrancisco -->
-  <!-- <arg name="init_x" value="-308.7" />
-  <arg name="init_y" value="-705.6" />
-  <arg name="init_z" value="10.0" />
-  <arg name="init_roll" value="0.0" />
-  <arg name="init_pitch" value="0.0" />
-  <arg name="init_yaw" value="-1.8" /> -->
-
   <!-- vel/pose connect -->
   <arg name="topic_pose_stamped" default="/ndt_pose" />
   <arg name="topic_twist_stamped" default="/estimate_twist" />
@@ -55,24 +39,6 @@
     <param name="trans_epsilon" value="0.01" />
     <param name="max_iterations" value="30" />
   </node>
-  
-  <!-- <node pkg="rostopic" type="rostopic" name="config_ndt"
-  args="pub /config/ndt autoware_config_msgs/ConfigNDT
-  '{header: {seq: 8, stamp: {secs: 0, nsecs: 0}, frame_id: ''},
-    init_pos_gnss: 0,
-    x: $(arg init_x),
-    y: $(arg init_y),
-    z: $(arg init_z),
-    roll: $(arg init_roll),
-    pitch: $(arg init_pitch),
-    yaw: $(arg init_yaw),
-    use_predict_pose: 1,
-    error_threshold: 0.01,
-    resolution: 1.0,
-    step_size: 0.5,
-    trans_epsilon: 0.01,
-    max_iterations: 30}
-  '"/> -->
 
   <!-- vel_pose_mux -->
   <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">

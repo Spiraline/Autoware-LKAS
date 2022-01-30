@@ -62,7 +62,7 @@ op_common_params:
 
 op_global_planner:
   use_static_goal: true
-  multilap_flag: 0
+  multilap_flag: false
   res_t_log: false
   use_static_goal: true
   goal_pose_x: 56.3
