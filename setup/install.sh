@@ -4,8 +4,7 @@ sudo apt install curl -y
 curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 sudo apt update
 sudo apt install ros-melodic-desktop-full -y
-echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+source /opt/ros/melodic/setup.bash
 sudo apt install python-rosdep python-rosinstall python-rosinstall-generator python-wstool build-essential python-rosdep -y
 sudo rosdep init
 rosdep update
@@ -48,12 +47,10 @@ sudo cp setup/grid_map_cvConfig.cmake /opt/ros/melodic/share/grid_map_cv/cmake
 
 # Autoware Build
 cd autoware.ai
-source ~/.bashrc
 AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 cd ..
 ln -s autoware.ai ~/autoware.ai
-echo "source ~/autoware.ai/install/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+source ~/autoware.ai/install/setup.bash
 
 echo "Autoware Build Success"
 
@@ -65,7 +62,6 @@ cd ..
 catkin_make
 cd ..
 ln -s spiraline_ws ~/spiraline_ws
-echo "source ~/spiraline_ws/devel/setup.bash" >> ~/.bashrc
-source ~/.bashrc
+source ~/spiraline_ws/devel/setup.bash
 
 echo "spiraline_ws Build Success"
