@@ -93,7 +93,7 @@ set(image_geometry_FOUND_CATKIN_PROJECT TRUE)
 
 if(NOT "include;/usr/include;/usr/include/opencv " STREQUAL " ")
   set(image_geometry_INCLUDE_DIRS "")
-  set(_include_dirs "include;/usr/include;/usr/include/opencv")
+  set(_include_dirs "include;/usr/include;/usr/include/opencv4")
   if(NOT " " STREQUAL " ")
     set(_report "Check the issue tracker '' and consider creating a ticket if the problem has not been reported yet.")
   elseif(NOT "http://www.ros.org/wiki/image_geometry " STREQUAL " ")
