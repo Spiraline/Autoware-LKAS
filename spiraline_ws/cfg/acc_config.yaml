@@ -18,7 +18,7 @@ ndt_matching:
   ndt_lkas_flag: false
   time_wall: 40
   pnorm_threshold: 0.05
-  score_threshold: 3.0
+  score_threshold: 1.5
   res_t_log: false
   accuracy_log: true
 
@@ -86,7 +86,7 @@ op_trajectory_evaluator:
 op_behavior_selector:
   ndt_lkas_flag: false
   pnorm_threshold: 0.05
-  score_threshold: 3.0
+  score_threshold: 1.5
   res_t_log: false
 
 # Control
@@ -107,4 +107,4 @@ lkas:
 twist_combiner:
   ndt_lkas_flag: false
   pnorm_threshold: 0.05
-  score_threshold: 3.0
+  score_threshold: 1.5

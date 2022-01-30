@@ -36,19 +36,20 @@ if __name__ == "__main__":
         exit(1)
 
     ### Open SVL script
-    # try:
-    #     svl_script_process = subprocess.Popen([
-    #         'python3',
-    #         spiraline_ws + '/svl_script/CubeTown_Obstacle.py'
-    #         ])
-    #     pid_list.append(svl_script_process.pid)
-    #     print('[System] SVL script open!')
-    #     sleep(2)
-    # except Exception as e:
-    #     print(e)
-    #     print('[System] SVL script fail!')
-    #     clean(pid_list)
-    #     exit(1)
+    if args.map:
+        try:
+            svl_script_process = subprocess.Popen([
+                'python3',
+                spiraline_ws + '/svl_script/CubeTown_Obstacle.py'
+                ])
+            pid_list.append(svl_script_process.pid)
+            print('[System] SVL script open!')
+            sleep(2)
+        except Exception as e:
+            print(e)
+            print('[System] SVL script fail!')
+            clean(pid_list)
+            exit(1)
 
     ### drive_progress_logger
     try:

@@ -44,7 +44,7 @@
   <include file="$(find lkas)/launch/twist_combiner.launch">
     <arg name="ndt_lkas_flag"        value="$(arg ndt_lkas_flag)" />
     <arg name="pnorm_threshold"      value="0.05" />
-    <arg name="score_threshold"      value="3.0" />
+    <arg name="score_threshold"      value="1.5" />
   </include>
   
 </launch>

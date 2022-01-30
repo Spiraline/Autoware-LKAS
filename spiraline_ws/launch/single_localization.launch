@@ -18,7 +18,7 @@
     <arg name="time_wall" value="40.0" />
     <arg name="ndt_lkas_flag" value="$(arg ndt_lkas_flag)" />
     <arg name="pnorm_threshold" value="0.05" />
-    <arg name="score_threshold" value="3.0" />
+    <arg name="score_threshold" value="1.5" />
     <arg name="res_t_log" value="$(arg res_t_log)" />
     <arg name="accuracy_log" value="false" />
   </include>
