@@ -40,7 +40,23 @@
   </include>
 
   <!-- ndt config -->
-  <node pkg="rostopic" type="rostopic" name="config_ndt"
+  <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
+    <param name="init_pos_gnss" value="0" />
+    <param name="init_x" value="57.1" />
+    <param name="init_y" value="1.38" />
+    <param name="init_z" value="0.48" />
+    <param name="init_roll" value="0.0" />
+    <param name="init_pitch" value="0.0" />
+    <param name="init_yaw" value="1.57" />
+    <param name="error_threshold" value="0.01" />
+    <param name="use_predict_pose" value="1" />
+    <param name="resolution" value="1.0" />
+    <param name="step_size" value="0.5" />
+    <param name="trans_epsilon" value="0.01" />
+    <param name="max_iterations" value="30" />
+  </node>
+  
+  <!-- <node pkg="rostopic" type="rostopic" name="config_ndt"
   args="pub /config/ndt autoware_config_msgs/ConfigNDT
   '{header: {seq: 8, stamp: {secs: 0, nsecs: 0}, frame_id: ''},
     init_pos_gnss: 0,
@@ -56,7 +72,7 @@
     step_size: 0.5,
     trans_epsilon: 0.01,
     max_iterations: 30}
-  '"/>
+  '"/> -->
 
   <!-- vel_pose_mux -->
   <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">
