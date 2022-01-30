@@ -104,15 +104,13 @@ catkin_init_workspace
 
 * Build spiraline_ws packages
 ```
+ln -s ${WORKSPACE_DIR}/autoware.ai ~/autoware.ai
+echo "source ~/autoware.ai/install/setup.bash" >> ~/.bashrc
+source ~/.bashrc
 cd ${WORKSPACE_DIR}/spiraline_ws
 catkin_make
 ln -s ${WORKSPACE_DIR}/spiraline_ws ~/spiraline_ws
-source ~/spiraline_ws/devel/setup.bash
+echo "source ~/spiraline_ws/devel/setup.bash" >> ~/.bashrc
+source ~/.bashrc
 
-```
-
-## Create symoblic links
-```
-ln -s ${WORKSPACE_DIR}/autoware.ai ~/autoware.ai
-ln -s ${WORKSPACE_DIR}/spiraline_ws ~/spiraline_ws
 ```
