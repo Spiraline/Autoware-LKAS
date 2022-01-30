@@ -13,8 +13,8 @@ rosdep update
 echo "ROS Install Sucess"
 
 # System Dependencies of Ubuntu 18.04 / ROS Melodic
-sudo apt-get update
-sudo apt install -y python-catkin-pkg python-rosdep ros-$ROS_DISTRO-catkin
+sudo apt-get update -y
+sudo apt install -y python-catkin-pkg python-rosdep ros-melodic-catkin
 sudo apt install -y python3-pip python3-colcon-common-extensions python3-setuptools python3-vcstool
 pip3 install -U setuptools
 
@@ -29,7 +29,7 @@ cmake ..
 make
 sudo make install
 cd ../..
-rm -rf eigen
+rm -rf eigen eigen-3.3.7.tar.gz
 
 sudo rm /usr/lib/cmake/eigen3/*
 sudo cp /usr/local/share/eigen3/cmake/* /usr/lib/cmake/eigen3
@@ -37,7 +37,8 @@ sudo cp /usr/local/share/eigen3/cmake/* /usr/lib/cmake/eigen3
 # Install rosdep
 cd autoware.ai
 rosdep update
-rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+rosdep install -y --from-paths src --ignore-src --rosdistro melodic
+cd ..
 
 # Resolve OpenCV version issue
 sudo apt-get install libopencv3.2 -y
@@ -59,6 +60,7 @@ cd spiraline_ws/src
 catkin_init_workspace
 cd ..
 catkin_make
+cd ..
 ln -s spiraline_ws ~/spiraline_ws
 echo "source ~/spiraline_ws/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
