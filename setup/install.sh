@@ -41,15 +41,21 @@ cd ..
 
 # Resolve OpenCV version issue
 sudo apt-get install libopencv3.2 -y
-sudo cp setup/cv_bridgeConfig.cmake /opt/ros/melodic/share/cv_bridge/cmake
-sudo cp setup/image_geometryConfig.cmake /opt/ros/melodic/share/image_geometry/cmake
-sudo cp setup/grid_map_cvConfig.cmake /opt/ros/melodic/share/grid_map_cv/cmake
+if [ -d "/usr/include/opencv4" ]; then
+    sudo cp setup/cv_bridgeConfig.cmake /opt/ros/melodic/share/cv_bridge/cmake
+    sudo cp setup/image_geometryConfig.cmake /opt/ros/melodic/share/image_geometry/cmake
+    sudo cp setup/grid_map_cvConfig.cmake /opt/ros/melodic/share/grid_map_cv/cmake
+fi
 
 # Autoware Build
 cd autoware.ai
-AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+if [ -d "/usr/local/cuda" ]; then
+    AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+else
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+fi
 cd ..
-ln -s autoware.ai ~/autoware.ai
+ln -s $(pwd)/autoware.ai ~/autoware.ai
 source ~/autoware.ai/install/setup.bash
 
 echo "Autoware Build Success"
@@ -61,7 +67,7 @@ catkin_init_workspace
 cd ..
 catkin_make
 cd ..
-ln -s spiraline_ws ~/spiraline_ws
+ln -s $(pwd)/spiraline_ws ~/spiraline_ws
 source ~/spiraline_ws/devel/setup.bash
 
 echo "spiraline_ws Build Success"
