@@ -15,7 +15,7 @@ gnss_calibrator:
 # Localization
 ndt_matching:
   get_height: true
-  ndt_lkas_flag: false
+  ndt_lkas_flag: true
   time_wall: 40
   pnorm_threshold: 0.05
   score_threshold: 3.0
@@ -84,7 +84,7 @@ op_trajectory_evaluator:
   res_t_log: false
 
 op_behavior_selector:
-  ndt_lkas_flag: false
+  ndt_lkas_flag: true
   pnorm_threshold: 0.05
   score_threshold: 3.0
   res_t_log: false
@@ -105,6 +105,6 @@ lkas:
   res_t_log: false
 
 twist_combiner:
-  ndt_lkas_flag: false
+  ndt_lkas_flag: true
   pnorm_threshold: 0.05
   score_threshold: 3.0

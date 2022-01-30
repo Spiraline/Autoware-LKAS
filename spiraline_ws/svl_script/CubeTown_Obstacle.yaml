@@ -17,7 +17,7 @@ simulator:
 # Host
 lgsvl_bridge:
   address: 127.0.0.1
-  port: 9091
+  port: 9090
 
 # Remote
 # lgsvl_bridge:
