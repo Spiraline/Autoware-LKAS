@@ -42,8 +42,8 @@ cd ..
 
 # Resolve OpenCV version issue
 sudo apt-get install libopencv3.2 -y
-sudo cp -f setup/cv_bridgeConfig.cmake /opt/ros/melodic/share/cv_bridge/cmake
-sudo cp -f setup/image_geometryConfig.cmake /opt/ros/melodic/share/image_geometry/cmake
+sudo cp setup/cv_bridgeConfig.cmake /opt/ros/melodic/share/cv_bridge/cmake
+sudo cp setup/image_geometryConfig.cmake /opt/ros/melodic/share/image_geometry/cmake
 
 # Autoware Build
 cd autoware.ai
@@ -52,7 +52,7 @@ cd ..
 ln -s autoware.ai ~/autoware.ai
 echo "source ~/autoware.ai/install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
-sudo cp -f setup/grid_map_cvConfig.cmake /opt/ros/melodic/share/grid_map_cv/cmake
+sudo cp setup/grid_map_cvConfig.cmake /opt/ros/melodic/share/grid_map_cv/cmake
 
 echo "Autoware Build Success"
 
