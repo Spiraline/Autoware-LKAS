@@ -46,7 +46,9 @@ sudo cp -f setup/cv_bridgeConfig.cmake /opt/ros/melodic/share/cv_bridge/cmake
 sudo cp -f setup/image_geometryConfig.cmake /opt/ros/melodic/share/image_geometry/cmake
 
 # Autoware Build
+cd autoware.ai
 AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+cd ..
 ln -s autoware.ai ~/autoware.ai
 echo "source ~/autoware.ai/install/setup.bash" >> ~/.bashrc
 source ~/.bashrc
