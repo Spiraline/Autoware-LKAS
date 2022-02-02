@@ -20,7 +20,7 @@ sudo apt install -y python3-pip python3-colcon-common-extensions python3-setupto
 pip3 install -U setuptools
 
 # Eigen Build
-if [ ! -d "/usr/local/share/eigen3"]; then
+if [ ! -d "/usr/local/share/eigen3" ]; then
     wget https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
     mkdir eigen
     tar --strip-components=1 -xzvf eigen-3.3.7.tar.gz -C eigen
@@ -59,7 +59,7 @@ if [ -d "/usr/include/opencv4" ]; then
 fi
 
 # Autoware Build
-if [ ! -d "autoware.ai/install"]; then
+if [ ! -d "autoware.ai/install" ]; then
     cd autoware.ai
     if [ -d "/usr/local/cuda" ]; then
         if ! AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release; then
@@ -78,7 +78,7 @@ if [ ! -d "autoware.ai/install"]; then
 fi
 
 # Build spiraline_ws
-if [ ! -d "spiraline_ws/devel"]; then
+if [ ! -d "spiraline_ws/devel" ]; then
     sudo apt-get install ros-melodic-ackermann-msgs ros-melodic-serial ros-melodic-veldoyne ros-melodic-velodyne-driver -y
     cd spiraline_ws/src
     catkin_init_workspace
@@ -96,6 +96,7 @@ fi
 sudo apt-get install -y ros-melodic-rosbridge-server net-tools
 
 # Python packages
+pip3 install --upgrade setuptools pip
 pip3 install PyYAML rospkg matplotlib opencv-python
 cd setup/svl
 python3 -m pip install -r requirements.txt --user .
