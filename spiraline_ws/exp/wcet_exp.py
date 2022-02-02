@@ -13,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument('--map', '-m', action='store_true')
     parser.add_argument('--rviz', '-r', action='store_true')
     parser.add_argument('--time', '-t', type=int, default=100)
-    parser.add_argument('--exp', '-e', type=str, default='other_wcet')
+    parser.add_argument('--exp', '-e', type=str, default='wcet')
     args = parser.parse_args()
 
     spiraline_ws = getenv("HOME") + "/spiraline_ws"
@@ -50,6 +50,21 @@ if __name__ == "__main__":
             print('[System] SVL script fail!')
             clean(pid_list)
             exit(1)
+
+    ### ndt_stat_logger
+    try:
+        ndt_stat_logger = subprocess.Popen([
+            'python3',
+            spiraline_ws + '/util/ndt_stat_logger.py'
+            ])
+        pid_list.append(ndt_stat_logger.pid)
+        print('[System] NDT stat logger starts!')
+        sleep(2)
+    except Exception as e:
+        print(e)
+        print('[System] NDT stat logger fail!')
+        clean(pid_list)
+        exit(1)
     
     ### autorunner
     try:
