@@ -97,7 +97,8 @@ sudo apt-get install -y ros-melodic-rosbridge-server net-tools
 
 # Python packages
 pip3 install --upgrade setuptools pip
-pip3 install PyYAML rospkg matplotlib opencv-python
+pip3 install -U PyYAML
+pip3 install rospkg matplotlib opencv-python
 cd setup/svl
 python3 -m pip install -r requirements.txt --user .
 cd ../..
