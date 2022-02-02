@@ -72,7 +72,7 @@ if __name__ == "__main__":
             'roslaunch',
             'autorunner',
             'cubetown_autorunner.launch',
-            '_exp:=' + args.exp
+            'exp:=' + args.exp
             ])
         pid_list.append(autorunner.pid)
         print('[System] autorunner starts!')
