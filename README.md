@@ -60,13 +60,15 @@ rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
 ```
 
 ### Resolving OpenCV version issue
-You should change some code to use OpenCV 4.x
-
 ```
 sudo apt-get install libopencv3.2 -y
 ```
 
-Change `set(_include_dirs "include;/usr/include;/usr/include/opencv")`
+You should change some code to use OpenCV 4.x.
+
+If you have `/usr/local/opencv4` directory,
+
+change `set(_include_dirs "include;/usr/include;/usr/include/opencv")`
 
 to `set(_include_dirs "include;/usr/include;/usr/include/opencv4")`
 
@@ -113,4 +115,17 @@ ln -s ${WORKSPACE_DIR}/spiraline_ws ~/spiraline_ws
 echo "source ~/spiraline_ws/devel/setup.bash" >> ~/.bashrc
 source ~/.bashrc
 
+```
+
+## Additional Install for SVL
+```
+sudo apt-get install -y ros-melodic-rosbridge-server net-tools
+pip3 install PyYAML rospkg matplotlib opencv-python
+cd setup/svl
+python3 -m pip install -r requirements.txt --user .
+```
+
+* Allow Firewall
+```
+sudo ufw allow 9090
 ```
