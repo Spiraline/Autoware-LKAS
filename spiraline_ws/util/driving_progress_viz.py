@@ -36,7 +36,7 @@ if __name__ == '__main__':
   plt.axhline(6, color='black', lw=2)
   plt.axhline(-6, color='black', lw=2)
 
-  time_index = args.time * 10
+  time_index = min(args.time * 10, len(original_case) // 10 * 10, len(ours_case) // 10 * 10)
 
   ax.plot([t/10 for t in range(time_index)], original_case['center_offset'][0:time_index], color='gray', linestyle='-', label='Original Autoware\n(L=30)')
   ax.plot([t/10 for t in range(time_index)], ours_case['center_offset'][0:time_index], color='black', linestyle='--', label='Our modified\nAutoware')
@@ -45,7 +45,7 @@ if __name__ == '__main__':
   ax.set_xlabel('Time (s)')
 
   ax.set_ylim(-20, 21)
-  plt.xticks(range(0, args.time, 2))
+  plt.xticks(range(0, time_index // 10, 2))
 
   plt.legend()
   fig.savefig(res_dir + "/fig15a.png")
@@ -62,8 +62,8 @@ if __name__ == '__main__':
   ax.set_ylabel('Execution Time (ms)')
   ax.set_xlabel('Time (s)')
 
-  plt.xticks(range(0, args.time, 2))
+  plt.xticks(range(0, (time_index+1) // 10, 2))
 
   plt.legend()
-  plt.show()
+  # plt.show()
   fig.savefig(res_dir + "/fig15b.png")

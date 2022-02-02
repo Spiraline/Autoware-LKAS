@@ -12,8 +12,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--map', '-m', action='store_true')
     parser.add_argument('--rviz', '-r', action='store_true')
-    parser.add_argument('--time', '-t', type=int, default=100)
-    parser.add_argument('--exp', '-e', type=str, default='ndt_ours')
+    parser.add_argument('--time', '-t', type=int, default=50)
+    parser.add_argument('--exp', '-e', type=str, default='progress_ours')
     args = parser.parse_args()
 
     spiraline_ws = getenv("HOME") + "/spiraline_ws"
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         try:
             svl_script_process = subprocess.Popen([
                 'python3',
-                spiraline_ws + '/svl_script/' + args.map +'.py'
+                spiraline_ws + '/svl_script/CubeTown_Obstacle.py'
                 ])
             pid_list.append(svl_script_process.pid)
             print('[System] SVL script open!')
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     try:
         drive_progress_logger = subprocess.Popen([
             'python3',
-            spiraline_ws + '/util/drive_progress_logger.py',
+            spiraline_ws + '/util/driving_progress_logger.py',
             '-o',
             'ours.csv'
             ])
@@ -108,8 +108,3 @@ if __name__ == "__main__":
     clean(pid_list)
 
     print("[System] Exp terminated successfully")
-
-    ### Visualize
-    system('python3 ' + spiraline_ws + '/util/driving_progress_viz.py -n ndt.csv -o ours.csv')
-
-    print("[System] Save result into file!")

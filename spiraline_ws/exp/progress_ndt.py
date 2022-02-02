@@ -12,8 +12,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--map', '-m', action='store_true')
     parser.add_argument('--rviz', '-r', action='store_true')
-    parser.add_argument('--time', '-t', type=int, default=100)
-    parser.add_argument('--exp', '-e', type=str, default='ndt_wcet')
+    parser.add_argument('--time', '-t', type=int, default=50)
+    parser.add_argument('--exp', '-e', type=str, default='progress_ndt')
     args = parser.parse_args()
 
     spiraline_ws = getenv("HOME") + "/spiraline_ws"
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     try:
         drive_progress_logger = subprocess.Popen([
             'python3',
-            spiraline_ws + '/util/drive_progress_logger.py',
+            spiraline_ws + '/util/driving_progress_logger.py',
             '-o',
             'ndt.csv'
             ])

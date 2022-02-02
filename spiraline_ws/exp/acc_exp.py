@@ -12,7 +12,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--map', '-m', action='store_true')
     parser.add_argument('--rviz', '-r', action='store_true')
-    parser.add_argument('--time', '-t', type=int, default=1000)
+    parser.add_argument('--time', '-t', type=int, default=100)
     parser.add_argument('--exp', '-e', type=str, default='accuracy')
     args = parser.parse_args()
 
@@ -91,9 +91,3 @@ if __name__ == "__main__":
     clean(pid_list)
 
     print("[System] Exp terminated successfully")
-
-    ### Visualize
-    system('python3 ' + spiraline_ws + '/util/acc_viz.py')
-
-    print("[System] Result saved!")
-    
