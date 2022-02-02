@@ -10,10 +10,6 @@ if system('python3 ' + spiraline_ws + '/util/acc_viz.py') == 0:
 if system('python3 ' + spiraline_ws + '/util/ndt_wcet_viz.py') == 0:
     print("[System] Fig13 saved")
 
-### Table 1
-if system('python3 ' + spiraline_ws + '/util/other_wcet_viz.py') == 0:
-    print("[System] Table 1 saved")
-
 ### Fig15b
 if system('python3 ' + spiraline_ws + '/util/driving_progress_viz.py -n ndt.csv -o ours.csv') == 0:
     print("[System] Fig15 saved")

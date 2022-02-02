@@ -17,7 +17,7 @@ ndt_matching:
   get_height: true
   ndt_lkas_flag: false
   time_wall: 40
-  pnorm_threshold: 0.05
+  pnorm_threshold: 0.01
   score_threshold: 1.5
   res_t_log: false
   accuracy_log: true
@@ -31,7 +31,7 @@ ndt_config:
   init_yaw: 1.57
   resolution: 1.0
   step_size: 0.2
-  trans_epsilon: 0.05
+  trans_epsilon: 0.01
   max_iterations: 30
 
 # Detection
@@ -85,7 +85,7 @@ op_trajectory_evaluator:
 
 op_behavior_selector:
   ndt_lkas_flag: false
-  pnorm_threshold: 0.05
+  pnorm_threshold: 0.01
   score_threshold: 1.5
   res_t_log: false
 
@@ -106,5 +106,5 @@ lkas:
 
 twist_combiner:
   ndt_lkas_flag: false
-  pnorm_threshold: 0.05
+  pnorm_threshold: 0.01
   score_threshold: 1.5
