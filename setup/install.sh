@@ -20,7 +20,7 @@ sudo apt install -y python3-pip python3-colcon-common-extensions python3-setupto
 pip3 install -U setuptools
 
 # Eigen Build
-if ! [ -d "/usr/local/share/eigen3"]; then
+if [ ! -d "/usr/local/share/eigen3"]; then
     wget https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
     mkdir eigen
     tar --strip-components=1 -xzvf eigen-3.3.7.tar.gz -C eigen
@@ -39,6 +39,7 @@ if ! [ -d "/usr/local/share/eigen3"]; then
     rm -rf eigen eigen-3.3.7.tar.gz
     sudo rm /usr/lib/cmake/eigen3/*
     sudo cp /usr/local/share/eigen3/cmake/* /usr/lib/cmake/eigen3
+fi
 
 # Install rosdep
 cd autoware.ai
@@ -58,34 +59,38 @@ if [ -d "/usr/include/opencv4" ]; then
 fi
 
 # Autoware Build
-cd autoware.ai
-if [ -d "/usr/local/cuda" ]; then
-    if ! AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release; then
-        echo "[System] Autoware Build Fail"
-        exit 1
+if [ ! -d "autoware.ai/install"]; then
+    cd autoware.ai
+    if [ -d "/usr/local/cuda" ]; then
+        if ! AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release; then
+            echo "[System] Autoware Build Fail"
+            exit 1
+        fi
+    else
+        if ! colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release; then
+            echo "[System] Autoware Build Fail"
+            exit 1
+        fi
     fi
-else
-    if ! colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release; then
-        echo "[System] Autoware Build Fail"
-        exit 1
-    fi
+    cd ..
+    ln -s $(pwd)/autoware.ai ~/autoware.ai
+    source ~/autoware.ai/install/setup.bash
 fi
-cd ..
-ln -s $(pwd)/autoware.ai ~/autoware.ai
-source ~/autoware.ai/install/setup.bash
 
 # Build spiraline_ws
-sudo apt-get install ros-melodic-ackermann-msgs ros-melodic-serial ros-melodic-veldoyne ros-melodic-velodyne-driver -y
-cd spiraline_ws/src
-catkin_init_workspace
-cd ..
-if ! catkin_make; then
-    echo "[System] spiraline_ws Build Fail"
-    exit 1
+if [ ! -d "spiraline_ws/devel"]; then
+    sudo apt-get install ros-melodic-ackermann-msgs ros-melodic-serial ros-melodic-veldoyne ros-melodic-velodyne-driver -y
+    cd spiraline_ws/src
+    catkin_init_workspace
+    cd ..
+    if ! catkin_make; then
+        echo "[System] spiraline_ws Build Fail"
+        exit 1
+    fi
+    cd ..
+    ln -s $(pwd)/spiraline_ws ~/spiraline_ws
+    source ~/spiraline_ws/devel/setup.bash
 fi
-cd ..
-ln -s $(pwd)/spiraline_ws ~/spiraline_ws
-source ~/spiraline_ws/devel/setup.bash
 
 # Build other files
 sudo apt-get install -y ros-melodic-rosbridge-server net-tools
