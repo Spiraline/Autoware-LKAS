@@ -143,6 +143,7 @@ int main(int argc, char** argv)
   }
 
   private_nh.param<double>("measurement_range", measurement_range, MAX_MEASUREMENT_RANGE);
+  private_nh.param<double>("leaf_size", voxel_leaf_size, 2.0);
 
   // Publishers
   filtered_points_pub = nh.advertise<sensor_msgs::PointCloud2>("/filtered_points", 10);

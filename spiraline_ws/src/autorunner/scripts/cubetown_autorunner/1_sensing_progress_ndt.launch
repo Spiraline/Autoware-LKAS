@@ -37,6 +37,7 @@
 
   <!-- voxel grid filter -->
   <node pkg="points_downsampler" name="voxel_grid_filter" type="voxel_grid_filter">
+    <param name="leaf_size"    value="2.0" />
     <param name="points_topic" value="$(arg lidar_republished_topic)" />
   </node>
 

@@ -86,6 +86,7 @@ if __name__ == "__main__":
     with open(ndt_log_dir + "/" + args.output_file, "w") as f:
         wr = csv.writer(f)
         wr.writerow(['ts', 'state', 'center_offset', 'res_t'])
+        prev_dis = 0
         while not rospy.is_shutdown():
             gnss_msg = rospy.wait_for_message('/gnss_pose', PoseStamped, timeout=None)
             state_msg = rospy.wait_for_message('/behavior_state', MarkerArray, timeout=None)
@@ -101,6 +102,10 @@ if __name__ == "__main__":
             yaw_deg = (y * 180 / math.pi + 1800) % 360
             
             min_wp, min_dis = find_closest_point(map_wp_list, [gnss_x, gnss_y], yaw_deg)
+
+            if abs(prev_dis) > 1.5 and min_dis * prev_dis < 0:
+                min_dis *= 1
+            prev_dis = min_dis
 
             if state_msg.markers[0].text == '(0)LKAS':
                 state_text = 'Backup'

@@ -2,7 +2,7 @@
   <!-- ndt config -->
   <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
     <param name="init_pos_gnss" value="0" />
-    <param name="error_threshold" value="0.01" />
+    <param name="error_threshold" value="0.1" />
     <param name="use_predict_pose" value="1" />
   </node>
 
@@ -19,6 +19,7 @@
     <param name="use_local_transform" value="false" />
     <param name="output_log_data" value="false" />
     <param name="gnss_reinit_fitness" value="500" />
+    <param name="score_threshold" value="1.5" />
   </node>
 
   <!-- vel_pose_mux -->

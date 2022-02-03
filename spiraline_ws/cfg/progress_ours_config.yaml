@@ -16,9 +16,8 @@ gnss_calibrator:
 ndt_matching:
   get_height: true
   ndt_lkas_flag: true
-  time_wall: 40
+  time_wall: 57
   pnorm_threshold: 0.01
-  score_threshold: 1.5
   res_t_log: false
   accuracy_log: false
 
@@ -50,7 +49,7 @@ op_common_params:
   pathDensity: 0.5
   rollOutDensity: 4
   rollOutsNumber: 0
-  maxVelocity: 13.0
+  maxVelocity: 11.0
   maxAcceleration: 10.0
   maxDeceleration: -10.0
   width: 1.85
@@ -86,11 +85,12 @@ op_trajectory_evaluator:
 op_behavior_selector:
   ndt_lkas_flag: true
   pnorm_threshold: 0.01
-  score_threshold: 1.5
   res_t_log: false
 
 # Control
 pure_pursuit:
+  lookahead_ratio: 2.0
+  minimum_lookahead_distance: 5.0
   res_t_log: false
 
 twist_filter:
@@ -107,4 +107,3 @@ lkas:
 twist_combiner:
   ndt_lkas_flag: true
   pnorm_threshold: 0.01
-  score_threshold: 1.5

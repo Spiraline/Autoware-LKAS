@@ -16,9 +16,8 @@ gnss_calibrator:
 ndt_matching:
   get_height: true
   ndt_lkas_flag: true
-  time_wall: 40
+  time_wall: 57
   pnorm_threshold: 0.01
-  score_threshold: 1.5
   res_t_log: false
   accuracy_log: false
 
@@ -86,7 +85,6 @@ op_trajectory_evaluator:
 op_behavior_selector:
   ndt_lkas_flag: true
   pnorm_threshold: 0.01
-  score_threshold: 1.5
   res_t_log: false
 
 # Control
@@ -107,4 +105,3 @@ lkas:
 twist_combiner:
   ndt_lkas_flag: true
   pnorm_threshold: 0.01
-  score_threshold: 1.5

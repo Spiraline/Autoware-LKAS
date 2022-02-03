@@ -951,7 +951,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   // Check inital matching is success or not
-  if(_is_init_match_finished == false && previous_pnorm < _pnorm_threshold && previous_pnorm != 0.0 && previous_score < _score_threshold && previous_score != 0.0)
+  if(_is_init_match_finished == false && previous_score < _score_threshold && previous_score != 0.0)
     _is_init_match_finished = true;
 
   health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
@@ -1622,6 +1622,8 @@ int main(int argc, char** argv)
   private_nh.param<double>("time_wall", _time_wall, 40.0);
   private_nh.param<double>("pnorm_threshold", _pnorm_threshold, 0.05);
   private_nh.param<double>("score_threshold", _score_threshold, 3.0);
+
+  _time_wall -= 20;
 
   nh.param<std::string>("/ndt_matching/localizer", _localizer, "velodyne");
 
