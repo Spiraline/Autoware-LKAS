@@ -348,13 +348,15 @@ BehaviorStateMachine* ForwardStateII::GetNextState()
   PreCalculatedConditions* pCParams = GetCalcParams();
 
   // hjw added
-  if(m_pParams->ndt_lkas_flag && pCParams->p_norm > m_pParams->pnorm_threshold && pCParams->ndt_score > m_pParams->score_threshold)
+  if(m_pParams->ndt_lkas_flag && ((pCParams->p_norm > m_pParams->pnorm_threshold && pCParams->ndt_score > m_pParams->score_threshold) || pCParams->ndt_score > 2)){
+    LKASWaitingCount = 0;
     return FindBehaviorState(LKAS_STATE);
+  }
 
   // if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
   // else if(pCParams->ndt_gnss_diff < 5 && pCParams->goalDistance < 10)
   //   return FindBehaviorState(GOAL_STATE);
-  else if(pCParams->currentGoalID != pCParams->prevGoalID)
+  else if(pCParams->goalDistance < 5)
     return FindBehaviorState(GOAL_STATE);
   // else if(m_pParams->pedestrianAppearence){
   //   return FindBehaviorState(PEDESTRIAN_STATE);
@@ -390,8 +392,10 @@ BehaviorStateMachine* FollowStateII::GetNextState()
 {
   PreCalculatedConditions* pCParams = GetCalcParams();
 
-  if(m_pParams->ndt_lkas_flag && pCParams->p_norm > m_pParams->pnorm_threshold && pCParams->ndt_score > m_pParams->score_threshold)
+  if(m_pParams->ndt_lkas_flag && pCParams->p_norm > m_pParams->pnorm_threshold && pCParams->ndt_score > m_pParams->score_threshold){
+    LKASWaitingCount = 0;
     return FindBehaviorState(LKAS_STATE);
+  }
   else if(pCParams->currentGoalID != pCParams->prevGoalID)
     return FindBehaviorState(GOAL_STATE);
   else if(m_pParams->pedestrianAppearence)
@@ -566,15 +570,23 @@ BehaviorStateMachine* IntersectionState::GetNextState()
 
 BehaviorStateMachine* LKASState::GetNextState()
 {
-  LKASWaitingCount += 1;
   PreCalculatedConditions* pCParams = GetCalcParams();
-  if(pCParams->p_norm < m_pParams->pnorm_threshold && pCParams->ndt_score < m_pParams->score_threshold && LKASWaitingCount > 10 && pCParams->bNewLocalPlan){
+  if(pCParams->p_norm < m_pParams->pnorm_threshold && pCParams->ndt_score < m_pParams->score_threshold){
+    LKASWaitingCount += 1;
+  }
+  else{
+    LKASWaitingCount = 0;
+  }
+
+  if(LKASWaitingCount > 100 && pCParams->bNewLocalPlan){
     pCParams->bNewLocalPlan = false;
-    LKASWaitingCount = 1;
     return FindBehaviorState(FORWARD_STATE);
   }
-  else
+  else if(pCParams->goalDistance < 5)
+    return FindBehaviorState(GOAL_STATE);
+  else{
     return FindBehaviorState(this->m_Behavior);
+  }
 }
 
 } /* namespace PlannerHNS */

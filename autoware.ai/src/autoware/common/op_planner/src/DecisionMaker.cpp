@@ -417,9 +417,9 @@ double DecisionMaker::GetClosestWaypointDistance(const int& iGlobalPathIndex){
       || preCalcPrams->bRePlan
       || preCalcPrams->bNewGlobalPath)
   {
-    std::cout << "New Local Plan !! " << currIndex << ", "<< preCalcPrams->bRePlan << ", " << preCalcPrams->bNewGlobalPath  << ", " <<  m_TotalOriginalPath.at(0).size() << ", PrevLocal: " << m_Path.size();
+    //std::cout << "New Local Plan !! " << currIndex << ", "<< preCalcPrams->bRePlan << ", " << preCalcPrams->bNewGlobalPath  << ", " <<  m_TotalOriginalPath.at(0).size() << ", PrevLocal: " << m_Path.size();
     m_Path = m_RollOuts.at(preCalcPrams->iCurrSafeTrajectory);
-    std::cout << ", NewLocal: " << m_Path.size() << std::endl;
+    //std::cout << ", NewLocal: " << m_Path.size() << std::endl;
 
     preCalcPrams->bNewLocalPlan = true;
 

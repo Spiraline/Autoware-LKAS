@@ -588,10 +588,10 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
     previous_pose = current_gnss_pose;
   }
 
-  if(previous_pnorm < _pnorm_threshold || previous_score < _score_threshold || !_ndt_lkas_flag)
-    matching_fail_cnt = 0;
-  else
+  if(_ndt_lkas_flag && (previous_score > 2.0 || (previous_pnorm > _pnorm_threshold && previous_score > _score_threshold)))
     matching_fail_cnt++;
+  else
+    matching_fail_cnt = 0;
 
   if(previous_pnorm == 0.0){
     previous_pnorm = 0.0;

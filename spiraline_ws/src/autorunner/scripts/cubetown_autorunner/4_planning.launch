@@ -106,7 +106,7 @@
     <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/traffic/$(arg mapName)_trafficlight.yaml"/>
     <rosparam command="load" file="$(env HOME)/spiraline_ws/cfg/traffic/$(arg mapName)_stopline.yaml"/>
 
-    <param name="score_threshold" value="1.5" />
+    <param name="score_threshold" value="1.0" />
     <param name="sprintSpeed" value="15.0" />
     <param name="obstacleWaitingTimeinIntersection" value="2.0" />
     <param name="evidence_tust_number"   value="25"/>

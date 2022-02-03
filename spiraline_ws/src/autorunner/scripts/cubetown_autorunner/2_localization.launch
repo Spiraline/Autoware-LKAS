@@ -19,7 +19,7 @@
     <param name="use_local_transform" value="false" />
     <param name="output_log_data" value="false" />
     <param name="gnss_reinit_fitness" value="500" />
-    <param name="score_threshold" value="1.5" />
+    <param name="score_threshold" value="1.0" />
   </node>
 
   <!-- vel_pose_mux -->

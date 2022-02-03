@@ -32,202 +32,90 @@ npc:
     name: Car
     type: Sedan
     offset:
-      forward: 10
-      right: -5
+      forward: 18
+      right: -108
       rotation : 90
   -
     name: Car1
     type: Sedan
     offset:
-      forward: 18
-      right: -5
+      forward: 23
+      right: -108
       rotation : 90
   -
     name: Car2
     type: Sedan
     offset:
-      forward: 25
-      right: -5
-      rotation : 90
-  -
-    name: Car
-    type: Sedan
-    offset:
-      forward: 10
-      right: -20
-      rotation : 90
-  -
-    name: Car1
-    type: Sedan
-    offset:
-      forward: 18
-      right: -20
+      forward: 28
+      right: -108
       rotation : 90
   -
     name: Car2
     type: Sedan
     offset:
-      forward: 25
-      right: -20
+      forward: 33
+      right: -108
       rotation : 90
-  -
-    name: Car
-    type: Sedan
-    offset:
-      forward: 10
-      right: -15
-      rotation : 90
-  -
-    name: Car1
-    type: Sedan
-    offset:
-      forward: 18
-      right: -15
-      rotation : 90
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 25
-      right: -15
-      rotation : 90
-  -
-    name: Car
-    type: Sedan
-    offset:
-      forward: 10
-      right: -10
-      rotation : 90
-  -
-    name: Car1
-    type: Sedan
-    offset:
-      forward: 18
-      right: -10
-      rotation : 90
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 25
-      right: -10
-      rotation : 90
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 30
-      right: -5
-      rotation : 0
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 34
-      right: -5
-      rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
       forward: 38
-      right: -7
-      rotation : 0
+      right: -105
+      rotation : 90
   -
     name: Car2
     type: Sedan
     offset:
-      forward: 65
-      right: -10
+      forward: 60
+      right: -100
       rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
       forward: 60
-      right: -15
+      right: -90
       rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
       forward: 60
-      right: -20
+      right: -80
       rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
       forward: 60
-      right: -25
+      right: -70
       rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
-      forward: 50
-      right: 0
+      forward: 48
+      right: -90
       rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
-      forward: 55
-      right: -5
+      forward: 48
+      right: -85
       rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
-      forward: 45
-      right: 4
+      forward: 48
+      right: -80
       rotation : 0
   -
     name: Car2
     type: Sedan
     offset:
-      forward: 40
-      right: 7
-      rotation : 0
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 35
-      right: 7
-      rotation : 0
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 30
-      right: 7
-      rotation : 0
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 25
-      right: 7
-      rotation : 0
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 20
-      right: 7
-      rotation : 0
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 42
-      right: -9
-      rotation : 0
-  -
-    name: Car2
-    type: Sedan
-    offset:
-      forward: 45
-      right: -11
-      rotation : 0
+      forward: 48
+      right: -75
+      rotation: 0

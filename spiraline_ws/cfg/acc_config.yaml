@@ -65,7 +65,7 @@ op_global_planner:
   res_t_log: false
   use_static_goal: true
   goal_pose_x: 56.3
-  goal_pose_y: -18.0
+  goal_pose_y: -15.0
   goal_pose_z: 0.0
   goal_ori_x: 0.0
   goal_ori_y: 0.0
