@@ -6,6 +6,7 @@ ray_ground_filter:
   res_t_log: false
 
 voxel_grid_filter:
+  leaf_size: 2.5
   measurement_range: 200
   res_t_log: false
 

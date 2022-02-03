@@ -588,6 +588,10 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
     previous_pose = current_gnss_pose;
   }
 
+  if(_is_init_match_finished && ndt_gnss_diff > 10.0 || previous_score > 2.0){
+    std::cout << "[NDT matching] Matching Fail!" << std::endl;
+  }
+
   if(_ndt_lkas_flag && (previous_score > 2.0 || (previous_pnorm > _pnorm_threshold && previous_score > _score_threshold)))
     matching_fail_cnt++;
   else
@@ -1476,11 +1480,12 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       }
     }
 
+    /*
     std::cout << "-----------------------------------------------------------------" << std::endl;
     std::cout << "Sequence: " << input->header.seq << std::endl;
     std::cout << "Timestamp: " << input->header.stamp << std::endl;
     std::cout << "Frame ID: " << input->header.frame_id << std::endl;
-    //    std::cout << "Number of Scan Points: " << scan_ptr->size() << " points." << std::endl;
+    std::cout << "Number of Scan Points: " << scan_ptr->size() << " points." << std::endl;
     std::cout << "Number of Filtered Scan Points: " << scan_points_num << " points." << std::endl;
     std::cout << "NDT has converged: " << has_converged << std::endl;
     std::cout << "Fitness Score: " << fitness_score << std::endl;
@@ -1497,6 +1502,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     std::cout << "Align time: " << align_time << std::endl;
     std::cout << "Get fitness score time: " << getFitnessScore_time << std::endl;
     std::cout << "-----------------------------------------------------------------" << std::endl;
+    */
 
     offset_imu_x = 0.0;
     offset_imu_y = 0.0;

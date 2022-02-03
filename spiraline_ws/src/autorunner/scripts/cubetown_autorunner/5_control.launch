@@ -35,7 +35,7 @@
   </node>
 
   <node pkg="lkas" type="twist_combiner" name="twist_combiner" output="screen">
-    <param name="score_threshold" value="1.0" />
+    <param name="score_threshold" value="1.4" />
   </node>
   
 </launch>

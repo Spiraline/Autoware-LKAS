@@ -14,7 +14,7 @@
 	<!-- Point Map Loader -->
 	<include file="$(find map_file)/launch/points_map_loader.launch">
 		<arg name="scene_num" value="noupdate" />
-		<arg name="path_pcd" value="$(env HOME)/spiraline_ws/points_map/CubeTown.pcd"/>
+		<arg name="path_pcd" value="$(env HOME)/spiraline_ws/points_map/HarshCubeTown.pcd"/>
 	</include>
 
 	<!-- Map TF Publisher -->	
@@ -37,7 +37,6 @@
 
   <!-- voxel grid filter -->
   <node pkg="points_downsampler" name="voxel_grid_filter" type="voxel_grid_filter">
-    <param name="leaf_size"    value="2.0" />
     <param name="points_topic" value="$(arg lidar_republished_topic)" />
   </node>
 
