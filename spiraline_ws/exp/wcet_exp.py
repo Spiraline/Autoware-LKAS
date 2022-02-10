@@ -3,6 +3,8 @@ from signal import SIGTERM
 from time import sleep
 import subprocess
 import argparse
+from autoware_msgs.msg import VehicleCmd
+import rospy
 
 def clean(pid_list):
     for pid in pid_list:
@@ -99,6 +101,11 @@ if __name__ == "__main__":
             print('[System] Rviz fail!')
             clean(pid_list)
             exit(1)
+
+    rospy.init_node('exp')
+    vehicle_cmd = rospy.wait_for_message('/vehicle_cmd', VehicleCmd, timeout=None)
+    system('rosnode kill exp')
+    print("[System] Start Driving")
     
     # Wait for driving
     sleep(args.time)
