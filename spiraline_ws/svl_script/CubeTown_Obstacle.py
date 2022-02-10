@@ -1,10 +1,9 @@
 #!/usr/bin/python3
+import socket
+import yaml
 import lgsvl
 from lgsvl.geometry import Transform, Vector
-import tqdm
-import os
-import random
-import yaml
+from time import sleep
 
 class Exp(object):
 	def __init__(self):
@@ -16,8 +15,6 @@ class Exp(object):
 		self.sim = lgsvl.Simulator(
 		    address=self.cfg['simulator']['address'],
 		    port=self.cfg['simulator']['port'])
-		# self.sim = lgsvl.Simulator(os.environ.get("SIMULATOR_HOST","127.0.0.1"), 8181)
-
 
 		# reset scene
 		target_scene = self.cfg['simulator']['scene']
@@ -40,9 +37,6 @@ class Exp(object):
 		self.u_right = lgsvl.utils.transform_to_right(self.origin)
 		self.u_up = lgsvl.utils.transform_to_up(self.origin)
 
-		# tracking info
-		self.collisions = []
-
 	def create_ego(self, sim):
 		# ego (main car)
 		ego_state = lgsvl.AgentState()
@@ -53,7 +47,7 @@ class Exp(object):
 		
 		ego.connect_bridge(
 		    self.cfg['lgsvl_bridge']['address'],
-		    self.cfg['lgsvl_bridge']['port'])		
+		    self.cfg['lgsvl_bridge']['port'])
 
 		def ego_collision(agent1, agent2, contact):
 			self.collisions.append([agent1, agent2, contact])
@@ -61,6 +55,21 @@ class Exp(object):
 
 		ego.on_collision(ego_collision)
 		return
+
+	def wait_for_bridge(self):
+		bridge_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		location = (self.cfg['lgsvl_bridge']['address'], self.cfg['lgsvl_bridge']['port'])
+		
+		socket_open = bridge_socket.connect_ex(location)
+
+		while socket_open:
+			print('[System] Wait for rosbridge')
+			sleep(2)
+			socket_open = bridge_socket.connect_ex(location)
+
+		print('[System] Bridge connected')
+
+		bridge_socket.close()
 
 	def create_npc(self, sim):
 		for car in self.cfg['npc']:
@@ -82,7 +91,6 @@ class Exp(object):
 			
 			sim.add_agent(
 				car['type'],
-				# lgsvl.AgentType.NPC, npc_state, color=Vector(200, 0, 255))
 				lgsvl.AgentType.NPC, npc_state, color=Vector(0, 0, 0))
 
 		return
@@ -98,31 +106,18 @@ class Exp(object):
 		pedestrian = sim.add_agent(
 			self.cfg['pedestrian'][0]['type'],
 			lgsvl.AgentType.PEDESTRIAN, pedestrian_state)
-		
-		return
 
 	def setup_sim(self):
+		self.wait_for_bridge()
 		self.create_ego(self.sim)
 		self.create_npc(self.sim)
 		# self.create_pedestrian(self.sim)
-		return
 
 	def run(self):
-		for exp_iter in range(self.cfg['exp']['iteration']):
-			self.sim.reset()			
-			self.setup_sim()			
-			# collisions = []
-			print('starting exp #{}'.format(exp_iter))
-
-			if(self.cfg['simulator']['timeout'] == 0):
-				self.sim.run()
-			else:
-				for _ in tqdm.tqdm(range(self.cfg['simulator']['timeout'])):
-					self.sim.run(1)
-
-		print('self.collisions: {}'.format(len(self.collisions)))
-		print('success')
-
+		self.sim.reset()
+		self.setup_sim()
+		print('[System] Simulation Starts')
+		self.sim.run()
 
 if __name__ == '__main__':
 	e = Exp()
