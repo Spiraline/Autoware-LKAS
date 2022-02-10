@@ -31,6 +31,7 @@
 
   <!-- LKAS -->
   <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
+    <param name="debug_window" value="false" />
     <param name="output_topic" value="twist_cmd_lkas"/>
   </node>
 

@@ -47,18 +47,11 @@ imm_ukf_pda_track:
 
 # Planning
 op_common_params:
-  pathDensity: 0.5
-  rollOutDensity: 4
-  rollOutsNumber: 0
   maxVelocity: 13.0
   maxAcceleration: 10.0
   maxDeceleration: -10.0
   width: 1.85
   length: 4.2
-  wheelBaseLength: 2.7
-  turningRadius: 5.2
-  maxSteerAngle: 0.2
-  steeringDelay: 1.2
 
 op_global_planner:
   use_static_goal: true
@@ -100,7 +93,6 @@ twist_gate:
 
 # Safety-Backup
 lkas:
-  debug_window: false
   res_t_log: false
 
 twist_combiner:

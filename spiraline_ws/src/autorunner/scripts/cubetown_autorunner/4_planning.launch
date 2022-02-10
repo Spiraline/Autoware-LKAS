@@ -7,7 +7,15 @@
     <param name="mapFileName"         value="" />
     <param name="velocitySource"      value="1" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info) "" -->
 
-    <param name="minVelocity"         value="0.1" />  
+    <param name="pathDensity"         value="0.5" />
+    <param name="rollOutDensity"         value="4" />
+    <param name="rollOutsNumber"         value="0" />
+    <param name="minVelocity"         value="0.1" />
+
+    <param name="wheelBaseLength"       value="2.7" />
+    <param name="turningRadius"       value="5.2" />
+    <param name="maxSteerAngle"       value="0.2" />
+    <param name="steeringDelay"       value="1.2" />
 
     <param name="maxLocalPlanDistance"     value="80" />  
     <param name="horizonDistance"       value="120" />
