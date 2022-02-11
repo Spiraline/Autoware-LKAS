@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--map', '-m', action='store_true')
     parser.add_argument('--rviz', '-r', action='store_true')
-    parser.add_argument('--time', '-t', type=int, default=30)
+    parser.add_argument('--time', '-t', type=int, default=40)
     parser.add_argument('--exp', '-e', type=str, default='progress_ndt')
     args = parser.parse_args()
 

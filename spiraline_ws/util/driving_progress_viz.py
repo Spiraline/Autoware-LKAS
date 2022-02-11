@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from os import getenv, makedirs
 from os.path import exists
 
@@ -44,8 +45,27 @@ if __name__ == '__main__':
   ax.set_ylabel('Center Offset (m)')
   ax.set_xlabel('Time (s)')
 
-  ax.set_ylim(-20, 21)
-  plt.xticks(range(0, time_index // 10, 2))
+  ax.set_ylim(-20, 20)
+  plt.xticks(range(0, (time_index+1) // 10, 2))
+
+  backup_period = []
+  prev_state = 'Normal'
+  start_t = 0
+  for t in range(time_index):
+    if ours_case['state'][t] != prev_state:
+      if prev_state == 'Normal':
+        start_t = t
+      else:
+        backup_period.append((start_t / 10, t / 10))
+      prev_state = ours_case['state'][t]
+
+  if prev_state == 'Backup':
+    backup_period.append((start_t / 10, time_index / 10))
+
+  print(backup_period)
+
+  for s, e in backup_period:
+    ax.add_patch(patches.Rectangle((s, -20), (e-s), 40, facecolor=[0,0,0,0.1], fill=True))
 
   plt.legend()
   fig.savefig(res_dir + "/fig15a.png")
@@ -62,7 +82,12 @@ if __name__ == '__main__':
   ax.set_ylabel('Execution Time (ms)')
   ax.set_xlabel('Time (s)')
 
+  ax.set_ylim(0, 250)
+
   plt.xticks(range(0, (time_index+1) // 10, 2))
+
+  for s, e in backup_period:
+    ax.add_patch(patches.Rectangle((s, 0), (e-s), 250, facecolor=[0,0,0,0.1], fill=True))
 
   plt.legend()
   # plt.show()

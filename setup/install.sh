@@ -63,11 +63,13 @@ if [ ! -d "autoware.ai/install" ]; then
     cd autoware.ai
     if [ -d "/usr/local/cuda" ]; then
         if ! AUTOWARE_COMPILE_WITH_CUDA=1 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release; then
+            rm -rf build install log
             echo "[System] Autoware Build Fail"
             exit 1
         fi
     else
         if ! colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release; then
+            rm -rf build install log
             echo "[System] Autoware Build Fail"
             exit 1
         fi
@@ -84,6 +86,7 @@ if [ ! -d "spiraline_ws/devel" ]; then
     catkin_init_workspace
     cd ..
     if ! catkin_make; then
+        rm -rf build devel
         echo "[System] spiraline_ws Build Fail"
         exit 1
     fi
