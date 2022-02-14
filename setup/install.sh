@@ -107,4 +107,5 @@ python3 -m pip install -r requirements.txt --user .
 cd ../..
 
 # Allow Firewall
+sudo ufw allow 22
 sudo ufw allow 9090
