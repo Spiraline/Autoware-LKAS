@@ -43,7 +43,11 @@ public:
 
   virtual ~Registration();
 
+  // HJW Added
   double getPNorm();
+  void setLKASFlag(bool flag);
+  void setTimeWall(double time_wall);
+  void setAccuracyFlag(bool flag);
 
 protected:
 
@@ -52,7 +56,11 @@ protected:
   double transformation_epsilon_;
   int max_iterations_;
 
+  // HJW Added
   double p_norm_;
+  bool ndt_lkas_flag_ = false;
+  bool accuracy_flag_ = false;
+  double time_wall_ = 40.0;
 
   //Original scanned point clouds
   typename pcl::PointCloud<PointSourceType>::Ptr source_cloud_;

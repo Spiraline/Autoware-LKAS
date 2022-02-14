@@ -30,7 +30,7 @@
 #include <autoware_msgs/Lane.h>
 #include <pure_pursuit/pure_pursuit.h>
 #include <pure_pursuit/pure_pursuit_viz.h>
-
+#include <boost/filesystem.hpp>
 #include <autoware_health_checker/health_checker/health_checker.h>
 
 #include <vector>
@@ -113,6 +113,9 @@ private:
   bool dynamic_param_flag_;
   std::vector<DynamicParams> dynamic_params;
 
+  struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
 
   // callbacks
   void callbackFromConfig(

@@ -320,7 +320,7 @@ void RayGroundFilter::RemovePointsUpTo(const pcl::PointCloud<pcl::PointXYZI>::Pt
 
 void RayGroundFilter::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 {
-  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+  if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   health_checker_ptr_->NODE_ACTIVATE();
   health_checker_ptr_->CHECK_RATE("topic_rate_points_raw_slow", 8, 5, 1, "topic points_raw subscribe rate slow.");
@@ -371,13 +371,11 @@ void RayGroundFilter::CloudCallback(const sensor_msgs::PointCloud2ConstPtr& in_s
   publish_cloud(ground_points_pub_, ground_cloud_ptr, in_sensor_cloud->header);
   publish_cloud(groundless_points_pub_, no_ground_cloud_ptr, in_sensor_cloud->header);
 
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/ray_ground_filter.csv");
     FILE *fp;
-    fp = fopen(print_file_path.c_str(), "a");
-    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fp = fopen(res_t_filename.c_str(), "a");
+    fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
     fclose(fp);
   }
 }
@@ -401,14 +399,15 @@ void RayGroundFilter::Run()
   // VLP-16HD|     0.1-0.4    |     1.33     |  -10.0<=x<=10.0   (20    / 0.35)
   ROS_INFO("Initializing Ground Filter, please wait...");
 
-  node_handle_.param("output_log", _output_log, false);
-
-  if(_output_log){
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/ray_ground_filter.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "w");
-    fclose(fp);
+  node_handle_.param("res_t_log", _res_t_log, false);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
   }
 
   node_handle_.param<std::string>("input_point_topic", input_point_topic_, "/points_raw");

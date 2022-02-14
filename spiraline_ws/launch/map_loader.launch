@@ -1,0 +1,17 @@
+<launch>
+	<!-- Vector Map Loader -->
+	<node pkg="map_file" type="vector_map_loader" name="vector_map_loader" args="
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/dtlane.csv
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/lane.csv 
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/node.csv 
+	    $(env HOME)/spiraline_ws/vector_map/CubeTown/point.csv"/>
+
+	<!-- Point Map Loader -->
+	<include file="$(find map_file)/launch/points_map_loader.launch">
+		<arg name="scene_num" value="noupdate" />
+		<arg name="path_pcd" value="$(env HOME)/spiraline_ws/points_map/CubeTown.pcd"/>
+	</include>
+
+	<!-- Map TF Publisher -->	
+	<node pkg="tf" type="static_transform_publisher" name="world_to_map" args="0 0 0 0 0 0 /world /map 10" />
+</launch>

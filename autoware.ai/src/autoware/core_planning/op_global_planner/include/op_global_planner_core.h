@@ -45,6 +45,7 @@
 #include "libwaypoint_follower/libwaypoint_follower.h"
 #include "autoware_can_msgs/CANInfo.h"
 #include <visualization_msgs/MarkerArray.h>
+#include <boost/filesystem.hpp>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/MappingHelpers.h"
@@ -108,9 +109,13 @@ protected:
 
   bool m_bFirstStart;
 
-  bool _output_log;
+  bool _multilap_flag;
+  double _multilap_replanning_distance;
+  int selectedGlobalPathIdx;
 
   struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
 
   ros::NodeHandle nh;
 
@@ -155,7 +160,8 @@ private:
     PlannerHNS::RoadNetwork m_Map;
     bool  m_bKmlMap;
     PlannerHNS::PlannerH m_PlannerH;
-    std::vector<std::vector<PlannerHNS::WayPoint> > m_GeneratedTotalPaths;
+    // std::vector<std::vector<PlannerHNS::WayPoint> > m_GeneratedTotalPaths;
+    std::vector<std::vector<std::vector<PlannerHNS::WayPoint>>> m_GeneratedTotalPaths;
 
     bool GenerateGlobalPlan(PlannerHNS::WayPoint& startPoint, PlannerHNS::WayPoint& goalPoint, std::vector<std::vector<PlannerHNS::WayPoint> >& generatedTotalPaths);
     void VisualizeAndSend(const std::vector<std::vector<PlannerHNS::WayPoint> > generatedTotalPaths);

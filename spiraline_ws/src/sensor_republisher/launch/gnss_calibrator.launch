@@ -1,0 +1,10 @@
+<launch>
+  <arg name="plane" default="0"/>
+  <arg name="res_t_log" default="false"/>
+
+  <node pkg="sensor_republisher" type="gnss_calibrator" name="gnss_calibrator" output="screen">
+    <param name="plane" value="$(arg plane)"/>
+    <param name="res_t_log" value="$(arg res_t_log)"/>
+  </node>
+
+</launch>

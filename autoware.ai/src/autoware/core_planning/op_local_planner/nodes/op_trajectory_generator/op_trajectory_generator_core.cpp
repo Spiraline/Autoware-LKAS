@@ -66,6 +66,17 @@ void TrajectoryGen::UpdatePlanningParams(ros::NodeHandle& _nh)
   _nh.getParam("/op_trajectory_generator/samplingSpeedFactor", m_PlanningParams.rollInSpeedFactor);
   _nh.getParam("/op_trajectory_generator/enableHeadingSmoothing", m_PlanningParams.enableHeadingSmoothing);
 
+  _nh.getParam("/op_trajectory_generator/res_t_log", _res_t_log);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
+  }
+
   _nh.getParam("/op_common_params/enableSwerving", m_PlanningParams.enableSwerving);
   if(m_PlanningParams.enableSwerving)
     m_PlanningParams.enableFollowing = true;
@@ -201,9 +212,7 @@ void TrajectoryGen::MainLoop()
 
   while (ros::ok())
   {
-    struct timespec start_time, end_time;
-
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     ros::spinOnce();
 
@@ -266,13 +275,13 @@ void TrajectoryGen::MainLoop()
     PlannerHNS::ROSHelpers::TrajectoriesToMarkers(m_RollOuts, all_rollOuts);
     pub_LocalTrajectoriesRviz.publish(all_rollOuts);
 
-    clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/op_trajectory_generator.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "a");
-    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
-    fclose(fp);
+    if(_res_t_log){
+      clock_gettime(CLOCK_MONOTONIC, &end_time);
+      FILE *fp;
+      fp = fopen(res_t_filename.c_str(), "a");
+      fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fclose(fp);
+    }
 
     loop_rate.sleep();
   }

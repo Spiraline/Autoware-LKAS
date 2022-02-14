@@ -423,19 +423,25 @@ void GlobalPlanner::MainLoop()
   timespec animation_timer;
   UtilityHNS::UtilityH::GetTickCount(animation_timer);
 
-  nh.getParam("/op_global_planner/output_log", _output_log);
+  nh.param<bool>("/op_global_planner/res_t_log", _res_t_log, false);
+  nh.param<bool>("/op_global_planner/multilap_flag", _multilap_flag, false);
+  nh.param<double>("/op_global_planner/multilap_replanning_distance", _multilap_replanning_distance, 50.0);
 
-  if(_output_log){
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/op_global_planner.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "w");
-    fclose(fp);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
   }
+
+  int planning_fail_cnt;
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     ros::spinOnce();
     bool bMakeNewPlan = false;
@@ -494,53 +500,71 @@ void GlobalPlanner::MainLoop()
 
     ClearOldCostFromMap();
 
+    // HJW updated for multi-lap
+    // goal pose is appended at goal pose callback function
     if(m_GoalsPos.size() > 0)
     {
-      if(m_GeneratedTotalPaths.size() > 0 && m_GeneratedTotalPaths.at(0).size() > 3)
+      if(m_GeneratedTotalPaths.size() == 0) // initialize two paths
       {
-        if(m_params.bEnableReplanning)
-        {
-          PlannerHNS::RelativeInfo info;
-          bool ret = PlannerHNS::PlanningHelpers::GetRelativeInfoRange(m_GeneratedTotalPaths, m_CurrentPose, 0.75, info);
-          if(ret == true && info.iGlobalPath >= 0 &&  info.iGlobalPath < m_GeneratedTotalPaths.size() && info.iFront > 0 && info.iFront < m_GeneratedTotalPaths.at(info.iGlobalPath).size())
-          {
-            double remaining_distance =    m_GeneratedTotalPaths.at(info.iGlobalPath).at(m_GeneratedTotalPaths.at(info.iGlobalPath).size()-1).cost - (m_GeneratedTotalPaths.at(info.iGlobalPath).at(info.iFront).cost + info.to_front_distance);
-            if(remaining_distance <= REPLANNING_DISTANCE)
-            {
-              bMakeNewPlan = true;
-              if(m_GoalsPos.size() > 0)
-                m_iCurrentGoalIndex = (m_iCurrentGoalIndex + 1) % m_GoalsPos.size();
-              std::cout << "Current Goal Index = " << m_iCurrentGoalIndex << std::endl << std::endl;
-            }
-          }
+        // Try 50 Times to planning
+        if(planning_fail_cnt == 0){
+          planning_fail_cnt = 50;
         }
-      }
-      else
-        bMakeNewPlan = true;
-
-      if(bMakeNewPlan || (m_params.bEnableDynamicMapUpdate && UtilityHNS::UtilityH::GetTimeDiffNow(m_ReplnningTimer) > REPLANNING_TIME))
-      {
-        UtilityHNS::UtilityH::GetTickCount(m_ReplnningTimer);
+        std::vector<std::vector<PlannerHNS::WayPoint>> tmp_path_list;
+        std::vector<std::vector<PlannerHNS::WayPoint>> tmp_path_list_2;
         PlannerHNS::WayPoint goalPoint = m_GoalsPos.at(m_iCurrentGoalIndex);
-        bool bNewPlan = GenerateGlobalPlan(m_CurrentPose, goalPoint, m_GeneratedTotalPaths);
 
+        // Generate path from initial pose to goal pose (rviz axis) and save to tmp_path_list
+        bool bNewPlan = GenerateGlobalPlan(m_CurrentPose, goalPoint, tmp_path_list);
 
         if(bNewPlan)
         {
-          bMakeNewPlan = false;
-          VisualizeAndSend(m_GeneratedTotalPaths);
+          m_GeneratedTotalPaths.push_back(tmp_path_list);
+
+          // Do multi-lap driving only current position and goal point is close
+          if(_multilap_flag){
+            if(hypot(m_CurrentPose.pos.x - goalPoint.pos.x, m_CurrentPose.pos.y - goalPoint.pos.y) < 30){
+              int wp_size = tmp_path_list.at(0).size();
+              PlannerHNS::WayPoint path2_start_wp = tmp_path_list.at(0).at(wp_size / 2 + 10);
+              PlannerHNS::WayPoint path2_end_wp = tmp_path_list.at(0).at(wp_size / 2 - 10);
+              bool bNewPlan_2 = GenerateGlobalPlan(path2_start_wp, path2_end_wp, tmp_path_list_2);
+
+              if(bNewPlan_2){
+                m_GeneratedTotalPaths.push_back(tmp_path_list_2);
+              }
+            }
+          }
+          selectedGlobalPathIdx = 0;
+          VisualizeAndSend(m_GeneratedTotalPaths.at(selectedGlobalPathIdx));
+        }
+        else{
+          planning_fail_cnt--;
+          if(planning_fail_cnt == 0){
+            m_GoalsPos.clear();
+          }
+        }
+      }
+      else if(m_GeneratedTotalPaths.size() > 1){
+        PlannerHNS::RelativeInfo info;
+        bool ret = PlannerHNS::PlanningHelpers::GetRelativeInfoRange(m_GeneratedTotalPaths.at(selectedGlobalPathIdx), m_CurrentPose, 0.75, info);
+        if(ret == true && info.iGlobalPath >= 0 &&  info.iGlobalPath < m_GeneratedTotalPaths.at(selectedGlobalPathIdx).size() && info.iFront > 0 && info.iFront < m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).size())
+        {
+          double remaining_distance = m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).at(m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).size()-1).cost - (m_GeneratedTotalPaths.at(selectedGlobalPathIdx).at(info.iGlobalPath).at(info.iFront).cost + info.to_front_distance);
+          if(remaining_distance <= _multilap_replanning_distance)
+          {
+            selectedGlobalPathIdx = 1 - selectedGlobalPathIdx;
+            VisualizeAndSend(m_GeneratedTotalPaths.at(selectedGlobalPathIdx));
+          }
         }
       }
       VisualizeDestinations(m_GoalsPos, m_iCurrentGoalIndex);
     }
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
-      std::string print_file_path = std::getenv("HOME");
-      print_file_path.append("/Documents/tmp/op_global_planner.csv");
       FILE *fp;
-      fp = fopen(print_file_path.c_str(), "a");
-      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fp = fopen(res_t_filename.c_str(), "a");
+      fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
       fclose(fp);
     }
 

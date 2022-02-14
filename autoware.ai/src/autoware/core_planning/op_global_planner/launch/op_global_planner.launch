@@ -17,6 +17,9 @@
   <arg name="goal_ori_y"           default="0.0" />
   <arg name="goal_ori_z"           default="0.0" />
   <arg name="goal_ori_w"           default="0.0" />
+  <arg name="multilap_flag"           default="false" />
+  <arg name="multilap_replanning_distance"           default="30.0" />
+  <arg name="res_t_log" default="false" />
 
   <node pkg="op_global_planner" type="op_global_planner" name="op_global_planner" output="screen">    
     <param name="pathDensity"         value="$(arg pathDensity)" />
@@ -35,7 +38,10 @@
     <param name="goal_ori_x"            value="$(arg goal_ori_x)" />
     <param name="goal_ori_y"            value="$(arg goal_ori_y)" />
     <param name="goal_ori_z"            value="$(arg goal_ori_z)" />
-    <param name="goal_ori_w"            value="$(arg goal_ori_w)" />      
+    <param name="goal_ori_w"            value="$(arg goal_ori_w)" />
+    <param name="multilap_flag"        value="$(arg multilap_flag)" />
+    <param name="multilap_replanning_distance"        value="$(arg multilap_replanning_distance)" />
+    <param name="res_t_log" value="$(arg res_t_log)" />
   </node> 
   
 </launch>

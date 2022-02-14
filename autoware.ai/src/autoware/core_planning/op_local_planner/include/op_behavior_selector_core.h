@@ -44,6 +44,7 @@
 #include <autoware_can_msgs/CANInfo.h>
 #include <autoware_msgs/DetectedObjectArray.h>
 #include <autoware_msgs/IntersectionCondition.h>
+#include <autoware_msgs/NDTStat.h>
 // #include <autoware_msgs/TrafficLight.h>
 // #include <autoware_msgs/Signals.h>
 #include <autoware_msgs/RUBISTrafficSignalArray.h>
@@ -53,6 +54,7 @@
 
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
+#include <boost/filesystem.hpp>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/DecisionMaker.h"
@@ -114,6 +116,8 @@ protected: //Planning Related variables
   autoware_msgs::ControlCommand m_Ctrl_cmd;
 
   double m_ndt_gnss_diff;
+  double m_ndt_score;
+  double m_pnorm;
 
   //Added by PHY
   double m_distanceToPedestrianThreshold;
@@ -123,8 +127,12 @@ protected: //Planning Related variables
   bool m_sprintSwitch;
   double m_obstacleWaitingTimeinIntersection;
 
-  bool _output_log;
+  //Added by HJW
   struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
+  bool m_ndt_lkas_flag;
+  double m_pnorm_threshold, m_score_threshold;
 
   //ROS messages (topics)
   ros::NodeHandle nh;
@@ -164,10 +172,12 @@ protected: //Planning Related variables
   ros::Subscriber sub_SprintSwitch;
   ros::Subscriber sub_IntersectionCondition;
   ros::Subscriber sub_gnss_pose;
+  ros::Subscriber sub_ndt_stat;
 
   // Callback function for subscriber.
   void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
   void callbackGetGNSSPose(const geometry_msgs::PoseStampedConstPtr& msg);
+  void callbackGetNDTStat(const autoware_msgs::NDTStat& msg);
   void callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg);
   void callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg);
   void callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg);

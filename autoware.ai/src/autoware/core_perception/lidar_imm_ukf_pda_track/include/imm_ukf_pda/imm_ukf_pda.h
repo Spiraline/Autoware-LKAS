@@ -34,6 +34,7 @@
 #include <tf/transform_listener.h>
 
 #include <vector_map/vector_map.h>
+#include <boost/filesystem.hpp>
 
 #include "autoware_msgs/DetectedObject.h"
 #include "autoware_msgs/DetectedObjectArray.h"
@@ -43,9 +44,9 @@
 class ImmUkfPda
 {
 private:
-  bool _output_log;
-
   struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
 
   int target_id_;
   bool init_;

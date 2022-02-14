@@ -37,6 +37,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Bool.h>
+#include <boost/filesystem.hpp>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/TrajectoryDynamicCosts.h"
@@ -92,9 +93,9 @@ protected:
   double m_VehicleImageWidthThreshold;
   int m_noVehicleCnt;
 
-  bool _output_log;
-
   struct timespec start_time, end_time;
+  bool _res_t_log;
+  std::string res_t_filename;
 
   //ROS messages (topics)
   ros::NodeHandle nh;

@@ -41,7 +41,7 @@ BehaviorGen::BehaviorGen()
   nh.getParam("/op_behavior_selector/distanceToPedestrianThreshold", m_distanceToPedestrianThreshold);
   nh.param("/op_behavior_selector/turnThreshold", m_turnThreshold, 20.0);
 
-  nh.getParam("/op_behavior_selector/output_log", _output_log);
+  nh.param("/op_behavior_selector/res_t_log", _res_t_log, false);
 
   tf::StampedTransform transform;
   PlannerHNS::ROSHelpers::GetTransformFromTF("map", "world", transform);
@@ -64,6 +64,8 @@ BehaviorGen::BehaviorGen()
   sub_current_pose = nh.subscribe("/current_pose", 10,  &BehaviorGen::callbackGetCurrentPose, this);
 
   sub_gnss_pose = nh.subscribe("/gnss_pose", 10,  &BehaviorGen::callbackGetGNSSPose, this);
+
+  sub_ndt_stat = nh.subscribe("/ndt_stat", 10,  &BehaviorGen::callbackGetNDTStat, this);
 
   int bVelSource = 1;
   _nh.getParam("/op_trajectory_evaluator/velocitySource", bVelSource);
@@ -181,11 +183,13 @@ void BehaviorGen::UpdatePlanningParams(ros::NodeHandle& _nh)
   _nh.getParam("/op_common_params/mapFileName" , m_MapPath);
 
   _nh.getParam("/op_behavior_selector/evidence_tust_number", m_PlanningParams.nReliableCount);
-
-  //std::cout << "nReliableCount: " << m_PlanningParams.nReliableCount << std::endl;
   
   _nh.param("/op_behavior_selector/sprintSpeed", m_sprintSpeed, 13.5);
   _nh.param("/op_behavior_selector/obstacleWaitingTimeinIntersection", m_obstacleWaitingTimeinIntersection, 1.0);
+
+  nh.param("/op_behavior_selector/ndt_lkas_flag", m_PlanningParams.ndt_lkas_flag, false);
+  nh.param("/op_behavior_selector/pnorm_threshold", m_PlanningParams.pnorm_threshold, 0.05);
+  nh.param("/op_behavior_selector/score_threshold", m_PlanningParams.score_threshold, 3.0);
 
   m_BehaviorGenerator.Init(controlParams, m_PlanningParams, m_CarInfo, m_sprintSpeed);  
 
@@ -242,6 +246,12 @@ void BehaviorGen::callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPt
 void BehaviorGen::callbackGetGNSSPose(const geometry_msgs::PoseStampedConstPtr& msg)
 {
   m_ndt_gnss_diff = hypot(msg->pose.position.x - m_CurrentPos.pos.x, msg->pose.position.y - m_CurrentPos.pos.y);
+}
+
+void BehaviorGen::callbackGetNDTStat(const autoware_msgs::NDTStat& msg)
+{
+  m_ndt_score = msg.score;
+  m_pnorm = msg.p_norm;
 }
 
 void BehaviorGen::callbackGetVehicleStatus(const geometry_msgs::TwistStampedConstPtr& msg)
@@ -596,12 +606,14 @@ void BehaviorGen::MainLoop()
 {
   ros::Rate loop_rate(100);
 
-  if(_output_log){
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/op_behavior_selector.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "w");
-    fclose(fp);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
   }
 
   m_sprintSwitch = false;
@@ -614,7 +626,7 @@ void BehaviorGen::MainLoop()
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
     ros::spinOnce();
 
@@ -706,6 +718,8 @@ void BehaviorGen::MainLoop()
       }
 
       m_BehaviorGenerator.m_ndt_gnss_diff = m_ndt_gnss_diff;
+      m_BehaviorGenerator.m_ndt_score = m_ndt_score;
+      m_BehaviorGenerator.m_pnorm = m_pnorm;
       
       m_BehaviorGenerator.m_sprintSwitch = m_sprintSwitch;
       m_CurrentBehavior = m_BehaviorGenerator.DoOneStep(dt, m_CurrentPos, m_VehicleStatus, 1, m_CurrTrafficLight, m_TrajectoryBestCost, 0);
@@ -754,13 +768,11 @@ void BehaviorGen::MainLoop()
     else
       sub_GlobalPlannerPaths = nh.subscribe("/lane_waypoints_array",   1,    &BehaviorGen::callbackGetGlobalPlannerPath,   this);
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
-      std::string print_file_path = std::getenv("HOME");
-      print_file_path.append("/Documents/tmp/op_behavior_selector.csv");
       FILE *fp;
-      fp = fopen(print_file_path.c_str(), "a");
-      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fp = fopen(res_t_filename.c_str(), "a");
+      fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
       fclose(fp);
     }
 

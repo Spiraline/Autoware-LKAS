@@ -75,7 +75,8 @@
 
 #define PREDICT_POSE_THRESHOLD 0.5
 
-#define SCORE_THRESHOLD 10
+#define PNORM_THRESHOLD 0.05
+#define SCORE_THRESHOLD 3
 #define POSE_DIFF_THRESHOLD 3
 
 #define Wa 0.4
@@ -114,6 +115,7 @@ static double offset_imu_odom_x, offset_imu_odom_y, offset_imu_odom_z, offset_im
 
 // For GPS backup method
 static pose current_gnss_pose;
+static double previous_pnorm = 0.0;
 static double previous_score = 0.0;
 
 // Can't load if typed "pcl::PointCloud<pcl::PointXYZRGB> map, add;"
@@ -124,8 +126,15 @@ static int map_loaded = 0;
 static int _use_gnss = 1;
 static int init_pos_set = 0;
 
+// HJW Added
 struct timespec start_time, end_time;
-static bool _output_log;
+static bool _res_t_log;
+static bool _accuracy_log;
+static std::string res_t_filename;
+static bool _ndt_lkas_flag;
+static double _time_wall = 40.0;
+static double _pnorm_threshold = 0.05;
+static double _score_threshold = 3.0;
 
 static pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> ndt;
 static cpu::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> anh_ndt;
@@ -177,6 +186,7 @@ static bool has_converged;
 static int iteration = 0;
 static double fitness_score = 0.0;
 static double trans_probability = 0.0;
+static double delta_p_norm = 0.0;
 
 // reference for comparing fitness_score, default value set to 500.0
 static double _gnss_reinit_fitness = 500.0;
@@ -498,6 +508,9 @@ static void map_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       new_anh_ndt.setMaximumIterations(max_iter);
       new_anh_ndt.setStepSize(step_size);
       new_anh_ndt.setTransformationEpsilon(trans_eps);
+      new_anh_ndt.setLKASFlag(_ndt_lkas_flag);
+      new_anh_ndt.setTimeWall(_time_wall);
+      new_anh_ndt.setAccuracyFlag(_accuracy_log);
 
       pcl::PointCloud<pcl::PointXYZ>::Ptr dummy_scan_ptr(new pcl::PointCloud<pcl::PointXYZ>());
       pcl::PointXYZ dummy_point;
@@ -570,18 +583,29 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
-  if(previous_score < SCORE_THRESHOLD && ndt_gnss_diff < POSE_DIFF_THRESHOLD)
-    matching_fail_cnt = 0;
-  else
-    matching_fail_cnt++;
+  if(!_is_init_match_finished){
+    current_pose = current_gnss_pose;
+    previous_pose = current_gnss_pose;
+  }
 
-  if(previous_score == 0.0){
+  if(_is_init_match_finished && ndt_gnss_diff > 10.0 || previous_score > 2.0){
+    std::cout << "[NDT matching] Matching Fail!" << std::endl;
+  }
+
+  if(_ndt_lkas_flag && (previous_score > 2.0 || (previous_pnorm > _pnorm_threshold && previous_score > _score_threshold)))
+    matching_fail_cnt++;
+  else
+    matching_fail_cnt = 0;
+
+  if(previous_pnorm == 0.0){
+    previous_pnorm = 0.0;
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
   }
-  else if(matching_fail_cnt > 10){
-    // matching_fail_cnt = 0.0;
+  else if(matching_fail_cnt > 0){
+    matching_fail_cnt = 0.0;
+    previous_pnorm = 0.0;
     previous_score = 0.0;
     current_pose = current_gnss_pose;
     previous_pose = previous_gnss_pose;
@@ -700,7 +724,7 @@ static void initialpose_callback(const geometry_msgs::PoseWithCovarianceStamped:
   offset_imu_odom_pitch = 0.0;
   offset_imu_odom_yaw = 0.0;
 
-  previous_score = 0.0;
+  previous_pnorm = 0.0;
 
   init_pos_set = 1;
 }
@@ -928,10 +952,10 @@ static void imu_callback(const sensor_msgs::Imu::Ptr& input)
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
-  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+  if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   // Check inital matching is success or not
-  if(_is_init_match_finished == false && previous_score < SCORE_THRESHOLD && previous_score != 0.0)
+  if(_is_init_match_finished == false && previous_score < _score_threshold && previous_score != 0.0)
     _is_init_match_finished = true;
 
   health_checker_ptr_->CHECK_RATE("topic_rate_filtered_points_slow", 8, 5, 1, "topic filtered_points subscribe rate slow.");
@@ -1062,8 +1086,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       iteration = anh_ndt.getFinalNumIteration();
 
       getFitnessScore_start = std::chrono::system_clock::now();
-      // fitness_score = anh_ndt.getFitnessScore();
-      fitness_score = anh_ndt.getPNorm();
+      fitness_score = anh_ndt.getFitnessScore();
+      delta_p_norm = anh_ndt.getPNorm();
       getFitnessScore_end = std::chrono::system_clock::now();
 
       trans_probability = anh_ndt.getTransformationProbability();
@@ -1413,6 +1437,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     health_checker_ptr_->CHECK_MAX_VALUE("estimate_twist_angular", angular_velocity, 5, 10, 15, "value linear angular twist is too high.");
     estimated_vel_pub.publish(estimate_vel_msg);
 
+    previous_pnorm = delta_p_norm;
     previous_score = fitness_score;
 
     // Set values for /ndt_stat
@@ -1423,6 +1448,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     ndt_stat_msg.velocity = current_velocity;
     ndt_stat_msg.acceleration = current_accel;
     ndt_stat_msg.use_predict_pose = 0;
+    ndt_stat_msg.p_norm = delta_p_norm;
 
     ndt_stat_pub.publish(ndt_stat_msg);
     /* Compute NDT_Reliability */
@@ -1454,14 +1480,16 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       }
     }
 
+    /*
     std::cout << "-----------------------------------------------------------------" << std::endl;
     std::cout << "Sequence: " << input->header.seq << std::endl;
     std::cout << "Timestamp: " << input->header.stamp << std::endl;
     std::cout << "Frame ID: " << input->header.frame_id << std::endl;
-    //    std::cout << "Number of Scan Points: " << scan_ptr->size() << " points." << std::endl;
+    std::cout << "Number of Scan Points: " << scan_ptr->size() << " points." << std::endl;
     std::cout << "Number of Filtered Scan Points: " << scan_points_num << " points." << std::endl;
     std::cout << "NDT has converged: " << has_converged << std::endl;
     std::cout << "Fitness Score: " << fitness_score << std::endl;
+    std::cout << "delta_p_norm: " << delta_p_norm << std::endl;
     std::cout << "Transformation Probability: " << trans_probability << std::endl;
     std::cout << "Execution Time: " << exe_time << " ms." << std::endl;
     std::cout << "Number of Iterations: " << iteration << std::endl;
@@ -1474,6 +1502,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     std::cout << "Align time: " << align_time << std::endl;
     std::cout << "Get fitness score time: " << getFitnessScore_time << std::endl;
     std::cout << "-----------------------------------------------------------------" << std::endl;
+    */
 
     offset_imu_x = 0.0;
     offset_imu_y = 0.0;
@@ -1516,13 +1545,11 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     previous_estimated_vel_kmph.data = estimated_vel_kmph.data;
   }
 
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/ndt_matching.csv");
     FILE *fp;
-    fp = fopen(print_file_path.c_str(), "a");
-    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fp = fopen(res_t_filename.c_str(), "a");
+    fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
     fclose(fp);
   }
 }
@@ -1584,15 +1611,25 @@ int main(int argc, char** argv)
   private_nh.getParam("imu_topic", _imu_topic);
   private_nh.param<double>("gnss_reinit_fitness", _gnss_reinit_fitness, 500.0);
 
-  private_nh.getParam("output_log", _output_log);
-
-  if(_output_log){
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/ndt_matching.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "w");
-    fclose(fp);
+  // HJW Added
+  private_nh.param<bool>("res_t_log", _res_t_log, false);
+  private_nh.param<bool>("accuracy_log", _accuracy_log, false);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
   }
+
+  private_nh.param<bool>("ndt_lkas_flag", _ndt_lkas_flag, true);
+  private_nh.param<double>("time_wall", _time_wall, 40.0);
+  private_nh.param<double>("pnorm_threshold", _pnorm_threshold, 0.05);
+  private_nh.param<double>("score_threshold", _score_threshold, 3.0);
+
+  _time_wall -= 20;
 
   nh.param<std::string>("/ndt_matching/localizer", _localizer, "velodyne");
 

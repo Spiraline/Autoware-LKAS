@@ -1,0 +1,54 @@
+<launch>
+
+  <!-- lidar_euclidean_cluster_detect-->
+  <node pkg="lidar_euclidean_cluster_detect" type="lidar_euclidean_cluster_detect" name="lidar_euclidean_cluster_detect" output="screen">
+    <param name="points_node"   value="/points_raw"/>
+    <param name="remove_ground" value="true"/>
+    <param name="downsample_cloud" value="false"/>
+    <param name="leaf_size" value="0.1"/>
+    <param name="use_diffnormals" value="false"/>
+    <param name="pose_estimation" value="true"/>
+    <param name="keep_lanes" value="false"/>
+    <param name="keep_lane_left_distance" value="5"/>
+    <param name="keep_lane_right_distance" value="5"/>
+    <param name="output_frame" value="velodyne"/>
+    <param name="remove_points_upto" value="0.0"/>
+    <param name="clustering_distance" value="0.75"/>
+    <param name="cluster_merge_threshold" value="1.5"/>
+    <param name="use_gpu" value="false"/>
+    <param name="use_multiple_thres" value="false"/>
+    <param name="clustering_ranges" value="[15,30,45,60]"/><!-- Distances to segment pointcloud -->
+    <param name="clustering_distances" value="[0.5,1.1,1.6,2.1,2.6]"/><!-- Euclidean Clustering threshold distance for each segment -->
+  </node>
+
+  <node pkg="detected_objects_visualizer" type="visualize_detected_objects" name="cluster_detect_visualization"
+        output="screen" ns="/detection/lidar_detector">
+    <param name="objects_src_topic" value="/objects_center"/>
+  </node>
+
+  <!-- imm_ukf_pda_track -->
+  <node pkg="imm_ukf_pda_track" type="imm_ukf_pda" name="imm_ukf_pda" output="screen">
+    <param name="tracker_input_topic" value="/detection/lidar_detector/objects_center" />
+    <param name="tracker_output_topic" value="/detection/object_tracker/objects_center" />
+    <param name="gating_threshold" value="9.22" />
+    <param name="gate_probability" value="0.99" />
+    <param name="detection_probability" value="0.9" />
+    <param name="life_time_threshold" value="8" />
+    <param name="static_velocity_threshold" value="0.5" />
+    <param name="static_num_history_threshold" value="3" />
+    <param name="prevent_explosion_threshold" value="1000" />
+    <param name="lane_direction_chi_threshold" value="2.71" />
+    <param name="nearest_lane_distance_threshold" value="1.0" />
+    <param name="tracking_frame" value="/world" />
+    <param name="vectormap_frame" value="/map" />
+    <param name="use_sukf" value="false" />
+    <param name="use_vectormap" value="false" />
+    <param name="merge_distance_threshold" value="0.5" />
+  </node>
+
+  <!-- <node pkg="detected_objects_visualizer" type="visualize_detected_objects" name="ukf_track_visualization"
+        output="screen" ns="$(arg namespace)">
+    <param name="objects_src_topic" value="/objects_$(arg label)"/>
+  </node> -->
+
+</launch>

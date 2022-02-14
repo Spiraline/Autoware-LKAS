@@ -55,6 +55,11 @@ public:
   int m_remainObstacleWaitingTime;
 
   double m_ndt_gnss_diff;
+  double m_ndt_score;
+  double m_pnorm;
+  double m_pnorm_threshold;
+  double m_score_threshold;
+  bool m_ndt_lkas_flag;
 
   int m_prevTrafficLightID;
   PlannerHNS::TrafficLightState m_prevTrafficLightSignal;

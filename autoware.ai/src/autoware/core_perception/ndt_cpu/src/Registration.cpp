@@ -67,6 +67,24 @@ double Registration<PointSourceType, PointTargetType>::getPNorm()
 }
 
 template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setLKASFlag(bool flag)
+{
+  ndt_lkas_flag_ = flag;
+}
+
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setAccuracyFlag(bool flag)
+{
+  accuracy_flag_ = flag;
+}
+
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setTimeWall(double time_wall)
+{
+  time_wall_ = time_wall;
+}
+
+template <typename PointSourceType, typename PointTargetType>
 bool Registration<PointSourceType, PointTargetType>::hasConverged() const
 {
   return converged_;

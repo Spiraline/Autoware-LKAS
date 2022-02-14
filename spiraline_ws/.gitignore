@@ -1,0 +1,9 @@
+*.weights
+*.png
+
+build
+devel
+log
+res
+
+src/CMakeLists.txt

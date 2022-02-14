@@ -40,6 +40,7 @@
 
 // headers in Autoware Health Checker
 #include <autoware_health_checker/health_checker/health_checker.h>
+#include <boost/filesystem.hpp>
 
 #include <opencv2/core/version.hpp>
 #include "gencolors.cpp"
@@ -74,7 +75,8 @@ private:
   size_t concentric_dividers_num_;
 
   struct timespec start_time, end_time;
-  bool _output_log;
+  bool _res_t_log;
+  std::string res_t_filename;
 
   std::vector<cv::Scalar> colors_;
   const size_t color_num_ = 60;  // different number of color to generate

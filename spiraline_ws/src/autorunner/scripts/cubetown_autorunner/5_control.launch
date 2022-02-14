@@ -1,0 +1,42 @@
+<launch>
+  <!-- pure_pursuit  -->
+  <arg name="dynamic_params" default="[[0.0, 5.0, 2.0, 5.0], [5.0, 9.0, 1.4, 7.0], [9.0, 10.0, 2.0, 18.0], [10.0, 13.5, 1.0, 20.0]]" />
+  <node pkg="pure_pursuit" type="pure_pursuit" name="pure_pursuit" output="screen">
+    <param name="is_linear_interpolation" value="true"/>
+    <param name="publishes_for_steering_robot" value="true"/>
+    <param name="add_virtual_end_waypoints" value="false"/>
+    <param name="const_lookahead_distance" value="4.0"/>
+    <param name="const_velocity" value="5.0"/>
+    <param name="velocity_source" value="0"/> <!-- 0 = waypoints, 1 = provided constant velocity -->
+    <param name="dynamic_params_flag" value="false" />
+    <rosparam param="dynamic_params" subst_value="True">$(arg dynamic_params)</rosparam>
+  </node>
+
+  <!-- twist_filter -->
+  <node pkg="twist_filter" type="twist_filter" name="twist_filter" output="screen">
+    <param name="lateral_accel_limit" value="5.0" />
+    <param name="lateral_jerk_limit" value="5.0" />
+    <param name="lowpass_gain_linear_x" value="0.0" />
+    <param name="lowpass_gain_angular_z" value="0.0" />
+    <param name="lowpass_gain_steering_angle" value="0.0" />
+    <param name="max_stop_count" value="40" />
+  </node>
+
+  <!-- twist_gate -->
+  <node pkg="twist_gate" type="twist_gate" name="twist_gate" output="log">
+    <param name="loop_rate" value="30.0" />
+    <param name="use_decision_maker" value="false" />
+    <param name="twist_topic" value="/twist_cmd_merged" />
+  </node>
+
+  <!-- LKAS -->
+  <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
+    <param name="debug_window" value="false" />
+    <param name="output_topic" value="twist_cmd_lkas"/>
+  </node>
+
+  <node pkg="lkas" type="twist_combiner" name="twist_combiner" output="screen">
+    <param name="score_threshold" value="1.4" />
+  </node>
+  
+</launch>

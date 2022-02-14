@@ -49,7 +49,7 @@ MotionPrediction::MotionPrediction()
   sub_StepSignal = nh.subscribe("/pred_step_signal",     1, &MotionPrediction::callbackGetStepForwardSignals,     this);
   // sub_tracked_objects  = nh.subscribe("/tracked_objects",       1,    &MotionPrediction::callbackGetTrackedObjects,     this);
 
-  _nh.param<bool>("/op_motion_predictor/output_log", _output_log, false);
+  _nh.param<bool>("/op_motion_predictor/res_t_log", _res_t_log, false);
   
   // Setup tf
   std::string tf_str_list_str;
@@ -531,19 +531,21 @@ void MotionPrediction::VisualizePrediction()
 
 void MotionPrediction::MainLoop()
 {
-  if(_output_log){
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/op_motion_predictor.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "w");
-    fclose(fp);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
   }
 
   ros::Rate loop_rate(25);
 
   while (ros::ok())
   {
-    if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+    if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
     ros::spinOnce();
 
     if(m_MapType == PlannerHNS::MAP_KML_FILE && !bMap)
@@ -605,13 +607,11 @@ void MotionPrediction::MainLoop()
 //      pub_predicted_objects_trajectories.publish(m_PredictedResultsResults);
 //    }
 
-    if(_output_log){
+    if(_res_t_log){
       clock_gettime(CLOCK_MONOTONIC, &end_time);
-      std::string print_file_path = std::getenv("HOME");
-      print_file_path.append("/Documents/tmp/op_motion_predictor.csv");
       FILE *fp;
-      fp = fopen(print_file_path.c_str(), "a");
-      fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+      fp = fopen(res_t_filename.c_str(), "a");
+      fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
       fclose(fp);
     }
 

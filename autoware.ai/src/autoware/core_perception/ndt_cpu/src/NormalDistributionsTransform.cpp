@@ -1,12 +1,14 @@
 #include "ndt_cpu/NormalDistributionsTransform.h"
 #include "ndt_cpu/debug.h"
+#include <chrono>
 #include <cmath>
 #include <iostream>
 #include <pcl/common/transforms.h>
+#include <boost/filesystem.hpp>
 
 #define V2_ 1
 
-// #define DEBUG_ENABLE
+#define SCORE_THRESHOLD 1
 
 // #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
 
@@ -110,6 +112,23 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::setInputTar
 template <typename PointSourceType, typename PointTargetType>
 void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTransformation(const Eigen::Matrix<float, 4, 4> &guess)
 {
+  std::chrono::time_point<std::chrono::system_clock> exec_start, exec_end;
+  double exec_time;
+
+  if(ndt_lkas_flag_){
+    exec_start = std::chrono::system_clock::now();
+  }
+
+  std::string acc_directory, acc_filename;
+  FILE* acc_fp;
+  if(accuracy_flag_){
+    acc_directory = std::getenv("HOME");
+    acc_directory = acc_directory.append("/spiraline_ws/log/ndt");
+    boost::filesystem::create_directories(boost::filesystem::path(acc_directory));
+    acc_filename = acc_directory + "/accuracy.csv";
+    acc_fp = fopen(acc_filename.c_str(), "a");
+  }
+
   nr_iterations_ = 0;
   converged_ = false;
 
@@ -145,10 +164,6 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
 
   int points_number = source_cloud_->points.size();
 
-  #ifdef DEBUG_ENABLE
-    FILE * fp = fopen("/home/jwhan/Documents/ndt_matching_test.txt", "a");
-  #endif
-
   while (!converged_) {
     previous_transformation_ = transformation_;
 
@@ -175,27 +190,41 @@ void NormalDistributionsTransform<PointSourceType, PointTargetType>::computeTran
 
     p = p + delta_p;
 
-    //Not update visualizer
+    if(ndt_lkas_flag_){
+      exec_end = std::chrono::system_clock::now();
+      exec_time = std::chrono::duration_cast<std::chrono::microseconds>(exec_end - exec_start).count() / 1000.0;
 
-    if (nr_iterations_ > max_iterations_ || (nr_iterations_ && (std::fabs(delta_p_norm) < transformation_epsilon_))) {
-      converged_ = true;
+      if(exec_time > time_wall_){
+        converged_ = true;
+      }
+    }
+    else{
+      if(nr_iterations_ > max_iterations_){
+        break;
+      }
     }
 
     double score = getFitnessScore();
 
-    #ifdef DEBUG_ENABLE
-      fprintf(fp, "%lf ", delta_p_norm);
-    #endif
+    if (nr_iterations_ && (std::fabs(delta_p_norm) < transformation_epsilon_) && score < SCORE_THRESHOLD) {
+      converged_ = true;
+    }
+
+    if(accuracy_flag_)
+    {
+      fprintf(acc_fp, "%lf,", delta_p_norm);
+    }
 
     nr_iterations_++;
   }
 
   p_norm_ = std::fabs(delta_p_norm);
 
-  #ifdef DEBUG_ENABLE
-    fprintf(fp, "\n");
-    fclose(fp);
-  #endif
+  if(accuracy_flag_)
+  {
+    fprintf(acc_fp, "\n");
+    fclose(acc_fp);
+  }
 
   if (source_cloud_->points.size() > 0) {
     trans_probability_ = score / static_cast<double>(source_cloud_->points.size());
@@ -258,7 +287,23 @@ double Registration<PointSourceType, PointTargetType>::getPNorm()
   return p_norm_;
 }
 
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setLKASFlag(bool flag)
+{
+  ndt_lkas_flag_ = flag;
+}
 
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setTimeWall(double time_wall)
+{
+  time_wall_ = time_wall;
+}
+
+template <typename PointSourceType, typename PointTargetType>
+void Registration<PointSourceType, PointTargetType>::setAccuracyFlag(bool flag)
+{
+  accuracy_flag_ = flag;
+}
 
 template <typename PointSourceType, typename PointTargetType>
 void NormalDistributionsTransform<PointSourceType, PointTargetType>::computePointDerivatives(Eigen::Vector3d &x, Eigen::Matrix<double, 3, 6> &point_gradient, Eigen::Matrix<double, 18, 6> &point_hessian, bool compute_hessian)

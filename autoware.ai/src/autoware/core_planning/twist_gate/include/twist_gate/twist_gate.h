@@ -28,6 +28,7 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
+#include <boost/filesystem.hpp>
 
 #include "autoware_config_msgs/ConfigTwistFilter.h"
 #include "autoware_msgs/ControlCommandStamped.h"
@@ -52,6 +53,9 @@ class TwistGate
 public:
   TwistGate(const ros::NodeHandle& nh, const ros::NodeHandle& private_nh);
   ~TwistGate();
+
+  bool _res_t_log;
+  std::string res_t_filename;
 
 private:
   void checkState();
@@ -91,6 +95,7 @@ private:
   ros::Time state_time_;
   ros::Duration timeout_period_;
   double loop_rate_;
+  std::string twist_topic_;
 
   std::thread watchdog_timer_thread_;
   bool is_alive;

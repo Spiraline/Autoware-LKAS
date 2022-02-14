@@ -201,6 +201,8 @@ void DecisionMaker::InitBehaviorStates()
    pValues->velocityOfNext = bestTrajectory.closest_obj_velocity;
 
    pValues->ndt_gnss_diff = m_ndt_gnss_diff;
+   pValues->ndt_score = m_ndt_score;
+   pValues->p_norm = m_pnorm;
 
    if(bestTrajectory.index >=0 &&  bestTrajectory.index < (int)m_RollOuts.size())
      pValues->iCurrSafeTrajectory = bestTrajectory.index;
@@ -415,9 +417,9 @@ double DecisionMaker::GetClosestWaypointDistance(const int& iGlobalPathIndex){
       || preCalcPrams->bRePlan
       || preCalcPrams->bNewGlobalPath)
   {
-    std::cout << "New Local Plan !! " << currIndex << ", "<< preCalcPrams->bRePlan << ", " << preCalcPrams->bNewGlobalPath  << ", " <<  m_TotalOriginalPath.at(0).size() << ", PrevLocal: " << m_Path.size();
+    //std::cout << "New Local Plan !! " << currIndex << ", "<< preCalcPrams->bRePlan << ", " << preCalcPrams->bNewGlobalPath  << ", " <<  m_TotalOriginalPath.at(0).size() << ", PrevLocal: " << m_Path.size();
     m_Path = m_RollOuts.at(preCalcPrams->iCurrSafeTrajectory);
-    std::cout << ", NewLocal: " << m_Path.size() << std::endl;
+    //std::cout << ", NewLocal: " << m_Path.size() << std::endl;
 
     preCalcPrams->bNewLocalPlan = true;
 

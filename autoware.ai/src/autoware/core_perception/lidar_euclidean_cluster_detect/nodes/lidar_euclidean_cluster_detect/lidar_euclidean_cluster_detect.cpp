@@ -67,6 +67,8 @@
 
 #include "cluster.h"
 
+#include <boost/filesystem.hpp>
+
 #ifdef GPU_CLUSTERING
 
 #include "gpu_euclidean_clustering.h"
@@ -91,8 +93,9 @@ std_msgs::Header _velodyne_header;
 
 std::string _output_frame;
 
-static bool _output_log;
 struct timespec start_time, end_time;
+static bool _res_t_log;
+static std::string res_t_filename;
 
 static bool _velodyne_transform_available;
 static bool _downsample_cloud;
@@ -847,7 +850,7 @@ void removePointsUpTo(const pcl::PointCloud<pcl::PointXYZ>::Ptr in_cloud_ptr,
 
 void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
 {
-  if(_output_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
+  if(_res_t_log) clock_gettime(CLOCK_MONOTONIC, &start_time);
 
   if (!_using_sensor_cloud)
   {
@@ -924,13 +927,11 @@ void velodyne_callback(const sensor_msgs::PointCloud2ConstPtr& in_sensor_cloud)
     _using_sensor_cloud = false;
   }
 
-  if(_output_log){
+  if(_res_t_log){
     clock_gettime(CLOCK_MONOTONIC, &end_time);
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
     FILE *fp;
-    fp = fopen(print_file_path.c_str(), "a");
-    fprintf(fp, "%lld.%.9ld,%lld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
+    fp = fopen(res_t_filename.c_str(), "a");
+    fprintf(fp, "%ld.%.9ld,%ld.%.9ld,%d\n",start_time.tv_sec,start_time.tv_nsec,end_time.tv_sec,end_time.tv_nsec,getpid());
     fclose(fp);
   }
 }
@@ -960,14 +961,16 @@ int main(int argc, char **argv)
   std::string cluster_centeroids_str;
   std::string points_ground_str;
 
-  private_nh.getParam("output_log", _output_log);
+  private_nh.param<bool>("res_t_log", _res_t_log, false);
 
-  if(_output_log){
-    std::string print_file_path = std::getenv("HOME");
-    print_file_path.append("/Documents/tmp/lidar_euclidean_cluster.csv");
-    FILE *fp;
-    fp = fopen(print_file_path.c_str(), "w");
-    fclose(fp);
+  if(_res_t_log)
+  {
+    std::string res_t_directory = std::getenv("HOME");
+    res_t_directory = res_t_directory.append("/spiraline_ws/log/res_t");
+    boost::filesystem::create_directories(boost::filesystem::path(res_t_directory));
+    res_t_filename = res_t_directory + "/" + ros::this_node::getName() + ".csv";
+    FILE *fp = fopen(res_t_filename.c_str(), "w");
+	  fclose(fp);
   }
 
   private_nh.param<std::string>("label", label, "center");

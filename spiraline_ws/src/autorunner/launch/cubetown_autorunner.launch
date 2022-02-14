@@ -1,0 +1,6 @@
+<launch>
+    <arg name="exp" default="default"/>
+    
+    <rosparam command="load" file="$(env HOME)/spiraline_ws/src/autorunner/cfg/cubetown_autorunner/$(arg exp)_autorunner.yaml" />
+    <node pkg="autorunner" type="cubetown_autorunner" name="cubetown_autorunner" output="screen" />
+</launch>

@@ -916,6 +916,9 @@ public:
   double LateralSkipDistance;
 
   double ndt_gnss_diff;
+  double ndt_score;
+  bool ndt_lkas_flag;
+  double pnorm_threshold, score_threshold;
   
   // Added by HJW for traffic signal parameter
   double stopLineMargin;
@@ -1028,6 +1031,8 @@ public:
   int         prevGoalID;
   double      closestWaypointDistance;
   double      ndt_gnss_diff;
+  double      ndt_score;
+  double      p_norm;
   double      goalDistance;
   bool        bNewLocalPlan;
   //-------------------------------------------//
