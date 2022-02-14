@@ -1,14 +1,12 @@
 # Autoware with LKAS
-Autoware with LKAS
-
-## Publication
-
+Autoware with safety guarantee mechanism
 
 ## Environment
 
 - Ubuntu 18.04
 - ROS Melodic
-- OpenCV 4.x
+- Python 3.x
+- CUDA > 10.x (optional)
 
 ## How to install ROS melodic
 ```
@@ -119,8 +117,9 @@ source ~/.bashrc
 
 ## Additional Install for SVL
 ```
-sudo apt-get install -y ros-melodic-rosbridge-server net-tools
-pip3 install PyYAML rospkg matplotlib opencv-python
+sudo apt-get install -y ros-melodic-rosbridge-server net-tools openssh-server
+python3 -m pip install -U PyYAML
+python3 -m pip install rospkg matplotlib opencv-python
 cd setup/svl
 python3 -m pip install -r requirements.txt --user .
 ```

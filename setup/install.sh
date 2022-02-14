@@ -96,7 +96,7 @@ if [ ! -d "spiraline_ws/devel" ]; then
 fi
 
 # Build other files
-sudo apt-get install -y ros-melodic-rosbridge-server net-tools
+sudo apt-get install -y ros-melodic-rosbridge-server net-tools openssh-server
 
 # Python packages
 pip3 install --upgrade setuptools pip
