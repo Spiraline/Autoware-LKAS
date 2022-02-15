@@ -20,18 +20,18 @@ if __name__ == '__main__':
       rr = csv.reader(f)
       for row in rr:
         exec_t = float(row[1]) - float(row[0])
-        if len(exec_arr) > 10:
+        if len(exec_arr) > 20:
           exec_arr.sort()
           if exec_arr[0] < exec_t:
             del exec_arr[0]
             exec_arr.append(exec_t)
         else:
           exec_arr.append(exec_t)
-      # print(node_name, [round(e*1000, 2) for e in exec_arr])
-      wcet = exec_arr[0]
-      for candidate in exec_arr[1:]:
-        if candidate < wcet * 1.5:
-          wcet = candidate
+      exec_arr.sort()
+      wcet = exec_arr[-5]
+      # for candidate in exec_arr[1:]:
+      #   if candidate < wcet * 1.5:
+      #     wcet = candidate
     table_data.append([node_name, round(wcet*1000, 2)])
 
   column_labels=["Node Name", "WCET (ms)"]
