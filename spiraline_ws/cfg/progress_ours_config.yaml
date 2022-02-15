@@ -42,7 +42,7 @@ lidar_euclidean_cluster_detect:
   cluster_size_max: 100000
   res_t_log: false
 
-imm_ukf_pda_track:
+imm_ukf_pda:
   res_t_log: false
 
 # Planning

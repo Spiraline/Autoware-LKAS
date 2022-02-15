@@ -2,6 +2,8 @@
   <!-- pure_pursuit  -->
   <arg name="dynamic_params" default="[[0.0, 5.0, 2.0, 5.0], [5.0, 9.0, 1.4, 7.0], [9.0, 10.0, 2.0, 18.0], [10.0, 13.5, 1.0, 20.0]]" />
   <node pkg="pure_pursuit" type="pure_pursuit" name="pure_pursuit" output="screen">
+    <param name="lookahead_ratio" value="2.0"/>
+    <param name="minimum_lookahead_distance" value="6.0"/>
     <param name="is_linear_interpolation" value="true"/>
     <param name="publishes_for_steering_robot" value="true"/>
     <param name="add_virtual_end_waypoints" value="false"/>
