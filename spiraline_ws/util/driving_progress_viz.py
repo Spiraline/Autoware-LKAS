@@ -10,7 +10,7 @@ if __name__ == '__main__':
   parser.add_argument('--ndt', '-n', type=str, required=True, help='original NDT log file name')
   parser.add_argument('--ours', '-o', type=str, required=True, help='ours log file name')
   parser.add_argument('--time', '-t', type=int, default=40, help='plot until this time')
-  parser.add_argument('--time_wall', '-w', type=int, default=57, help='time wall')
+  parser.add_argument('--time_wall', '-w', type=int, default=56, help='time wall')
   args = parser.parse_args()
 
   csv_log_dir = getenv("HOME") + "/spiraline_ws/log/ndt/"
