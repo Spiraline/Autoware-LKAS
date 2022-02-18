@@ -62,8 +62,6 @@ if __name__ == '__main__':
   if prev_state == 'Backup':
     backup_period.append((start_t / 10, time_index / 10))
 
-  print(backup_period)
-
   for s, e in backup_period:
     ax.add_patch(patches.Rectangle((s, -20), (e-s), 40, facecolor=[0,0,0,0.1], fill=True))
 
