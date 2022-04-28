@@ -50,11 +50,6 @@ class Exp(object):
 		    self.cfg['lgsvl_bridge']['address'],
 		    self.cfg['lgsvl_bridge']['port'])
 
-		def ego_collision(agent1, agent2, contact):
-			self.collisions.append([agent1, agent2, contact])
-			return
-
-		ego.on_collision(ego_collision)
 		return
 
 	def wait_for_bridge(self):
