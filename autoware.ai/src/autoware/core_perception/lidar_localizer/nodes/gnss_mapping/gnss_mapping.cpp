@@ -37,7 +37,8 @@ struct pose
 
 // global variables
 static pose previous_gnss_pose, current_gnss_pose, localizer_pose, added_pose;
-static int is_gnss_ready = 2;
+static bool gnss_pos_ready = false;
+static bool gnss_ori_ready = false;
 
 static ros::Time current_scan_time;
 static ros::Time previous_scan_time;
@@ -59,7 +60,6 @@ static double _min_scan_range = 5.0;
 static double _max_scan_range = 200.0;
 static double _min_add_scan_shift = 1.0;
 
-static double _tf_x, _tf_y, _tf_z, _tf_roll, _tf_pitch, _tf_yaw;
 static Eigen::Matrix4f tf_btol, tf_ltob;
 
 static bool _incremental_voxel_update = false;
@@ -70,20 +70,27 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
   current_gnss_pose.y = input->pose.position.y;
   current_gnss_pose.z = input->pose.position.z;
 
+  if(!gnss_pos_ready)
+  {
+    previous_gnss_pose = current_gnss_pose;
+    gnss_pos_ready = true;
+    return;
+  }
+
   double x_diff = current_gnss_pose.x - previous_gnss_pose.x;
   double y_diff = current_gnss_pose.y - previous_gnss_pose.y;
   double z_diff = current_gnss_pose.z - previous_gnss_pose.z;
 
-  if(is_gnss_ready > 0)
+  if(!gnss_ori_ready)
   {
-    if(is_gnss_ready == 1)
+    if(x_diff * x_diff + y_diff * y_diff > 0.5)
     {
       current_gnss_pose.roll = 0;
       current_gnss_pose.pitch = 0;
       current_gnss_pose.yaw = atan2(y_diff, x_diff);
+      previous_gnss_pose = current_gnss_pose;
+      gnss_ori_ready = true;
     }
-    previous_gnss_pose = current_gnss_pose;
-    is_gnss_ready--;
     return;
   }
 
@@ -163,7 +170,7 @@ static double calcDiffForRadian(const double lhs_rad, const double rhs_rad)
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
-  if(!is_gnss_ready) return;
+  if(!gnss_ori_ready) return;
 
   double r;
   pcl::PointXYZI p;
@@ -336,45 +343,10 @@ int main(int argc, char** argv)
   std::cout << "output_filter_resolution: " << _output_filter_resolution << std::endl;
   std::cout << "output_path: " << _output_path << std::endl;
 
-  if (nh.getParam("tf_x", _tf_x) == false)
-  {
-    std::cout << "tf_x is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_y", _tf_y) == false)
-  {
-    std::cout << "tf_y is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_z", _tf_z) == false)
-  {
-    std::cout << "tf_z is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_roll", _tf_roll) == false)
-  {
-    std::cout << "tf_roll is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_pitch", _tf_pitch) == false)
-  {
-    std::cout << "tf_pitch is not set." << std::endl;
-    return 1;
-  }
-  if (nh.getParam("tf_yaw", _tf_yaw) == false)
-  {
-    std::cout << "tf_yaw is not set." << std::endl;
-    return 1;
-  }
-
-  std::cout << "(tf_x,tf_y,tf_z,tf_roll,tf_pitch,tf_yaw): (" << _tf_x << ", " << _tf_y << ", " << _tf_z << ", "
-            << _tf_roll << ", " << _tf_pitch << ", " << _tf_yaw << ")" << std::endl;
-
-
-  Eigen::Translation3f tl_btol(_tf_x, _tf_y, _tf_z);                 // tl: translation
-  Eigen::AngleAxisf rot_x_btol(_tf_roll, Eigen::Vector3f::UnitX());  // rot: rotation
-  Eigen::AngleAxisf rot_y_btol(_tf_pitch, Eigen::Vector3f::UnitY());
-  Eigen::AngleAxisf rot_z_btol(_tf_yaw, Eigen::Vector3f::UnitZ());
+  Eigen::Translation3f tl_btol(0.0, 0.0, 0.0);                 // tl: translation
+  Eigen::AngleAxisf rot_x_btol(0.0, Eigen::Vector3f::UnitX());  // rot: rotation
+  Eigen::AngleAxisf rot_y_btol(0.0, Eigen::Vector3f::UnitY());
+  Eigen::AngleAxisf rot_z_btol(0.0, Eigen::Vector3f::UnitZ());
   tf_btol = (tl_btol * rot_z_btol * rot_y_btol * rot_x_btol).matrix();
   tf_ltob = tf_btol.inverse();
 
