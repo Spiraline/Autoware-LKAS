@@ -79,11 +79,11 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   double x_diff = current_gnss_pose.x - previous_gnss_pose.x;
   double y_diff = current_gnss_pose.y - previous_gnss_pose.y;
-  double z_diff = current_gnss_pose.z - previous_gnss_pose.z;
+  // double z_diff = current_gnss_pose.z - previous_gnss_pose.z;
 
   if(!gnss_ori_ready)
   {
-    if(x_diff * x_diff + y_diff * y_diff > 0.5)
+    if(x_diff * x_diff + y_diff * y_diff > 0.3)
     {
       current_gnss_pose.roll = 0;
       current_gnss_pose.pitch = 0;
@@ -94,8 +94,11 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
     return;
   }
 
-  current_gnss_pose.yaw += atan2(y_diff, x_diff);
-  previous_gnss_pose = current_gnss_pose;
+  if(x_diff * x_diff + y_diff * y_diff > 0.005)
+  {
+    current_gnss_pose.yaw = atan2(y_diff, x_diff);
+    previous_gnss_pose = current_gnss_pose;
+  }
 }
 
 static void save_map()
@@ -213,8 +216,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_ptr(new pcl::PointCloud<pcl::PointXYZI>(map));
 
   Eigen::AngleAxisf gnss_rotation_x(current_gnss_pose.roll, Eigen::Vector3f::UnitX());
-  Eigen::AngleAxisf gnss_rotation_y(current_gnss_pose.pitch, Eigen::Vector3f::UnitX());
-  Eigen::AngleAxisf gnss_rotation_z(current_gnss_pose.yaw, Eigen::Vector3f::UnitX());
+  Eigen::AngleAxisf gnss_rotation_y(current_gnss_pose.pitch, Eigen::Vector3f::UnitY());
+  Eigen::AngleAxisf gnss_rotation_z(current_gnss_pose.yaw, Eigen::Vector3f::UnitZ());
 
   Eigen::Translation3f gnss_translation(current_gnss_pose.x, current_gnss_pose.y, current_gnss_pose.z);
 
