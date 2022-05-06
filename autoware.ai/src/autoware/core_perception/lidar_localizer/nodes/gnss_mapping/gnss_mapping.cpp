@@ -52,6 +52,8 @@ static Eigen::Matrix4f gnss_transform = Eigen::Matrix4f::Identity();
 
 // Leaf size of VoxelGrid filter.
 static double _voxel_leaf_size = 2.0;
+static double _output_filter_resolution = 0.0;
+static std::string _output_path = "~/";
 
 static double _min_scan_range = 5.0;
 static double _max_scan_range = 200.0;
@@ -61,8 +63,6 @@ static double _tf_x, _tf_y, _tf_z, _tf_roll, _tf_pitch, _tf_yaw;
 static Eigen::Matrix4f tf_btol, tf_ltob;
 
 static bool _incremental_voxel_update = false;
-
-static std::string filename;
 
 static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 {
@@ -91,14 +91,8 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
   previous_gnss_pose = current_gnss_pose;
 }
 
-static void output_callback(const autoware_config_msgs::ConfigNDTMappingOutput::ConstPtr& input)
+static void save_map()
 {
-  double filter_res = input->filter_res;
-  std::string filename = input->filename;
-  std::cout << "output_callback" << std::endl;
-  std::cout << "filter_res: " << filter_res << std::endl;
-  std::cout << "filename: " << filename << std::endl;
-
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_ptr(new pcl::PointCloud<pcl::PointXYZI>(map));
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_filtered(new pcl::PointCloud<pcl::PointXYZI>());
   map_ptr->header.frame_id = "map";
@@ -106,7 +100,7 @@ static void output_callback(const autoware_config_msgs::ConfigNDTMappingOutput::
   sensor_msgs::PointCloud2::Ptr map_msg_ptr(new sensor_msgs::PointCloud2);
 
   // Apply voxelgrid filter
-  if (filter_res == 0.0)
+  if (_output_filter_resolution == 0.0)
   {
     std::cout << "Original: " << map_ptr->points.size() << " points." << std::endl;
     pcl::toROSMsg(*map_ptr, *map_msg_ptr);
@@ -114,7 +108,7 @@ static void output_callback(const autoware_config_msgs::ConfigNDTMappingOutput::
   else
   {
     pcl::VoxelGrid<pcl::PointXYZI> voxel_grid_filter;
-    voxel_grid_filter.setLeafSize(filter_res, filter_res, filter_res);
+    voxel_grid_filter.setLeafSize(_output_filter_resolution, _output_filter_resolution, _output_filter_resolution);
     voxel_grid_filter.setInputCloud(map_ptr);
     voxel_grid_filter.filter(*map_filtered);
     std::cout << "Original: " << map_ptr->points.size() << " points." << std::endl;
@@ -124,8 +118,14 @@ static void output_callback(const autoware_config_msgs::ConfigNDTMappingOutput::
 
   ndt_map_pub.publish(*map_msg_ptr);
 
+  char buffer[80];
+  std::time_t now = std::time(NULL);
+  std::tm* pnow = std::localtime(&now);
+  std::strftime(buffer, 80, "%Y%m%d_%H%M%S", pnow);
+  std::string filename = _output_path + "/" + std::string(buffer) + ".pcd";
+
   // Writing Point Cloud data to PCD file
-  if (filter_res == 0.0)
+  if (_output_filter_resolution == 0.0)
   {
     pcl::io::savePCDFileASCII(filename, *map_ptr);
     std::cout << "Saved " << map_ptr->points.size() << " data points to " << filename << "." << std::endl;
@@ -325,14 +325,16 @@ int main(int argc, char** argv)
   private_nh.getParam("max_scan_range", _max_scan_range);
   private_nh.getParam("min_add_scan_shift", _min_add_scan_shift);
   private_nh.getParam("incremental_voxel_update", _incremental_voxel_update);
-
-
+  private_nh.getParam("output_filter_resolution", _output_filter_resolution);
+  private_nh.getParam("output_path", _output_path);
 
   std::cout << "voxel_leaf_size: " << _voxel_leaf_size << std::endl;
   std::cout << "min_scan_range: " << _min_scan_range << std::endl;
   std::cout << "max_scan_range: " << _max_scan_range << std::endl;
   std::cout << "min_add_scan_shift: " << _min_add_scan_shift << std::endl;
   std::cout << "incremental_voxel_update: " << _incremental_voxel_update << std::endl;
+  std::cout << "output_filter_resolution: " << _output_filter_resolution << std::endl;
+  std::cout << "output_path: " << _output_path << std::endl;
 
   if (nh.getParam("tf_x", _tf_x) == false)
   {
@@ -381,15 +383,23 @@ int main(int argc, char** argv)
   ndt_map_pub = nh.advertise<sensor_msgs::PointCloud2>("/points_map", 1000);
   current_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/current_pose", 1000);
 
-  // ros::Subscriber output_sub = nh.subscribe("config/ndt_mapping_output", 10, output_callback);
   ros::Subscriber points_sub = nh.subscribe("points_raw", 100000, points_callback);
 
   ros::Subscriber gnss_sub = nh.subscribe("gnss_pose", 100000, gnss_callback);
 
   ros::Rate loop_rate(10);
 
+  bool _save_map = false;
+
   while(ros::ok())
   {
+    nh.getParam("save_map", _save_map);
+    if(_save_map){
+      save_map();
+      nh.setParam("save_map", false);
+      _save_map = false;
+    }
+
     ros::spinOnce();
     loop_rate.sleep();
   }
