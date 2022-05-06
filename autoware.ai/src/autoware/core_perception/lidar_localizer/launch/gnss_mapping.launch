@@ -1,0 +1,11 @@
+<!-- -->
+<launch>
+  <arg name="incremental_voxel_update" default="false" />
+
+  <!-- rosrun lidar_localizer ndt_mapping  -->
+  <node pkg="lidar_localizer" type="queue_counter" name="queue_counter" output="screen"/>
+  <node pkg="lidar_localizer" type="gnss_mapping" name="gnss_mapping" output="screen">
+    <param name="incremental_voxel_update" value="$(arg incremental_voxel_update)" />
+  </node>
+
+</launch>
