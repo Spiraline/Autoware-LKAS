@@ -35,15 +35,6 @@ struct pose
   double yaw;
 };
 
-enum class MethodType
-{
-  PCL_GENERIC = 0,
-  PCL_ANH = 1,
-  PCL_ANH_GPU = 2,
-  PCL_OPENMP = 3,
-};
-static MethodType _method_type = MethodType::PCL_GENERIC;
-
 // global variables
 static pose previous_gnss_pose, current_gnss_pose, localizer_pose, added_pose;
 static int is_gnss_ready = 2;
@@ -53,24 +44,18 @@ static ros::Time previous_scan_time;
 
 static pcl::PointCloud<pcl::PointXYZI> map;
 
-// Default values
-static int max_iter = 30;        // Maximum iterations
-static float ndt_res = 1.0;      // Resolution
-static double step_size = 0.1;   // Step size
-static double trans_eps = 0.01;  // Transformation epsilon
-
-// Leaf size of VoxelGrid filter.
-static double voxel_leaf_size = 2.0;
-
 static ros::Publisher ndt_map_pub;
 static ros::Publisher current_pose_pub;
 static geometry_msgs::PoseStamped current_pose_msg, guess_pose_msg;
 
 static Eigen::Matrix4f gnss_transform = Eigen::Matrix4f::Identity();
 
-static double min_scan_range = 5.0;
-static double max_scan_range = 200.0;
-static double min_add_scan_shift = 1.0;
+// Leaf size of VoxelGrid filter.
+static double _voxel_leaf_size = 2.0;
+
+static double _min_scan_range = 5.0;
+static double _max_scan_range = 200.0;
+static double _min_add_scan_shift = 1.0;
 
 static double _tf_x, _tf_y, _tf_z, _tf_roll, _tf_pitch, _tf_yaw;
 static Eigen::Matrix4f tf_btol, tf_ltob;
@@ -104,28 +89,6 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   current_gnss_pose.yaw += atan2(y_diff, x_diff);
   previous_gnss_pose = current_gnss_pose;
-}
-
-static void param_callback(const autoware_config_msgs::ConfigNDTMapping::ConstPtr& input)
-{
-  ndt_res = input->resolution;
-  step_size = input->step_size;
-  trans_eps = input->trans_epsilon;
-  max_iter = input->max_iterations;
-  voxel_leaf_size = input->leaf_size;
-  min_scan_range = input->min_scan_range;
-  max_scan_range = input->max_scan_range;
-  min_add_scan_shift = input->min_add_scan_shift;
-
-  std::cout << "param_callback" << std::endl;
-  std::cout << "ndt_res: " << ndt_res << std::endl;
-  std::cout << "step_size: " << step_size << std::endl;
-  std::cout << "trans_epsilon: " << trans_eps << std::endl;
-  std::cout << "max_iter: " << max_iter << std::endl;
-  std::cout << "voxel_leaf_size: " << voxel_leaf_size << std::endl;
-  std::cout << "min_scan_range: " << min_scan_range << std::endl;
-  std::cout << "max_scan_range: " << max_scan_range << std::endl;
-  std::cout << "min_add_scan_shift: " << min_add_scan_shift << std::endl;
 }
 
 static void output_callback(const autoware_config_msgs::ConfigNDTMappingOutput::ConstPtr& input)
@@ -226,7 +189,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     p.intensity = (double)item->intensity;
 
     r = sqrt(pow(p.x, 2.0) + pow(p.y, 2.0));
-    if (min_scan_range < r && r < max_scan_range)
+    if (_min_scan_range < r && r < _max_scan_range)
     {
       scan.push_back(p);
     }
@@ -236,7 +199,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
   // Apply voxelgrid filter
   pcl::VoxelGrid<pcl::PointXYZI> voxel_grid_filter;
-  voxel_grid_filter.setLeafSize(voxel_leaf_size, voxel_leaf_size, voxel_leaf_size);
+  voxel_grid_filter.setLeafSize(_voxel_leaf_size, _voxel_leaf_size, _voxel_leaf_size);
   voxel_grid_filter.setInputCloud(scan_ptr);
   voxel_grid_filter.filter(*filtered_scan_ptr);
 
@@ -285,7 +248,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
   // Calculate the shift between added_pos and current_pos
   double shift = sqrt(pow(current_gnss_pose.x - added_pose.x, 2.0) + pow(current_gnss_pose.y - added_pose.y, 2.0));
-  if (shift >= min_add_scan_shift)
+  if (shift >= _min_add_scan_shift)
   {
     map += *transformed_scan_ptr;
     added_pose.x = current_gnss_pose.x;
@@ -357,9 +320,18 @@ int main(int argc, char** argv)
   ros::NodeHandle private_nh("~");
 
   // setting parameters
+  private_nh.getParam("voxel_leaf_size", _voxel_leaf_size);
+  private_nh.getParam("min_scan_range", _min_scan_range);
+  private_nh.getParam("max_scan_range", _max_scan_range);
+  private_nh.getParam("min_add_scan_shift", _min_add_scan_shift);
   private_nh.getParam("incremental_voxel_update", _incremental_voxel_update);
 
-  std::cout << "method_type: " << static_cast<int>(_method_type) << std::endl;
+
+
+  std::cout << "voxel_leaf_size: " << _voxel_leaf_size << std::endl;
+  std::cout << "min_scan_range: " << _min_scan_range << std::endl;
+  std::cout << "max_scan_range: " << _max_scan_range << std::endl;
+  std::cout << "min_add_scan_shift: " << _min_add_scan_shift << std::endl;
   std::cout << "incremental_voxel_update: " << _incremental_voxel_update << std::endl;
 
   if (nh.getParam("tf_x", _tf_x) == false)
@@ -406,16 +378,21 @@ int main(int argc, char** argv)
 
   map.header.frame_id = "map";
 
-  ndt_map_pub = nh.advertise<sensor_msgs::PointCloud2>("/ndt_map", 1000);
+  ndt_map_pub = nh.advertise<sensor_msgs::PointCloud2>("/points_map", 1000);
   current_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("/current_pose", 1000);
 
-  ros::Subscriber param_sub = nh.subscribe("config/ndt_mapping", 10, param_callback);
-  ros::Subscriber output_sub = nh.subscribe("config/ndt_mapping_output", 10, output_callback);
+  // ros::Subscriber output_sub = nh.subscribe("config/ndt_mapping_output", 10, output_callback);
   ros::Subscriber points_sub = nh.subscribe("points_raw", 100000, points_callback);
 
   ros::Subscriber gnss_sub = nh.subscribe("gnss_pose", 100000, gnss_callback);
 
-  ros::spin();
+  ros::Rate loop_rate(10);
+
+  while(ros::ok())
+  {
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
 
   return 0;
 }
