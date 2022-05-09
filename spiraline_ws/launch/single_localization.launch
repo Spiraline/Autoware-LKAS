@@ -7,7 +7,7 @@
   <arg name="topic_twist_stamped" default="/estimate_twist" />
 
   <!-- ndt_matching -->
-  <node pkg="lidar_localizer" type="ndt_matching" name="ndt_matching" output="screen">
+  <node pkg="lidar_localizer" type="ndt_matching" name="ndt_matching">
     <param name="method_type" value="1" /> <!-- pcl_generic=0, pcl_anh=1, pcl_anh_gpu=2, pcl_openmp=3 -->
     <param name="use_gnss" value="true" />
     <param name="use_odom" value="false" />
@@ -19,17 +19,17 @@
     <param name="use_local_transform" value="false" />
     <param name="output_log_data" value="false" />
     <param name="gnss_reinit_fitness" value="500" />
-    <param name="get_height" value="true" />
+    <param name="get_height" value="false" />
     <param name="time_wall" value="57.0" />
     <param name="ndt_lkas_flag" value="$(arg ndt_lkas_flag)" />
-    <param name="pnorm_threshold" value="0.05" >
-    <param name="score_threshold" value="1.5" />
+    <param name="pnorm_threshold" value="0.05" />
+    <param name="score_threshold" value="6.0" />
     <param name="res_t_log" value="$(arg res_t_log)" />
     <param name="accuracy_log" value="false" />
   </node>
 
   <!-- ndt config -->
-  <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
+  <!-- <node pkg="lkas" type="ndt_config_publisher.py" name="ndt_config" output="screen">
     <param name="init_pos_gnss" value="0" />
     <param name="init_x" value="57.1" />
     <param name="init_y" value="1.38" />
@@ -43,7 +43,7 @@
     <param name="step_size" value="0.5" />
     <param name="trans_epsilon" value="0.01" />
     <param name="max_iterations" value="10" />
-  </node>
+  </node> -->
 
   <!-- vel_pose_mux -->
   <include file="$(find autoware_connector)/launch/vel_pose_connect.launch">

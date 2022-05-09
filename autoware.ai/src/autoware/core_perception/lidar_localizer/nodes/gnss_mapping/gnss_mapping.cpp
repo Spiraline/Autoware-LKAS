@@ -18,6 +18,7 @@
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <ndt_cpu/NormalDistributionsTransform.h>
 #include <pcl/registration/ndt.h> // Need for voxel grid filter
 
 #include <autoware_config_msgs/ConfigNDTMapping.h>
@@ -35,11 +36,36 @@ struct pose
   double yaw;
 };
 
-// global variables
+////// For NDT
+enum class MethodType
+{
+  PCL_GENERIC = 0,
+  PCL_ANH = 1,
+  PCL_ANH_GPU = 2,
+  PCL_OPENMP = 3,
+};
+static MethodType _method_type = MethodType::PCL_GENERIC;
+
+static pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> ndt;
+static cpu::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> anh_ndt;
+static int max_iter = 30;        // Maximum iterations
+static float ndt_res = 1.0;      // Resolution
+static double step_size = 0.1;   // Step size
+static double trans_eps = 0.01;  // Transformation epsilon
+static double fitness_score;
+static bool has_converged;
+static int final_num_iteration;
+static double transformation_probability;
+static int initial_scan_loaded = 0;
+
+
+////// global variables
 static pose previous_gnss_pose, current_gnss_pose, localizer_pose, added_pose;
 static bool gnss_pos_ready = false;
 static bool gnss_ori_ready = false;
 static bool _enable_mapping = true;
+static bool _use_ndt = false;
+static bool _use_gnss_ori = false;
 
 static ros::Time current_scan_time;
 static ros::Time previous_scan_time;
@@ -76,6 +102,21 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
   {
     previous_gnss_pose = current_gnss_pose;
     gnss_pos_ready = true;
+    return;
+  }
+
+  if(_use_gnss_ori)
+  {
+    double r, p, y;
+    tf::Quaternion quat(input->pose.orientation.x, input->pose.orientation.y, input->pose.orientation.z, input->pose.orientation.w);
+    // converted to RPY[-pi : pi]
+    tf::Matrix3x3(quat).getRPY(r, p, y);
+
+    current_gnss_pose.roll = r;
+    current_gnss_pose.pitch = p;
+    current_gnss_pose.yaw = y;
+    previous_gnss_pose = current_gnss_pose;
+    gnss_ori_ready = true;
     return;
   }
 
@@ -149,30 +190,6 @@ static void save_map()
   }
 }
 
-static double wrapToPm(double a_num, const double a_max)
-{
-  if (a_num >= a_max)
-  {
-    a_num -= 2.0 * a_max;
-  }
-  return a_num;
-}
-
-static double wrapToPmPi(double a_angle_rad)
-{
-  return wrapToPm(a_angle_rad, M_PI);
-}
-
-static double calcDiffForRadian(const double lhs_rad, const double rhs_rad)
-{
-  double diff_rad = lhs_rad - rhs_rad;
-  if (diff_rad >= M_PI)
-    diff_rad = diff_rad - 2 * M_PI;
-  else if (diff_rad < -M_PI)
-    diff_rad = diff_rad + 2 * M_PI;
-  return diff_rad;
-}
-
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
   if(!_enable_mapping) return;
@@ -224,16 +241,79 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
   Eigen::Translation3f gnss_translation(current_gnss_pose.x, current_gnss_pose.y, current_gnss_pose.z);
 
-  t_localizer =
+  Eigen::Matrix4f init_guess =
       (gnss_translation * gnss_rotation_z * gnss_rotation_y * gnss_rotation_x).matrix() * tf_btol;
 
-  // Didn't modify below
+  double ndt_roll, ndt_pitch, ndt_yaw;
+  tf::Matrix3x3 mat_n, mat_l, mat_b;
+  if(_use_ndt)
+  {
+    pcl::PointCloud<pcl::PointXYZI>::Ptr output_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+    if (initial_scan_loaded == 0)
+    {
+      pcl::transformPointCloud(*scan_ptr, *transformed_scan_ptr, init_guess);
+      map += *transformed_scan_ptr;
+
+      if (_method_type == MethodType::PCL_GENERIC)
+      {
+        ndt.setTransformationEpsilon(trans_eps);
+        ndt.setStepSize(step_size);
+        ndt.setResolution(ndt_res);
+        ndt.setMaximumIterations(max_iter);
+        ndt.setInputSource(filtered_scan_ptr);
+      }
+      else if (_method_type == MethodType::PCL_ANH)
+      {
+        anh_ndt.setTransformationEpsilon(trans_eps);
+        anh_ndt.setStepSize(step_size);
+        anh_ndt.setResolution(ndt_res);
+        anh_ndt.setMaximumIterations(max_iter);
+        anh_ndt.setInputSource(filtered_scan_ptr);
+      }
+
+      initial_scan_loaded = 1;
+      return;
+    }
+    if (_method_type == MethodType::PCL_GENERIC)
+    {
+      ndt.setInputTarget(map_ptr);
+      ndt.align(*output_cloud, init_guess);
+      fitness_score = ndt.getFitnessScore();
+      t_localizer = ndt.getFinalTransformation();
+      has_converged = ndt.hasConverged();
+      final_num_iteration = ndt.getFinalNumIteration();
+      transformation_probability = ndt.getTransformationProbability();
+    }
+    else if (_method_type == MethodType::PCL_ANH)
+    {
+      anh_ndt.setInputTarget(map_ptr);
+      anh_ndt.align(init_guess);
+      fitness_score = anh_ndt.getFitnessScore();
+      t_localizer = anh_ndt.getFinalTransformation();
+      has_converged = anh_ndt.hasConverged();
+      final_num_iteration = anh_ndt.getFinalNumIteration();
+    }
+
+    mat_n.setValue(static_cast<double>(t_localizer(0, 0)), static_cast<double>(t_localizer(0, 1)),
+                  static_cast<double>(t_localizer(0, 2)), static_cast<double>(t_localizer(1, 0)),
+                  static_cast<double>(t_localizer(1, 1)), static_cast<double>(t_localizer(1, 2)),
+                  static_cast<double>(t_localizer(2, 0)), static_cast<double>(t_localizer(2, 1)),
+                  static_cast<double>(t_localizer(2, 2)));
+    mat_n.getRPY(ndt_roll, ndt_pitch, ndt_yaw, 1);
+    Eigen::AngleAxisf ndt_rotation_x(ndt_roll, Eigen::Vector3f::UnitX());
+    Eigen::AngleAxisf ndt_rotation_y(ndt_pitch, Eigen::Vector3f::UnitY());
+    Eigen::AngleAxisf ndt_rotation_z(ndt_yaw, Eigen::Vector3f::UnitZ());
+
+    t_localizer =
+      (gnss_translation * ndt_rotation_z * ndt_rotation_y * ndt_rotation_x).matrix() * tf_btol;
+  }
+  else
+  {
+    t_localizer = init_guess;
+  }
 
   t_base_link = t_localizer * tf_ltob;
-
   pcl::transformPointCloud(*scan_ptr, *transformed_scan_ptr, t_localizer);
-
-  tf::Matrix3x3 mat_l, mat_b;
 
   mat_l.setValue(static_cast<double>(t_localizer(0, 0)), static_cast<double>(t_localizer(0, 1)),
                  static_cast<double>(t_localizer(0, 2)), static_cast<double>(t_localizer(1, 0)),
@@ -254,7 +334,12 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   mat_l.getRPY(localizer_pose.roll, localizer_pose.pitch, localizer_pose.yaw, 1);
 
   transform.setOrigin(tf::Vector3(current_gnss_pose.x, current_gnss_pose.y, current_gnss_pose.z));
-  q.setRPY(current_gnss_pose.roll, current_gnss_pose.pitch, current_gnss_pose.yaw);
+
+  if(_use_ndt)
+    q.setRPY(ndt_roll, ndt_pitch, ndt_yaw);
+  else
+    q.setRPY(current_gnss_pose.roll, current_gnss_pose.pitch, current_gnss_pose.yaw);
+
   transform.setRotation(q);
 
   br.sendTransform(tf::StampedTransform(transform, current_scan_time, "map", "base_link"));
@@ -267,9 +352,17 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     added_pose.x = current_gnss_pose.x;
     added_pose.y = current_gnss_pose.y;
     added_pose.z = current_gnss_pose.z;
-    added_pose.roll = current_gnss_pose.roll;
-    added_pose.pitch = current_gnss_pose.pitch;
-    added_pose.yaw = current_gnss_pose.yaw;
+
+    if(_use_ndt){
+      added_pose.roll = ndt_roll;
+      added_pose.pitch = ndt_pitch;
+      added_pose.yaw = ndt_yaw;
+    }
+    else{
+      added_pose.roll = current_gnss_pose.roll;
+      added_pose.pitch = current_gnss_pose.pitch;
+      added_pose.yaw = current_gnss_pose.yaw;
+    }
   }
 
   sensor_msgs::PointCloud2::Ptr map_msg_ptr(new sensor_msgs::PointCloud2);
@@ -298,8 +391,8 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   std::cout << "(x,y,z,roll,pitch,yaw):" << std::endl;
   std::cout << "(" << current_gnss_pose.x << ", " << current_gnss_pose.y << ", " << current_gnss_pose.z << ", " << current_gnss_pose.roll
             << ", " << current_gnss_pose.pitch << ", " << current_gnss_pose.yaw << ")" << std::endl;
-  std::cout << "Transformation Matrix:" << std::endl;
-  std::cout << t_localizer << std::endl;
+  // std::cout << "Transformation Matrix:" << std::endl;
+  // std::cout << t_localizer << std::endl;
   std::cout << "shift: " << shift << std::endl;
   std::cout << "-----------------------------------------------------------------" << std::endl;
 }
@@ -336,6 +429,8 @@ int main(int argc, char** argv)
   private_nh.getParam("voxel_leaf_size", _voxel_leaf_size);
   private_nh.getParam("min_scan_range", _min_scan_range);
   private_nh.getParam("max_scan_range", _max_scan_range);
+  private_nh.getParam("use_ndt", _use_ndt);
+  private_nh.getParam("use_gnss_ori", _use_gnss_ori);
   private_nh.getParam("min_height", _min_height);
   private_nh.getParam("min_add_scan_shift", _min_add_scan_shift);
   private_nh.getParam("incremental_voxel_update", _incremental_voxel_update);

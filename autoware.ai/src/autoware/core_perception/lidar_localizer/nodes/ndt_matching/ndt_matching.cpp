@@ -588,9 +588,9 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
     previous_pose = current_gnss_pose;
   }
 
-  if(_is_init_match_finished && ndt_gnss_diff > 10.0 || previous_score > 2.0){
-    std::cout << "[NDT matching] Matching Fail!" << std::endl;
-  }
+  // if(_is_init_match_finished && ndt_gnss_diff > 10.0 || previous_score > 2.0){
+  //   std::cout << "[NDT matching] Matching Fail!" << std::endl;
+  // }
 
   if(_ndt_lkas_flag && (previous_score > 2.0 || (previous_pnorm > _pnorm_threshold && previous_score > _score_threshold)))
     matching_fail_cnt++;
