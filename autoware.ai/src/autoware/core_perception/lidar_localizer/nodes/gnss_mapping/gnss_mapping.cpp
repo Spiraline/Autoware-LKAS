@@ -48,10 +48,10 @@ static MethodType _method_type = MethodType::PCL_GENERIC;
 
 static pcl::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> ndt;
 static cpu::NormalDistributionsTransform<pcl::PointXYZI, pcl::PointXYZI> anh_ndt;
-static int max_iter = 30;        // Maximum iterations
-static float ndt_res = 1.0;      // Resolution
-static double step_size = 0.1;   // Step size
-static double trans_eps = 0.01;  // Transformation epsilon
+static int _max_iter = 30;        // Maximum iterations
+static float _ndt_res = 1.0;      // Resolution
+static double _step_size = 0.1;   // Step size
+static double _trans_eps = 0.01;  // Transformation epsilon
 static double fitness_score;
 static bool has_converged;
 static int final_num_iteration;
@@ -256,18 +256,18 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
       if (_method_type == MethodType::PCL_GENERIC)
       {
-        ndt.setTransformationEpsilon(trans_eps);
-        ndt.setStepSize(step_size);
-        ndt.setResolution(ndt_res);
-        ndt.setMaximumIterations(max_iter);
+        ndt.setTransformationEpsilon(_trans_eps);
+        ndt.setStepSize(_step_size);
+        ndt.setResolution(_ndt_res);
+        ndt.setMaximumIterations(_max_iter);
         ndt.setInputSource(filtered_scan_ptr);
       }
       else if (_method_type == MethodType::PCL_ANH)
       {
-        anh_ndt.setTransformationEpsilon(trans_eps);
-        anh_ndt.setStepSize(step_size);
-        anh_ndt.setResolution(ndt_res);
-        anh_ndt.setMaximumIterations(max_iter);
+        anh_ndt.setTransformationEpsilon(_trans_eps);
+        anh_ndt.setStepSize(_step_size);
+        anh_ndt.setResolution(_ndt_res);
+        anh_ndt.setMaximumIterations(_max_iter);
         anh_ndt.setInputSource(filtered_scan_ptr);
       }
 
@@ -436,6 +436,10 @@ int main(int argc, char** argv)
   private_nh.getParam("incremental_voxel_update", _incremental_voxel_update);
   private_nh.getParam("output_filter_resolution", _output_filter_resolution);
   private_nh.getParam("output_path", _output_path);
+  private_nh.getParam("resolution", _ndt_res);
+  private_nh.getParam("step_size", _step_size);
+  private_nh.getParam("trans_eps", _trans_eps);
+  private_nh.getParam("max_iter", _max_iter);
 
   std::cout << "voxel_leaf_size: " << _voxel_leaf_size << std::endl;
   std::cout << "min_scan_range: " << _min_scan_range << std::endl;

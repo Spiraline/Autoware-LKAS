@@ -1,14 +1,21 @@
 <!-- -->
 <launch>
   <arg name="voxel_leaf_size" default="2.0" />
-  <arg name="min_scan_range" default="7.0" />
+  <arg name="min_scan_range" default="5.0" />
   <arg name="max_scan_range" default="200.0" />
   <arg name="min_height" default="-2.9" />
   <arg name="min_add_scan_shift" default="2.0" />
+
+  <!-- For NDT -->
   <arg name="use_ndt" default="false" />
-  <arg name="use_gnss_ori" default="false" />
+  <arg name="resolution" default="7.0" />
+  <arg name="step_size" default="0.5" />
+  <arg name="trans_eps" default="0.05" />
+  <arg name="max_iter" default="10" />
+
+  <arg name="use_gnss_ori" default="true" />
   <arg name="incremental_voxel_update" default="false" />
-  <arg name="output_filter_resolution" default="0.5" />
+  <arg name="output_filter_resolution" default="0.0" />
   <arg name="output_path" default="$(env HOME)" />
 
   <!-- rosrun lidar_localizer ndt_mapping  -->
@@ -21,6 +28,10 @@
     <param name="use_gnss_ori" value="$(arg use_gnss_ori)" />
     <param name="min_height" value="$(arg min_height)" />
     <param name="min_add_scan_shift" value="$(arg min_add_scan_shift)" />
+    <param name="resolution" value="$(arg resolution)" />
+    <param name="step_size" value="$(arg step_size)" />
+    <param name="trans_eps" value="$(arg trans_eps)" />
+    <param name="max_iter" value="$(arg max_iter)" />
     <param name="incremental_voxel_update" value="$(arg incremental_voxel_update)" />
     <param name="output_filter_resolution" value="$(arg output_filter_resolution)" />
     <param name="output_path" value="$(arg output_path)" />
