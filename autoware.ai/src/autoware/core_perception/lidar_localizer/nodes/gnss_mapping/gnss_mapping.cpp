@@ -39,6 +39,7 @@ struct pose
 static pose previous_gnss_pose, current_gnss_pose, localizer_pose, added_pose;
 static bool gnss_pos_ready = false;
 static bool gnss_ori_ready = false;
+static bool _enable_mapping = true;
 
 static ros::Time current_scan_time;
 static ros::Time previous_scan_time;
@@ -59,6 +60,7 @@ static std::string _output_path = "~/";
 static double _min_scan_range = 5.0;
 static double _max_scan_range = 200.0;
 static double _min_add_scan_shift = 1.0;
+static double _min_height = 0.0;
 
 static Eigen::Matrix4f tf_btol, tf_ltob;
 
@@ -173,6 +175,7 @@ static double calcDiffForRadian(const double lhs_rad, const double rhs_rad)
 
 static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
+  if(!_enable_mapping) return;
   if(!gnss_ori_ready) return;
 
   double r;
@@ -199,7 +202,7 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     p.intensity = (double)item->intensity;
 
     r = sqrt(pow(p.x, 2.0) + pow(p.y, 2.0));
-    if (_min_scan_range < r && r < _max_scan_range)
+    if (_min_scan_range < r && r < _max_scan_range && p.z >= _min_height)
     {
       scan.push_back(p);
     }
@@ -333,6 +336,7 @@ int main(int argc, char** argv)
   private_nh.getParam("voxel_leaf_size", _voxel_leaf_size);
   private_nh.getParam("min_scan_range", _min_scan_range);
   private_nh.getParam("max_scan_range", _max_scan_range);
+  private_nh.getParam("min_height", _min_height);
   private_nh.getParam("min_add_scan_shift", _min_add_scan_shift);
   private_nh.getParam("incremental_voxel_update", _incremental_voxel_update);
   private_nh.getParam("output_filter_resolution", _output_filter_resolution);
@@ -341,6 +345,7 @@ int main(int argc, char** argv)
   std::cout << "voxel_leaf_size: " << _voxel_leaf_size << std::endl;
   std::cout << "min_scan_range: " << _min_scan_range << std::endl;
   std::cout << "max_scan_range: " << _max_scan_range << std::endl;
+  std::cout << "min_height: " << _min_height << std::endl;
   std::cout << "min_add_scan_shift: " << _min_add_scan_shift << std::endl;
   std::cout << "incremental_voxel_update: " << _incremental_voxel_update << std::endl;
   std::cout << "output_filter_resolution: " << _output_filter_resolution << std::endl;
@@ -369,10 +374,16 @@ int main(int argc, char** argv)
   while(ros::ok())
   {
     nh.getParam("save_map", _save_map);
+    nh.getParam("enable_mapping", _enable_mapping);
     if(_save_map){
       save_map();
       nh.setParam("save_map", false);
       _save_map = false;
+    }
+
+    if(!_enable_mapping){
+      gnss_pos_ready = false;
+      gnss_ori_ready = false;
     }
 
     ros::spinOnce();

@@ -1,5 +1,5 @@
 <launch>
-  <arg name="res_t_log" value="true" />
+  <arg name="res_t_log" value="false" />
   <arg name="ndt_lkas_flag" value="true" />
 
   <!-- pure_pursuit  -->
@@ -19,32 +19,35 @@
   </node>
 
   <!-- twist_filter -->
-  <include file="$(find twist_filter)/launch/twist_filter.launch">    
-    <!-- For twist_filter -->
-    <arg name="wheel_base" default="2.7" />
-    <arg name="lateral_accel_limit" default="5.0" />
-    <arg name="lateral_jerk_limit" default="5.0" />
-    <arg name="lowpass_gain_linear_x" default="0.0" />
-    <arg name="lowpass_gain_angular_z" default="0.0" />
-    <arg name="lowpass_gain_steering_angle" default="0.0" />
-    <arg name="max_stop_count" default="40" /> <!-- 10 = 1 second -->  
-    <!-- For twist_gate -->
-    <arg name="loop_rate" default="30.0" />
-    <arg name="use_decision_maker" default="False" />
-    <arg name="twist_topic" default="/twist_cmd_merged" />
-    <arg name="res_t_log"   default="$(arg res_t_log)" />
-  </include>
+  <node pkg="twist_filter" type="twist_filter" name="twist_filter" output="screen">
+    <param name="lateral_accel_limit" value="5.0" />
+    <param name="lateral_jerk_limit" value="5.0" />
+    <param name="lowpass_gain_linear_x" value="0.0" />
+    <param name="lowpass_gain_angular_z" value="0.0" />
+    <param name="lowpass_gain_steering_angle" value="0.0" />
+    <param name="max_stop_count" value="40" />
+    <param name="res_t_log" value="true" />
+  </node>
 
+  <!-- twist_gate -->
+  <node pkg="twist_gate" type="twist_gate" name="twist_gate" output="log">
+    <param name="loop_rate" value="30.0" />
+    <param name="use_decision_maker" value="false" />
+    <param name="twist_topic" value="/twist_cmd_merged" />
+    <param name="res_t_log" value="true" />
+  </node>
+
+  <!-- LKAS -->
   <node pkg="lkas" type="lkas.py" name="lkas" output="screen">
     <param name="output_topic" value="twist_cmd_lkas"/>
     <param name="debug_window" value="False"/>
     <param name="res_t_log"    value="$(arg res_t_log)"/>
   </node>
 
-  <include file="$(find lkas)/launch/twist_combiner.launch">
-    <arg name="ndt_lkas_flag"        value="$(arg ndt_lkas_flag)" />
-    <arg name="pnorm_threshold"      value="0.05" />
-    <arg name="score_threshold"      value="1.5" />
-  </include>
+  <node pkg="lkas" type="twist_combiner" name="twist_combiner" output="screen">
+    <param name="ndt_lkas_flag"        value="$(arg ndt_lkas_flag)" />
+    <param name="pnorm_threshold"      value="0.05" />
+    <param name="score_threshold"      value="1.5" />
+  </node>
   
 </launch>

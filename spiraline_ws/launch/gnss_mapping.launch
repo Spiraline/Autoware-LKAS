@@ -3,10 +3,10 @@
   <arg name="voxel_leaf_size" default="2.0" />
   <arg name="min_scan_range" default="5.0" />
   <arg name="max_scan_range" default="200.0" />
-  <arg name="min_height" default="1.0" />
+  <arg name="min_height" default="-1.5" />
   <arg name="min_add_scan_shift" default="2.0" />
   <arg name="incremental_voxel_update" default="false" />
-  <arg name="output_filter_resolution" default="0.0" />
+  <arg name="output_filter_resolution" default="0.5" />
   <arg name="output_path" default="$(env HOME)" />
 
   <!-- rosrun lidar_localizer ndt_mapping  -->
