@@ -15,7 +15,6 @@
 
   <arg name="use_gnss_ori" default="false" />
   <arg name="incremental_voxel_update" default="false" />
-  <arg name="output_filter_resolution" default="0.0" />
   <arg name="output_path" default="$(env HOME)" />
 
   <!-- rosrun lidar_localizer ndt_mapping  -->
@@ -33,7 +32,6 @@
     <param name="trans_eps" value="$(arg trans_eps)" />
     <param name="max_iter" value="$(arg max_iter)" />
     <param name="incremental_voxel_update" value="$(arg incremental_voxel_update)" />
-    <param name="output_filter_resolution" value="$(arg output_filter_resolution)" />
     <param name="output_path" value="$(arg output_path)" />
   </node>
 

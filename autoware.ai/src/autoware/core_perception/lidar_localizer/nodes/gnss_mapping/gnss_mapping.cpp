@@ -80,7 +80,6 @@ static Eigen::Matrix4f gnss_transform = Eigen::Matrix4f::Identity();
 
 // Leaf size of VoxelGrid filter.
 static double _voxel_leaf_size = 2.0;
-static double _output_filter_resolution = 0.0;
 static std::string _output_path = "~/";
 
 static double _min_scan_range = 5.0;
@@ -144,7 +143,7 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
   }
 }
 
-static void save_map()
+static void save_map(double resolution)
 {
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_ptr(new pcl::PointCloud<pcl::PointXYZI>(map));
   pcl::PointCloud<pcl::PointXYZI>::Ptr map_filtered(new pcl::PointCloud<pcl::PointXYZI>());
@@ -153,7 +152,7 @@ static void save_map()
   sensor_msgs::PointCloud2::Ptr map_msg_ptr(new sensor_msgs::PointCloud2);
 
   // Apply voxelgrid filter
-  if (_output_filter_resolution == 0.0)
+  if (resolution == 0.0)
   {
     std::cout << "Original: " << map_ptr->points.size() << " points." << std::endl;
     pcl::toROSMsg(*map_ptr, *map_msg_ptr);
@@ -161,7 +160,7 @@ static void save_map()
   else
   {
     pcl::VoxelGrid<pcl::PointXYZI> voxel_grid_filter;
-    voxel_grid_filter.setLeafSize(_output_filter_resolution, _output_filter_resolution, _output_filter_resolution);
+    voxel_grid_filter.setLeafSize(resolution, resolution, resolution);
     voxel_grid_filter.setInputCloud(map_ptr);
     voxel_grid_filter.filter(*map_filtered);
     std::cout << "Original: " << map_ptr->points.size() << " points." << std::endl;
@@ -178,7 +177,7 @@ static void save_map()
   std::string filename = _output_path + "/" + std::string(buffer) + ".pcd";
 
   // Writing Point Cloud data to PCD file
-  if (_output_filter_resolution == 0.0)
+  if (resolution == 0.0)
   {
     pcl::io::savePCDFileASCII(filename, *map_ptr);
     std::cout << "Saved " << map_ptr->points.size() << " data points to " << filename << "." << std::endl;
@@ -434,7 +433,6 @@ int main(int argc, char** argv)
   private_nh.getParam("min_height", _min_height);
   private_nh.getParam("min_add_scan_shift", _min_add_scan_shift);
   private_nh.getParam("incremental_voxel_update", _incremental_voxel_update);
-  private_nh.getParam("output_filter_resolution", _output_filter_resolution);
   private_nh.getParam("output_path", _output_path);
   private_nh.getParam("resolution", _ndt_res);
   private_nh.getParam("step_size", _step_size);
@@ -447,7 +445,6 @@ int main(int argc, char** argv)
   std::cout << "min_height: " << _min_height << std::endl;
   std::cout << "min_add_scan_shift: " << _min_add_scan_shift << std::endl;
   std::cout << "incremental_voxel_update: " << _incremental_voxel_update << std::endl;
-  std::cout << "output_filter_resolution: " << _output_filter_resolution << std::endl;
   std::cout << "output_path: " << _output_path << std::endl;
 
   Eigen::Translation3f tl_btol(0.0, 0.0, 0.0);                 // tl: translation
@@ -468,16 +465,16 @@ int main(int argc, char** argv)
 
   ros::Rate loop_rate(10);
 
-  bool _save_map = false;
+  double _save_map = -1.0;
 
   while(ros::ok())
   {
     nh.getParam("save_map", _save_map);
     nh.getParam("enable_mapping", _enable_mapping);
-    if(_save_map){
-      save_map();
-      nh.setParam("save_map", false);
-      _save_map = false;
+    if(_save_map >= 0){
+      save_map(_save_map);
+      nh.setParam("save_map", -1.0);
+      _save_map = -1.0;
     }
 
     if(!_enable_mapping){
