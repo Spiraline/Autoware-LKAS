@@ -387,6 +387,11 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   std::cout << "Number of filtered scan points: " << filtered_scan_ptr->size() << " points." << std::endl;
   std::cout << "transformed_scan_ptr: " << transformed_scan_ptr->points.size() << " points." << std::endl;
   std::cout << "map: " << map.points.size() << " points." << std::endl;
+  if(_use_ndt){
+    std::cout << "NDT has converged: " << has_converged << std::endl;
+    std::cout << "Fitness score: " << fitness_score << std::endl;
+    std::cout << "Number of iteration: " << final_num_iteration << std::endl;
+  }
   std::cout << "(x,y,z,roll,pitch,yaw):" << std::endl;
   std::cout << "(" << current_gnss_pose.x << ", " << current_gnss_pose.y << ", " << current_gnss_pose.z << ", " << current_gnss_pose.roll
             << ", " << current_gnss_pose.pitch << ", " << current_gnss_pose.yaw << ")" << std::endl;
