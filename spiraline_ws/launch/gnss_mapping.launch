@@ -13,7 +13,7 @@
   <arg name="trans_eps" default="0.05" />
   <arg name="max_iter" default="20" />
 
-  <arg name="use_gnss_ori" default="false" />
+  <arg name="use_gnss_ori" default="true" />
   <arg name="incremental_voxel_update" default="false" />
   <arg name="output_path" default="$(env HOME)" />
 

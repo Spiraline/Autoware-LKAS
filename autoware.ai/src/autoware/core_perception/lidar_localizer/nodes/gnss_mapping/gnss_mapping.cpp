@@ -66,6 +66,7 @@ static bool gnss_ori_ready = false;
 static bool _enable_mapping = true;
 static bool _use_ndt = false;
 static bool _use_gnss_ori = false;
+static int initial_yaw = 0;
 
 static ros::Time current_scan_time;
 static ros::Time previous_scan_time;
@@ -87,9 +88,20 @@ static double _max_scan_range = 200.0;
 static double _min_add_scan_shift = 1.0;
 static double _min_height = 0.0;
 
+static double _tf_x, _tf_y, _tf_z, _tf_roll, _tf_pitch, _tf_yaw;
 static Eigen::Matrix4f tf_btol, tf_ltob;
 
 static bool _incremental_voxel_update = false;
+
+static double calcDiffForRadian(const double lhs_rad, const double rhs_rad)
+{
+  double diff_rad = lhs_rad - rhs_rad;
+  if (diff_rad >= M_PI)
+    diff_rad = diff_rad - 2 * M_PI;
+  else if (diff_rad < -M_PI)
+    diff_rad = diff_rad + 2 * M_PI;
+  return diff_rad;
+}
 
 static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 {
@@ -99,6 +111,14 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   if(!gnss_pos_ready)
   {
+    if(_use_gnss_ori)
+    {
+      double r, p, y;
+      tf::Quaternion quat(input->pose.orientation.x, input->pose.orientation.y, input->pose.orientation.z, input->pose.orientation.w);
+      // converted to RPY[-pi : pi]
+      tf::Matrix3x3(quat).getRPY(r, p, y);
+      initial_yaw = y;
+    }
     previous_gnss_pose = current_gnss_pose;
     gnss_pos_ready = true;
     return;
@@ -113,7 +133,8 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
     current_gnss_pose.roll = r;
     current_gnss_pose.pitch = p;
-    current_gnss_pose.yaw = y;
+    current_gnss_pose.yaw = calcDiffForRadian(y, initial_yaw);
+
     previous_gnss_pose = current_gnss_pose;
     gnss_ori_ready = true;
     return;
