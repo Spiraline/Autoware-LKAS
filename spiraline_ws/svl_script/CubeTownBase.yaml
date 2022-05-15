@@ -25,7 +25,8 @@ lgsvl_bridge:
 #   port: 9000
 
 ego:
-  asset-id: 787db474-5220-496f-adcd-c8e6abce010d
+  asset-id: 72a34f33-6043-44b1-9095-6b2aecca081f
+  # asset-id: 787db474-5220-496f-adcd-c8e6abce010d
   # asset-id: c881c8c1-4b85-4604-beed-67c41492fd95 # multi-lab
 
 npc:

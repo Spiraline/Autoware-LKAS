@@ -353,25 +353,28 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
   localizer_pose.z = t_localizer(2, 3);
   mat_l.getRPY(localizer_pose.roll, localizer_pose.pitch, localizer_pose.yaw, 1);
 
-  transform.setOrigin(tf::Vector3(current_gnss_pose.x, current_gnss_pose.y, current_gnss_pose.z));
+  std::cout << localizer_pose.x << " " << localizer_pose.y << std::endl;
+
+  // transform.setOrigin(tf::Vector3(current_gnss_pose.x, current_gnss_pose.y, current_gnss_pose.z));
+  transform.setOrigin(tf::Vector3(localizer_pose.x, localizer_pose.y, localizer_pose.z));
 
   if(_use_ndt)
     q.setRPY(ndt_roll, ndt_pitch, ndt_yaw);
   else
-    q.setRPY(current_gnss_pose.roll, current_gnss_pose.pitch, current_gnss_pose.yaw);
+    q.setRPY(localizer_pose.roll, localizer_pose.pitch, localizer_pose.yaw);
+    // q.setRPY(current_gnss_pose.roll, current_gnss_pose.pitch, current_gnss_pose.yaw);
 
   transform.setRotation(q);
 
   br.sendTransform(tf::StampedTransform(transform, current_scan_time, "map", "base_link"));
 
-  // Calculate the shift between added_pos and current_pos
-  double shift = sqrt(pow(current_gnss_pose.x - added_pose.x, 2.0) + pow(current_gnss_pose.y - added_pose.y, 2.0));
+  double shift = sqrt(pow(localizer_pose.x - added_pose.x, 2.0) + pow(localizer_pose.y - added_pose.y, 2.0));
   if (shift >= _min_add_scan_shift)
   {
     map += *transformed_scan_ptr;
-    added_pose.x = current_gnss_pose.x;
-    added_pose.y = current_gnss_pose.y;
-    added_pose.z = current_gnss_pose.z;
+    added_pose.x = localizer_pose.x;
+    added_pose.y = localizer_pose.y;
+    added_pose.z = localizer_pose.z;
 
     if(_use_ndt){
       added_pose.roll = ndt_roll;
@@ -379,11 +382,32 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       added_pose.yaw = ndt_yaw;
     }
     else{
-      added_pose.roll = current_gnss_pose.roll;
-      added_pose.pitch = current_gnss_pose.pitch;
-      added_pose.yaw = current_gnss_pose.yaw;
+      added_pose.roll = localizer_pose.roll;
+      added_pose.pitch = localizer_pose.pitch;
+      added_pose.yaw = localizer_pose.yaw;
     }
   }
+
+  // Calculate the shift between added_pos and current_pos
+  // double shift = sqrt(pow(current_gnss_pose.x - added_pose.x, 2.0) + pow(current_gnss_pose.y - added_pose.y, 2.0));
+  // if (shift >= _min_add_scan_shift)
+  // {
+  //   map += *transformed_scan_ptr;
+  //   added_pose.x = current_gnss_pose.x;
+  //   added_pose.y = current_gnss_pose.y;
+  //   added_pose.z = current_gnss_pose.z;
+
+  //   if(_use_ndt){
+  //     added_pose.roll = ndt_roll;
+  //     added_pose.pitch = ndt_pitch;
+  //     added_pose.yaw = ndt_yaw;
+  //   }
+  //   else{
+  //     added_pose.roll = current_gnss_pose.roll;
+  //     added_pose.pitch = current_gnss_pose.pitch;
+  //     added_pose.yaw = current_gnss_pose.yaw;
+  //   }
+  // }
 
   sensor_msgs::PointCloud2::Ptr map_msg_ptr(new sensor_msgs::PointCloud2);
   pcl::toROSMsg(*map_ptr, *map_msg_ptr);
@@ -465,6 +489,13 @@ int main(int argc, char** argv)
   private_nh.getParam("trans_eps", _trans_eps);
   private_nh.getParam("max_iter", _max_iter);
 
+  private_nh.getParam("tf_x", _tf_x);
+  private_nh.getParam("tf_y", _tf_y);
+  private_nh.getParam("tf_z", _tf_z);
+  private_nh.getParam("tf_roll", _tf_roll);
+  private_nh.getParam("tf_pitch", _tf_pitch);
+  private_nh.getParam("tf_yaw", _tf_yaw);
+
   std::cout << "voxel_leaf_size: " << _voxel_leaf_size << std::endl;
   std::cout << "min_scan_range: " << _min_scan_range << std::endl;
   std::cout << "max_scan_range: " << _max_scan_range << std::endl;
@@ -473,10 +504,10 @@ int main(int argc, char** argv)
   std::cout << "incremental_voxel_update: " << _incremental_voxel_update << std::endl;
   std::cout << "output_path: " << _output_path << std::endl;
 
-  Eigen::Translation3f tl_btol(0.0, 0.0, 0.0);                 // tl: translation
-  Eigen::AngleAxisf rot_x_btol(0.0, Eigen::Vector3f::UnitX());  // rot: rotation
-  Eigen::AngleAxisf rot_y_btol(0.0, Eigen::Vector3f::UnitY());
-  Eigen::AngleAxisf rot_z_btol(0.0, Eigen::Vector3f::UnitZ());
+  Eigen::Translation3f tl_btol(_tf_x, _tf_y, _tf_z);                 // tl: translation
+  Eigen::AngleAxisf rot_x_btol(_tf_roll, Eigen::Vector3f::UnitX());  // rot: rotation
+  Eigen::AngleAxisf rot_y_btol(_tf_pitch, Eigen::Vector3f::UnitY());
+  Eigen::AngleAxisf rot_z_btol(_tf_yaw, Eigen::Vector3f::UnitZ());
   tf_btol = (tl_btol * rot_z_btol * rot_y_btol * rot_x_btol).matrix();
   tf_ltob = tf_btol.inverse();
 
