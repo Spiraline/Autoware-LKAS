@@ -131,8 +131,8 @@ struct timespec start_time, end_time;
 static bool _res_t_log;
 static bool _accuracy_log;
 static std::string res_t_filename;
-static bool _ndt_lkas_flag;
-static double _time_wall = 40.0;
+static bool _ndt_lkas_flag = false;
+static double _time_wall = 60.0;
 static double _pnorm_threshold = 0.05;
 static double _score_threshold = 3.0;
 
@@ -583,47 +583,50 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
 
   double ndt_gnss_diff = hypot(current_gnss_pose.x - current_pose.x, current_gnss_pose.y - current_pose.y);
 
-  if(!_is_init_match_finished){
+  if(!_is_init_match_finished && _ndt_lkas_flag){
     current_pose = current_gnss_pose;
     previous_pose = current_gnss_pose;
   }
 
-  if(_is_init_match_finished && ndt_gnss_diff > 10.0 || previous_score > 2.0){
-    std::cout << "[NDT matching] Matching Fail!" << std::endl;
-  }
+  // if(_is_init_match_finished && ndt_gnss_diff > 10.0 || previous_score > 2.0){
+  //   std::cout << "[NDT matching] Matching Fail!" << std::endl;
+  // }
 
-  if(_ndt_lkas_flag && (previous_score > 2.0 || (previous_pnorm > _pnorm_threshold && previous_score > _score_threshold)))
-    matching_fail_cnt++;
-  else
-    matching_fail_cnt = 0;
+  if(_ndt_lkas_flag)
+  {
+    if(previous_score > 2.0 || (previous_pnorm > _pnorm_threshold && previous_score > _score_threshold))
+      matching_fail_cnt++;
+    else
+      matching_fail_cnt = 0;
 
-  if(previous_pnorm == 0.0){
-    previous_pnorm = 0.0;
-    previous_score = 0.0;
-    current_pose = current_gnss_pose;
-    previous_pose = previous_gnss_pose;
-  }
-  else if(matching_fail_cnt > 0){
-    matching_fail_cnt = 0.0;
-    previous_pnorm = 0.0;
-    previous_score = 0.0;
-    current_pose = current_gnss_pose;
-    previous_pose = previous_gnss_pose;
-    current_velocity = 0.0;
-    current_velocity_x = 0.0;
-    current_velocity_y = 0.0;
-    current_velocity_z = 0.0;
-    angular_velocity = 0.0;
+    if(previous_pnorm == 0.0){
+      previous_pnorm = 0.0;
+      previous_score = 0.0;
+      current_pose = current_gnss_pose;
+      previous_pose = previous_gnss_pose;
+    }
+    else if(matching_fail_cnt > 0){
+      matching_fail_cnt = 0.0;
+      previous_pnorm = 0.0;
+      previous_score = 0.0;
+      current_pose = current_gnss_pose;
+      previous_pose = previous_gnss_pose;
+      current_velocity = 0.0;
+      current_velocity_x = 0.0;
+      current_velocity_y = 0.0;
+      current_velocity_z = 0.0;
+      angular_velocity = 0.0;
 
-    current_accel = 0.0;
-    current_accel_x = 0.0;
-    current_accel_y = 0.0;
-    current_accel_z = 0.0;
+      current_accel = 0.0;
+      current_accel_x = 0.0;
+      current_accel_y = 0.0;
+      current_accel_z = 0.0;
 
-    offset_x = 0.0;
-    offset_y = 0.0;
-    offset_z = 0.0;
-    offset_yaw = 0.0;
+      offset_x = 0.0;
+      offset_y = 0.0;
+      offset_z = 0.0;
+      offset_yaw = 0.0;
+    }
   }
 
   previous_gnss_pose = current_gnss_pose;
@@ -1625,7 +1628,7 @@ int main(int argc, char** argv)
   }
 
   private_nh.param<bool>("ndt_lkas_flag", _ndt_lkas_flag, true);
-  private_nh.param<double>("time_wall", _time_wall, 40.0);
+  private_nh.param<double>("time_wall", _time_wall, 60.0);
   private_nh.param<double>("pnorm_threshold", _pnorm_threshold, 0.05);
   private_nh.param<double>("score_threshold", _score_threshold, 3.0);
 
@@ -1663,6 +1666,7 @@ int main(int argc, char** argv)
   std::cout << "Log file: " << filename << std::endl;
   std::cout << "method_type: " << static_cast<int>(_method_type) << std::endl;
   std::cout << "use_gnss: " << _use_gnss << std::endl;
+  std::cout << "use_ndt_lkas: " << _ndt_lkas_flag << std::endl;
   std::cout << "queue_size: " << _queue_size << std::endl;
   std::cout << "offset: " << _offset << std::endl;
   std::cout << "get_height: " << _get_height << std::endl;

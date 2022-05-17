@@ -27,8 +27,6 @@ Panels:
     Name: Time
     SyncMode: 0
     SyncSource: ""
-  - Class: autoware_rviz_debug/DecisionMakerPanel
-    Name: DecisionMakerPanel
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
