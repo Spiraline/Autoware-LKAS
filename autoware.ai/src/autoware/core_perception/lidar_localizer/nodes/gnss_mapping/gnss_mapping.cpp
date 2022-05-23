@@ -117,7 +117,7 @@ static void gnss_callback(const geometry_msgs::PoseStamped::ConstPtr& input)
       tf::Quaternion quat(input->pose.orientation.x, input->pose.orientation.y, input->pose.orientation.z, input->pose.orientation.w);
       // converted to RPY[-pi : pi]
       tf::Matrix3x3(quat).getRPY(r, p, y);
-      initial_yaw = y;
+      initial_yaw = calcDiffForRadian(y, _tf_yaw * -1);
     }
     previous_gnss_pose = current_gnss_pose;
     gnss_pos_ready = true;
@@ -355,14 +355,12 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 
   std::cout << localizer_pose.x << " " << localizer_pose.y << std::endl;
 
-  // transform.setOrigin(tf::Vector3(current_gnss_pose.x, current_gnss_pose.y, current_gnss_pose.z));
   transform.setOrigin(tf::Vector3(localizer_pose.x, localizer_pose.y, localizer_pose.z));
 
   if(_use_ndt)
     q.setRPY(ndt_roll, ndt_pitch, ndt_yaw);
   else
     q.setRPY(localizer_pose.roll, localizer_pose.pitch, localizer_pose.yaw);
-    // q.setRPY(current_gnss_pose.roll, current_gnss_pose.pitch, current_gnss_pose.yaw);
 
   transform.setRotation(q);
 
@@ -387,27 +385,6 @@ static void points_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
       added_pose.yaw = localizer_pose.yaw;
     }
   }
-
-  // Calculate the shift between added_pos and current_pos
-  // double shift = sqrt(pow(current_gnss_pose.x - added_pose.x, 2.0) + pow(current_gnss_pose.y - added_pose.y, 2.0));
-  // if (shift >= _min_add_scan_shift)
-  // {
-  //   map += *transformed_scan_ptr;
-  //   added_pose.x = current_gnss_pose.x;
-  //   added_pose.y = current_gnss_pose.y;
-  //   added_pose.z = current_gnss_pose.z;
-
-  //   if(_use_ndt){
-  //     added_pose.roll = ndt_roll;
-  //     added_pose.pitch = ndt_pitch;
-  //     added_pose.yaw = ndt_yaw;
-  //   }
-  //   else{
-  //     added_pose.roll = current_gnss_pose.roll;
-  //     added_pose.pitch = current_gnss_pose.pitch;
-  //     added_pose.yaw = current_gnss_pose.yaw;
-  //   }
-  // }
 
   sensor_msgs::PointCloud2::Ptr map_msg_ptr(new sensor_msgs::PointCloud2);
   pcl::toROSMsg(*map_ptr, *map_msg_ptr);
